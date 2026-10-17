@@ -109,6 +109,8 @@ function equipItem(itemId) {
 
   // Equip new item.
   inventory.equipment[slot] = itemId;
+  if (slot === "weapon") cancelCasting("weapon changed.");
+  refreshPlayerStats();
 
   showMessage(`${item.name} equipped.`);
   updateCharacterSheet();
@@ -140,6 +142,8 @@ function unequipItem(slot) {
   const item = getItem(itemId);
 
   inventory.equipment[slot] = null;
+  if (slot === "weapon") cancelCasting("weapon changed.");
+  refreshPlayerStats();
   inventory.items.push(itemId);
 
   if (item) {
@@ -265,7 +269,7 @@ function renderInventory() {
     slot.appendChild(idLabel);
 
     // Tooltip
-    slot.title = createItemTooltip(item);
+    setTooltip(slot, createItemTooltip(item));
 
     // Click item to equip it.
     slot.addEventListener("click", () => {
@@ -316,6 +320,7 @@ function renderEquipment() {
     if (!item) {
       nameElement.textContent = "Empty";
       iconElement.textContent = "+";
+      setTooltip(nameElement.closest(".equipment-slot"), "Empty equipment slot");
 
       continue;
     }
@@ -331,7 +336,7 @@ function renderEquipment() {
     const button = nameElement.closest(".equipment-slot");
 
     if (button) {
-      button.title = createItemTooltip(item) + "\n\nClick to unequip";
+      setTooltip(button, createItemTooltip(item) + "\n\nClick to unequip");
     }
   }
 }

@@ -31,7 +31,8 @@ function renderSpellBook() {
   spellList.innerHTML = "";
 
   // Read all spells defined in spells.js.
-  for (const spell of Object.values(SPELLS)) {
+  for (const definition of Object.values(SPELLS)) {
+    const spell = getSpellStats(definition);
     const entry = document.createElement("div");
     entry.className = "spell-book-entry";
 
@@ -63,15 +64,19 @@ entry.addEventListener("dragend", () => {
     const description = document.createElement("div");
     description.className = "spell-book-description";
     description.textContent =
-      spell.description ?? "No description available.";
+      `${spell.description ?? "No description available."} ${spell.rules ?? ""}`;
 
     const stats = document.createElement("div");
     stats.className = "spell-book-stats";
 
     const statParts = [];
+    statParts.push(`Range: ${spell.range}px`, `Cooldown: ${spell.cooldown}s`, "Requires line of sight");
 
     if (spell.damage !== undefined) {
       statParts.push(`Damage: ${spell.damage}`);
+    }
+    if (spell.damagePerTick !== undefined) {
+      statParts.push(`Damage: ${spell.damagePerTick} every ${spell.tickInterval}s for ${spell.duration}s`);
     }
 
     if (spell.manaCost !== undefined) {

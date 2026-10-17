@@ -26,6 +26,8 @@ You can also serve the folder with your editor's local web server and open its a
 
 Quest progress appears in the quest panel, and combat messages appear in the message log. Enemies respawn after being defeated.
 
+Fireball has a 320-pixel range and a 0.5-second cooldown; Ignite has a 240-pixel range and a 2-second cooldown. Cliffs and tree trunks block spells, while water does not. Moving, taking damage, pressing Escape, changing weapons, or losing a valid target interrupts Fireball before release without spending mana. Recasting Ignite refreshes its duration without stacking damage or postponing the next tick. Hover over action-bar spells for details.
+
 ## Controls
 
 | Action | Control |
@@ -48,6 +50,8 @@ Quest progress appears in the quest panel, and combat messages appear in the mes
 | --- | --- |
 | `index.html`, `style.css` | Page layout, menus, and interface styling |
 | `game.js` | Game states, player, input, camera, rendering, and main loop |
+| `stats.js` | Shared stat formulas, resource limits, spell damage, and defense |
+| `tooltips.js` | Immediate hover and keyboard-focus tooltips |
 | `world.js` | Map settings, scenery, collision regions, and spawn locations |
 | `collision.js` | Background polygon collision checks |
 | `enemies.js` | Enemy definitions, AI, damage, death, and respawning |
@@ -62,4 +66,6 @@ Quest progress appears in the quest panel, and combat messages appear in the mes
 
 ## Development status
 
-This is an evolving prototype. Progress is kept in memory: reloading the page or restarting after death resets the adventure. Saving, melee attacks, and more complete attribute effects are not implemented yet. See [todo.md](todo.md) for planned improvements.
+Hover over stats in the character sheet for explanations. Strength increases maximum health, Dexterity increases movement speed, Vitality improves health regeneration, and Intelligence improves mana regeneration. Equipment bonuses count toward these effects.
+
+This is an evolving prototype. Progress is kept in memory: reloading the page or restarting after death resets the adventure. Saving, melee attacks, and attribute-based spell damage are not implemented yet. See [todo.md](todo.md) for planned improvements.

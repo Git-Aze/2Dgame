@@ -3,6 +3,25 @@
   box-sizing: border-box;
 }
 
+#game-tooltip {
+  position: fixed;
+  z-index: 2000;
+  width: max-content;
+  max-width: min(340px, calc(100vw - 24px));
+  max-height: calc(100dvh - 24px);
+  overflow: hidden;
+  padding: 10px 12px;
+  border: 1px solid #b89b61;
+  border-radius: 5px;
+  background: #171f1b;
+  color: #f2eadb;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.5);
+  font: 12px/1.5 Arial, sans-serif;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  pointer-events: none;
+}
+
 html,
 body {
   margin: 0;
@@ -397,6 +416,8 @@ body {
    ======================================== */
 
 #character-sheet {
+  max-height: calc(100dvh - 32px);
+  overflow-y: auto;
   position: absolute;
 
   top: 50%;

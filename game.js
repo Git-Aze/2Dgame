@@ -57,8 +57,10 @@ const player = {
 
   // Resources
   hp: 100,
+  baseMaxHp: 100,
   maxHp: 100,
   mana: 50,
+  baseMaxMana: 50,
   maxMana: 50,
 
   // Character information
@@ -83,6 +85,7 @@ const player = {
   animTime: 0,
   frame: 0,
   casting: false,
+  castReleased: false,
   castTime: 0,
   castTarget: null,
 };
@@ -114,6 +117,7 @@ function setGameState(state) {
 
   player.moving = false;
   player.casting = false;
+  player.castReleased = false;
   player.castTime = 0;
   player.castTarget = null;
   player.frame = 0;
@@ -136,8 +140,7 @@ function startGame() {
   if (gameState === "dead") {
     Object.assign(player, structuredClone(initialPlayerState));
     selectedEnemy = null;
-    fireballs.length = 0;
-    activeIgnites.length = 0;
+    resetSpellState();
     enemies.length = 0;
     nextEnemyInstanceId = 1;
     spawnStartingEnemies();
@@ -441,18 +444,6 @@ function movePlayer(dx, dy) {
   moveEntity(player, dx, dy);
 }
 
-function getPlayerStats() {
-  const bonuses = getEquipmentBonuses();
-
-  return {
-    strength: (player.strength ?? 10) + bonuses.strength,
-    vitality: (player.vitality ?? 10) + bonuses.vitality,
-    intelligence: (player.intelligence ?? 10) + bonuses.intelligence,
-    dexterity: (player.dexterity ?? 10) + bonuses.dexterity,
-    armor: (player.armor ?? 0) + bonuses.armor,
-  };
-}
-
 
 function updateXPBar() {
   const xpFill = document.getElementById("xp-bar-fill");
@@ -565,9 +556,29 @@ function spendAttributePoint(attribute) {
 
   // Spend one point.
   player.attributePoints -= 1;
+  refreshPlayerStats();
 
   // Refresh the character sheet.
   updateCharacterSheet();
+}
+
+const sheetValueElements = new Map();
+
+function setSheetValue(id, value) {
+  if (!sheetValueElements.has(id)) sheetValueElements.set(id, document.getElementById(id));
+  const element = sheetValueElements.get(id);
+  const text = String(value);
+  if (element.textContent === text) return;
+  element.textContent = text;
+  const row = element.closest(".stat-row");
+  if (row?.dataset.tooltip) row.setAttribute("aria-label", `${row.textContent.trim()}. ${row.dataset.tooltip}`);
+}
+
+function updateCharacterResources() {
+  // Match the HUD's rounding; never rebuild inventory during live updates.
+  setSheetValue("sheet-health", `${Math.ceil(player.hp)} / ${player.maxHp}`);
+  setSheetValue("sheet-mana", `${Math.ceil(player.mana)} / ${player.maxMana}`);
+  setSheetValue("sheet-gold", player.gold);
 }
 
 function updateCharacterSheet() {
@@ -585,13 +596,10 @@ function updateCharacterSheet() {
 
   document.getElementById("stat-armor").textContent = stats.armor;
 
-  document.getElementById("sheet-health").textContent =
-    `${player.hp} / ${player.maxHp}`;
-
-  document.getElementById("sheet-mana").textContent =
-    `${player.mana} / ${player.maxMana}`;
-
-  document.getElementById("sheet-gold").textContent = player.gold;
+  setSheetValue("stat-move-speed", `${stats.moveSpeed.toFixed(1)} px/s`);
+  setSheetValue("stat-health-regen", `${stats.healthRegen.toFixed(2)} / s`);
+  setSheetValue("stat-mana-regen", `${stats.manaRegen.toFixed(2)} / s`);
+  updateCharacterResources();
 
   document.getElementById("attribute-points").textContent =
     player.attributePoints;
@@ -601,6 +609,38 @@ function updateCharacterSheet() {
   });
   renderInventory();
   renderEquipment();
+  updateStatDescriptions(stats);
+  updateCharacterFrame();
+  renderActionBar();
+  if (!document.getElementById("spell-book").classList.contains("hidden")) renderSpellBook();
+}
+
+function updateStatDescriptions(stats) {
+  const descriptions = {
+    "stat-move-speed": "Movement speed in world pixels per second, including Dexterity from attributes and equipment. Diagonal movement has the same speed.",
+    "stat-health-regen": "Health restored per second while alive, including equipment Vitality. Regeneration stops at maximum health.",
+    "stat-mana-regen": "Mana restored per second while playing, including equipment Intelligence. Regeneration stops at maximum mana.",
+    "stat-strength": `Strength: +${STAT_RULES.healthPerStrength} maximum health per point above ${STAT_RULES.attributeBaseline}, including equipment bonuses. Current maximum: ${stats.maxHp} HP. Increasing the maximum does not heal you.`,
+    "stat-vitality": `Vitality: +${STAT_RULES.healthRegenPerVitality} HP regenerated per second per point, including equipment bonuses, plus ${STAT_RULES.baseHealthRegen} base regeneration. Current: ${stats.healthRegen.toFixed(2)} HP/second while alive. Does not increase maximum health.`,
+    "stat-intelligence": `Intelligence: +${STAT_RULES.manaRegenPerIntelligence} mana regenerated per second per point, including equipment bonuses, plus ${STAT_RULES.baseManaRegen} base regeneration. Current: ${stats.manaRegen.toFixed(2)} mana/second. Does not currently increase spell damage or maximum mana.`,
+    "stat-dexterity": `Dexterity: +${STAT_RULES.speedPerDexterity * 100}% movement speed per point above ${STAT_RULES.attributeBaseline}, including equipment bonuses. Current: ${stats.moveSpeed.toFixed(1)} pixels/second. Does not currently change casting speed.`,
+    "stat-armor": `Armor: each point reduces damage from an enemy attack by 1. Attacks always deal at least 1 damage. Current reduction: ${stats.armor}.`,
+    "sheet-health": `Health: reaching zero ends the adventure. Maximum health is increased by Strength. Health regenerates while alive, based on Vitality.`,
+    "sheet-mana": `Mana: spent to cast spells and regenerated based on Intelligence. Maximum mana is currently ${player.maxMana}. Hover over an action-bar spell to see its mana cost.`,
+    "sheet-gold": "Gold: earned from quest rewards. There are currently no shops or purchases.",
+    "attribute-points": "Attribute points: gain 5 per level. Use the + buttons to permanently increase a base attribute by 1 for this adventure.",
+    "sheet-level": "Level: earn XP from enemy kills and quests. Each level grants 5 attribute points; the next XP requirement increases by 50% (rounded down).",
+  };
+  for (const [id, description] of Object.entries(descriptions)) {
+    const value = document.getElementById(id);
+    const target = value.closest(".stat-row, .attribute-points-row") ?? value;
+    setTooltip(target, description);
+    target.setAttribute("aria-label", `${target.textContent.trim()}. ${description}`);
+    if (!target.hasAttribute("tabindex")) target.tabIndex = 0;
+  }
+  setTooltip(document.getElementById("character-hp-bar"), descriptions["sheet-health"]);
+  setTooltip(document.getElementById("character-mana-bar"), descriptions["sheet-mana"]);
+  setTooltip(document.getElementById("xp-bar-container"), descriptions["sheet-level"]);
 }
 
 canvas.addEventListener("click", (event) => {
@@ -628,6 +668,7 @@ window.addEventListener("keydown", (event) => {
   if (key === "c" && !event.repeat) {
     toggleCharacterSheet();
   }
+  if (key === "escape" && player.casting) cancelCasting("cancelled.");
 
   if (
     [
@@ -709,9 +750,10 @@ function damagePlayer(baseDamage) {
 
   // 1 armor reduces incoming damage by 1.
   // Attacks always deal at least 1 damage.
-  const finalDamage = Math.max(1, baseDamage - armor);
+  const finalDamage = getDamageTaken(baseDamage, stats);
 
   player.hp = Math.max(0, player.hp - finalDamage);
+  if (player.casting && !player.castReleased) cancelCasting("you took damage.");
 
   showMessage(`You take ${finalDamage} damage. (${armor} armor)`);
 
@@ -771,29 +813,16 @@ function drawUI() {
 // MANA REGENERATION SYSTEM
 // ==========================================
 
-const BASE_MANA_REGEN = 2;
-const MANA_REGEN_PER_INTELLIGENCE = 0.1;
-
-// Calculate mana regeneration based on Intelligence.
-function getManaRegenRate() {
-  const intelligence = player.intelligence;
-
-  return BASE_MANA_REGEN +
-    intelligence * MANA_REGEN_PER_INTELLIGENCE;
-}
-
 // Regenerate mana every frame.
-function updateManaRegeneration(dt) {
+function updateManaRegeneration(dt, stats = getPlayerStats()) {
   if (player.mana >= player.maxMana) {
     player.mana = player.maxMana;
     return;
   }
 
-  const regenRate = getManaRegenRate();
-
   player.mana = Math.min(
     player.maxMana,
-    player.mana + regenRate * dt
+    player.mana + stats.manaRegen * dt
   );
 }
 
@@ -801,31 +830,15 @@ function updateManaRegeneration(dt) {
 // HEALTH REGENERATION SYSTEM
 // ==========================================
 
-const BASE_HEALTH_REGEN = 0.2; // 1 HP every 5 seconds
-const HEALTH_REGEN_PER_VITALITY = 0.02;
-
-// Calculate regeneration based on Vitality.
-function getHealthRegenRate() {
-  // Use the same attributes object as your character sheet.
-  const vitality = player.vitality;
-
-  return (
-    BASE_HEALTH_REGEN +
-    vitality * HEALTH_REGEN_PER_VITALITY
-  );
-}
-
 // Regenerate health every frame.
-function updateHealthRegeneration(dt) {
+function updateHealthRegeneration(dt, stats = getPlayerStats()) {
   if (player.hp <= 0 || player.hp >= player.maxHp) {
     return;
   }
 
-  const regenRate = getHealthRegenRate();
-
   player.hp = Math.min(
     player.maxHp,
-    player.hp + regenRate * dt
+    player.hp + stats.healthRegen * dt
   );
 }
 
@@ -866,6 +879,9 @@ function updateCharacterFrame() {
     manaText.textContent =
       `${Math.ceil(player.mana)} / ${player.maxMana}`;
   }
+  if (!document.getElementById("character-sheet").classList.contains("hidden")) {
+    updateCharacterResources();
+  }
 }
 
 // --------------------------------------------------
@@ -874,7 +890,8 @@ function updateCharacterFrame() {
 
 function update(dt) {
   if (!isPlaying()) return;
-  updateCasting(dt);
+  const stats = getPlayerStats();
+  updateSpellCooldowns(dt);
   let dx = 0;
   let dy = 0;
 
@@ -883,11 +900,8 @@ function update(dt) {
   if (keys["a"] || keys["arrowleft"]) dx -= 1;
   if (keys["d"] || keys["arrowright"]) dx += 1;
 
-  // Don't interrupt the spell animation with movement.
-  if (player.casting) {
-    dx = 0;
-    dy = 0;
-  }
+  if (player.casting && (dx !== 0 || dy !== 0)) cancelCasting("you moved.");
+  updateCasting(dt);
   player.moving = dx !== 0 || dy !== 0;
 
   if (player.moving) {
@@ -901,7 +915,8 @@ function update(dt) {
       player.facing = dy < 0 ? "up" : "down";
     }
 
-    movePlayer(dx * player.speed * dt, dy * player.speed * dt);
+    const speed = stats.moveSpeed;
+    movePlayer(dx * speed * dt, dy * speed * dt);
 
     player.animTime += dt;
 
@@ -919,8 +934,8 @@ function update(dt) {
   if (!isPlaying()) return;
   updateEnemyRespawns(dt);
   updateCombat(dt);
-  updateManaRegeneration(dt);
-  updateHealthRegeneration(dt);
+  updateManaRegeneration(dt, stats);
+  updateHealthRegeneration(dt, stats);
   updateCharacterFrame();
 }
 
@@ -997,8 +1012,8 @@ drawCharacterPortrait();
 spawnStartingEnemies();
 giveStartingItems();
 setupEquipmentButtons();
-renderInventory();
-renderEquipment();
+refreshPlayerStats();
+updateCharacterSheet();
 updateXPBar();
 updateCharacterFrame();
 resetQuests();

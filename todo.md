@@ -27,14 +27,13 @@ Completion target: exploration and combat work without obvious world or state in
 - [x] 2.02 Add a data-defined kill quest with separate progress tracking, event-driven UI and one-time rewards.
 - [x] 2.03 Begin with equipping item `00001` for 20 XP, then unlock and start Slime Trouble.
 
-- [ ] 2.04 Define central derived-stat formulas for resources, regeneration, damage, and defense.
-- [ ] 2.05 Apply equipment intelligence/vitality bonuses to regeneration.
-- [ ] 2.06 Include weapon damage bonuses in the appropriate damage calculations.
-- [ ] 2.07 Give strength and dexterity meaningful gameplay effects and explain them in the UI.
-- [ ] 2.08 Ensure the character sheet displays the same stats that gameplay uses.
-- [ ] 2.09 Define spell range and line-of-sight rules and enforce them consistently.
-- [ ] 2.10 Define casting interruption and Ignite refresh/cooldown behavior.
-- [ ] 2.11 Add clear onboarding for movement, targeting, equipment, and spells.
+- [x] 2.04 Define central derived-stat formulas for resources, regeneration, damage, and defense.
+- [x] 2.05 Apply equipment intelligence/vitality bonuses to regeneration.
+- [x] 2.06 Include casting-weapon damage bonuses in direct spell damage; keep Ignite's damage per tick fixed.
+- [x] 2.07 Give Strength maximum-health bonuses and Dexterity movement-speed bonuses; add hover explanations for all displayed stats.
+- [x] 2.08 Ensure the character sheet displays shared gameplay stats and updates live resources without rebuilding inventory. Show spell damage, mana cost and casting details on action-bar hover tooltips. Use instant shared tooltips for spells, stats and items, with keyboard-focus support.
+- [x] 2.09 Enforce spell range and line of sight against cliffs and tree trunks; water remains passable for spells.
+- [x] 2.10 Define Fireball interruption and release costs, spell cooldowns, and non-stacking Ignite refreshes that preserve tick timing.
 
 Completion target: a new player can explore, fight, level up, and see character choices affect gameplay.
 
@@ -48,7 +47,6 @@ Completion target: a new player can explore, fight, level up, and see character 
 - [x] 3.06 Remove or document unused terrain rendering, decoration data, and legacy UI code.
 - [ ] 3.07 Review unused assets such as `house.png` and `tree.png`; retain only if needed or document their intended use.
 - [x] 3.08 Add a README with local run instructions, controls, and project structure.
-- [ ] 3.09 Reconcile the existing `todo.txt` with this checklist.
 
 ### Focused verification
 

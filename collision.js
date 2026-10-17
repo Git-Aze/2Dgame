@@ -97,3 +97,29 @@ function collidesWithMap(left, top, right, bottom) {
   return !onCrossing && mapCollision.water.some((region) =>
     polygonIntersectsRect(region, left, top, right, bottom));
 }
+
+function segmentsIntersect(ax, ay, bx, by, cx, cy, dx, dy) {
+  if (Math.max(ax, bx) < Math.min(cx, dx) || Math.min(ax, bx) > Math.max(cx, dx) ||
+      Math.max(ay, by) < Math.min(cy, dy) || Math.min(ay, by) > Math.max(cy, dy)) return false;
+  const cross = (px, py, qx, qy, rx, ry) => (qx - px) * (ry - py) - (qy - py) * (rx - px);
+  const a = cross(ax, ay, bx, by, cx, cy);
+  const b = cross(ax, ay, bx, by, dx, dy);
+  const c = cross(cx, cy, dx, dy, ax, ay);
+  const d = cross(cx, cy, dx, dy, bx, by);
+  return ((a <= 0 && b >= 0) || (a >= 0 && b <= 0)) &&
+    ((c <= 0 && d >= 0) || (c >= 0 && d <= 0));
+}
+
+// Water is passable for spells. Solid scenery uses the same footprints as movement.
+function spellPathBlocked(ax, ay, bx, by) {
+  for (const region of mapCollision.solid) {
+    if (!segmentIntersectsRect(ax, ay, bx, by, region.left, region.top, region.right, region.bottom)) continue;
+    if (pointInPolygon(ax, ay, region.points) || pointInPolygon(bx, by, region.points)) return true;
+    for (let i = 0, j = region.points.length - 1; i < region.points.length; j = i++) {
+      if (segmentsIntersect(ax, ay, bx, by, ...region.points[j], ...region.points[i])) return true;
+    }
+  }
+  return trees.some((tree) => segmentIntersectsRect(ax, ay, bx, by,
+    tree.x - tree.trunkWidth / 2, tree.y - tree.trunkHeight / 2,
+    tree.x + tree.trunkWidth / 2, tree.y + tree.trunkHeight / 2));
+}

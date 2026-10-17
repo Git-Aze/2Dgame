@@ -101,6 +101,11 @@
               <span id="stat-armor">0</span>
             </div>
 
+            <h3 class="sheet-section-title">Movement and Recovery</h3>
+            <div class="stat-row"><span>Movement Speed</span><span id="stat-move-speed">145 px/s</span></div>
+            <div class="stat-row"><span>Health Regen</span><span id="stat-health-regen">0.40 / s</span></div>
+            <div class="stat-row"><span>Mana Regen</span><span id="stat-mana-regen">3.00 / s</span></div>
+
             <h3 class="sheet-section-title">Resources</h3>
 
             <div class="stat-row">
@@ -199,7 +204,7 @@
       <p class="help">Move: WASD or arrow keys · Character: C · Spells: K</p>
 
       <div id="action-bar">
-        <button class="action-slot" id="slot-1" title="Fireball (1)">
+        <button class="action-slot" id="slot-1">
           <span class="slot-number">1</span>
           <span class="spell-icon">🔥</span>
         </button>
@@ -255,10 +260,12 @@
         <p class="game-overlay-controls">Move: WASD / arrows · Character: C · Spells: K<br />Click an enemy to target · Cast: 1–0</p>
       </div>
     </section>
+    <script src="tooltips.js"></script>
     <script src="world.js"></script>
     <script src="collision.js"></script>
     <script src="items.js"></script>
     <script src="inventory.js"></script>
+    <script src="stats.js"></script>
     <script src="quests.js"></script>
     <script src="quest-system.js"></script>
     <script src="quest-ui.js"></script>

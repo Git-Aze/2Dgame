@@ -68,7 +68,7 @@ function renderActionBar() {
 
   slots.forEach((slot, index) => {
     const spellId = actionBarSpells[index];
-    const spell = spellId ? SPELLS[spellId] : null;
+    const spell = spellId ? getSpellStats(SPELLS[spellId]) : null;
 
     let icon = slot.querySelector(".spell-icon");
 
@@ -82,12 +82,32 @@ function renderActionBar() {
 
     const key = index === 9 ? "0" : String(index + 1);
 
-    slot.title = spell
-      ? `${spell.name} (${key}) — Right-click to remove`
-      : `Empty slot (${key})`;
+    setTooltip(slot, spell ? createActionTooltip(spell, key) : `Empty slot (${key})`);
+    slot.setAttribute("aria-label", slot.dataset.tooltip);
 
     slot.draggable = Boolean(spell);
   });
+}
+
+function createActionTooltip(spell, key) {
+  const lines = [`${spell.name} (${key})`, spell.description];
+  if (spell.damage !== undefined) lines.push(`Damage: ${spell.damage} per hit`);
+  if (spell.damagePerTick !== undefined) {
+    const ticks = Math.floor(spell.duration / spell.tickInterval);
+    lines.push(`Damage: ${spell.damagePerTick} every ${spell.tickInterval}s for ${spell.duration}s (${ticks * spell.damagePerTick} total)`);
+  }
+  lines.push(`Mana cost: ${spell.manaCost}`);
+  lines.push(`Range: ${spell.range} pixels · Cooldown: ${spell.cooldown}s`);
+  lines.push("Requires line of sight. Cliffs and tree trunks block spells; water does not.");
+  lines.push(spell.rules);
+  if (spell.castFrameDuration && spell.castFrameCount) {
+    lines.push(`Cast time: ${(spell.castFrameDuration * spell.castFrameCount).toFixed(2)}s`);
+  } else {
+    lines.push("Cast time: instant");
+  }
+  if (spell.requiredWeaponCategory) lines.push(`Requires: ${spell.requiredWeaponCategory} weapon`);
+  lines.push("Select an enemy to cast. Right-click to remove.");
+  return lines.filter(Boolean).join("\n");
 }
 
 // ==========================================
@@ -204,7 +224,6 @@ function setupActionBar() {
     }
   });
 
-  renderActionBar();
 }
 
 setupActionBar();

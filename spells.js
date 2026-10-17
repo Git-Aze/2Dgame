@@ -11,6 +11,9 @@ const SPELLS = {
 
     damage: 35,
     manaCost: 10,
+    range: 320,
+    cooldown: 0.5,
+    rules: "Movement, damage, Escape, weapon changes, or losing the target interrupt casting before release at no mana cost. Mana and cooldown begin on release. Released projectiles continue independently, stop at solid scenery, and expire after traveling their range.",
     projectileSpeed: 300,
     radius: 7,
     castFrameDuration: 0.12,
@@ -27,6 +30,9 @@ const SPELLS = {
 
     damagePerTick: 2,
     manaCost: 15,
+    range: 240,
+    cooldown: 2,
+    rules: "Recasting refreshes the burn to 10 seconds without stacking or delaying the next tick. The burn continues if the target leaves range or line of sight. Mana and cooldown begin immediately.",
     tickInterval: 1,
     duration: 10,
 
@@ -35,6 +41,56 @@ const SPELLS = {
 };
 
 const fireballs = [];
+const spellCooldowns = Object.create(null);
+
+function updateSpellCooldowns(dt) {
+  for (const id of Object.keys(spellCooldowns)) {
+    spellCooldowns[id] = Math.max(0, spellCooldowns[id] - dt);
+  }
+}
+
+function validateSpellTarget(spell, target) {
+  const weapon = getEquippedItem("weapon");
+  let reason = "";
+  if (spell.requiredWeaponCategory && weapon?.weaponType !== spell.requiredWeaponCategory) {
+    reason = `${spell.name} requires a ${spell.requiredWeaponCategory} weapon.`;
+  } else if (!target?.alive) {
+    reason = "Select a living enemy before casting.";
+  } else {
+    const ax = player.x + player.w / 2, ay = player.y + player.h / 2;
+    const bx = target.x + target.w / 2, by = target.y + target.h / 2;
+    if (Math.hypot(bx - ax, by - ay) > spell.range) reason = `${spell.name}: target is out of range.`;
+    else if (spellPathBlocked(ax, ay, bx, by)) reason = `${spell.name}: line of sight is blocked.`;
+  }
+  if (reason) showMessage(reason);
+  return !reason;
+}
+
+function canCastSpell(spell, target) {
+  if (!isPlaying() || player.casting) return false;
+  if (spellCooldowns[spell.id] > 0) {
+    showMessage(`${spell.name} is on cooldown (${spellCooldowns[spell.id].toFixed(1)}s).`);
+    return false;
+  }
+  return validateSpellTarget(spell, target) && hasEnoughMana(spell);
+}
+
+function cancelCasting(reason = "") {
+  if (!player.casting) return;
+  player.casting = false;
+  player.castTime = 0;
+  player.castTarget = null;
+  player.castReleased = false;
+  player.frame = 0;
+  if (reason) showMessage(`Casting interrupted: ${reason}`);
+}
+
+function resetSpellState() {
+  fireballs.length = 0;
+  activeIgnites.length = 0;
+  for (const id of Object.keys(spellCooldowns)) delete spellCooldowns[id];
+  cancelCasting();
+}
 
 function hasEnoughMana(spell) {
   if (player.mana < spell.manaCost) {
@@ -65,33 +121,13 @@ function castIgnite() {
   if (!isPlaying()) return;
   if (player.casting) return;
 
-  const spell = SPELLS.ignite;
+  const spell = getSpellStats(SPELLS.ignite);
 
-  // Check equipped weapon.
-  const weapon = getEquippedItem("weapon");
-
-  if (
-    spell.requiredWeaponCategory !== null &&
-    (!weapon || weapon.weaponType !== spell.requiredWeaponCategory)
-  ) {
-    showMessage(
-      `${spell.name} requires a ${spell.requiredWeaponCategory} weapon.`
-    );
-    return;
-  }
-
-  // Check target.
-  if (!selectedEnemy || !selectedEnemy.alive) {
-    selectedEnemy = null;
-    showMessage("Select an enemy before casting Ignite.");
-    return;
-  }
-
-  // Check mana.
-  if (!hasEnoughMana(spell)) return;
+  if (!canCastSpell(spell, selectedEnemy)) return;
 
   // Spend mana.
   spendMana(spell);
+  spellCooldowns.ignite = spell.cooldown;
 
   const target = selectedEnemy;
 
@@ -101,8 +137,7 @@ function castIgnite() {
   );
 
   if (existingEffect) {
-    existingEffect.elapsed = 0;
-    existingEffect.ticksApplied = 0;
+    existingEffect.remaining = spell.duration;
     existingEffect.damagePerTick = spell.damagePerTick;
     existingEffect.tickInterval = spell.tickInterval;
     existingEffect.duration = spell.duration;
@@ -114,8 +149,8 @@ function castIgnite() {
   // Apply Ignite.
   activeIgnites.push({
     target,
-    elapsed: 0,
-    ticksApplied: 0,
+    tickTimer: 0,
+    remaining: spell.duration,
     damagePerTick: spell.damagePerTick,
     tickInterval: spell.tickInterval,
     duration: spell.duration,
@@ -139,16 +174,15 @@ function updateIgnites(dt) {
       continue;
     }
 
-    effect.elapsed += dt;
-
-    const totalTicks = Math.floor(effect.duration / effect.tickInterval);
+    const elapsed = Math.min(dt, effect.remaining);
+    effect.remaining = Math.max(0, effect.remaining - dt);
+    effect.tickTimer += elapsed;
 
     // Apply each tick that is due.
     while (
-      effect.ticksApplied < totalTicks &&
-      effect.elapsed >= (effect.ticksApplied + 1) * effect.tickInterval
+      effect.tickTimer + 1e-9 >= effect.tickInterval
     ) {
-      effect.ticksApplied++;
+      effect.tickTimer = Math.max(0, effect.tickTimer - effect.tickInterval);
 
       showMessage(
         `${target.name} takes ${effect.damagePerTick} Ignite damage!`);
@@ -161,7 +195,7 @@ function updateIgnites(dt) {
     }
 
     // Remove expired Ignite effects.
-    if (!target.alive || effect.ticksApplied >= totalTicks) {
+    if (!target.alive || effect.remaining <= 0) {
       activeIgnites.splice(i, 1);
     }
   }
@@ -257,7 +291,7 @@ function drawFireball(fireball) {
 function launchFireball(target) {
   if (!target || !target.alive) return;
 
-  const spell = SPELLS.fireball;
+  const spell = getSpellStats(SPELLS.fireball);
 
   fireballs.push({
     x: player.x + player.w / 2,
@@ -266,6 +300,7 @@ function launchFireball(target) {
     speed: spell.projectileSpeed,
     damage: spell.damage,
     radius: spell.radius,
+    remainingRange: spell.range,
   });
 }
 
@@ -279,30 +314,7 @@ function castFireball() {
 
   const spell = SPELLS.fireball;
 
-  // Check equipped weapon.
-  if (spell.requiredWeaponCategory !== null) {
-    const weapon = getEquippedItem("weapon");
-
-    if (!weapon || weapon.weaponType !== spell.requiredWeaponCategory) {
-      showMessage(
-        `${spell.name} requires a ${spell.requiredWeaponCategory} weapon to cast.`
-      );
-      return;
-    }
-  }
-
-  // Check target.
-  if (!selectedEnemy || !selectedEnemy.alive) {
-    selectedEnemy = null;
-    showMessage("Click an enemy before casting Fireball.");
-    return;
-  }
-
-  // Check mana.
-  if (!hasEnoughMana(spell)) return;
-
-  // Spend mana only after all checks pass.
-  spendMana(spell);
+  if (!canCastSpell(spell, selectedEnemy)) return;
 
   // Face the selected enemy.
   const dx = selectedEnemy.x - player.x;
@@ -319,6 +331,7 @@ function castFireball() {
 
   // Begin Fireball casting animation.
   player.casting = true;
+  player.castReleased = false;
   player.castTime = 0;
   player.castTarget = selectedEnemy;
   player.moving = false;
@@ -327,6 +340,11 @@ function castFireball() {
 
 function updateCasting(dt) {
   if (!player.casting) return;
+  if (!player.castReleased && (!validateSpellTarget(SPELLS.fireball, player.castTarget) ||
+      !hasEnoughMana(SPELLS.fireball))) {
+    cancelCasting("target, weapon or mana is no longer valid.");
+    return;
+  }
 
   const previousFrame = Math.min(
     CAST_FRAME_COUNT - 1,
@@ -345,12 +363,16 @@ function updateCasting(dt) {
     previousFrame < CAST_FRAME_COUNT - 1 &&
     currentFrame === CAST_FRAME_COUNT - 1
   ) {
+    spendMana(SPELLS.fireball);
+    spellCooldowns.fireball = SPELLS.fireball.cooldown;
     launchFireball(player.castTarget);
+    player.castReleased = true;
     player.castTarget = null;
   }
 
   if (player.castTime >= CAST_FRAME_COUNT * CAST_FRAME_DURATION) {
     player.casting = false;
+    player.castReleased = false;
     player.castTime = 0;
     player.castTarget = null;
     player.frame = 0;
@@ -380,7 +402,17 @@ function updateCombat(dt) {
     const dx = targetX - fireball.x;
     const dy = targetY - fireball.y;
     const distance = Math.hypot(dx, dy);
-    const travel = fireball.speed * dt;
+    const travel = Math.min(fireball.speed * dt, fireball.remainingRange);
+
+    // Sweep the traveled segment so projectiles cannot skip thin obstacles.
+    const step = distance <= travel + target.w / 2 ? distance : Math.min(distance, travel);
+    const nextX = distance ? fireball.x + dx / distance * step : fireball.x;
+    const nextY = distance ? fireball.y + dy / distance * step : fireball.y;
+    if (spellPathBlocked(fireball.x, fireball.y, nextX, nextY)) {
+      fireballs.splice(i, 1);
+      showMessage("Fireball was blocked by scenery.");
+      continue;
+    }
 
     if (distance <= travel + target.w / 2) {
       showMessage(
@@ -395,6 +427,8 @@ function updateCombat(dt) {
     } else {
       fireball.x += (dx / distance) * travel;
       fireball.y += (dy / distance) * travel;
+      fireball.remainingRange = Math.max(0, fireball.remainingRange - travel);
+      if (fireball.remainingRange <= 0) fireballs.splice(i, 1);
     }
   }
 }
