@@ -1,3 +1,7 @@
+import { on } from "./events.js";
+import { QUEST_DEFINITIONS } from "./quests.js";
+import { questProgress } from "./state.js";
+
 // Called on quest transitions and progress changes, never from the game loop.
 function renderQuestLog() {
   const list = document.getElementById("quest-list");
@@ -25,3 +29,9 @@ function renderQuestLog() {
     list.appendChild(entry);
   }
 }
+
+function setupQuestUI() {
+  on("quests:changed", renderQuestLog);
+}
+
+export { setupQuestUI };

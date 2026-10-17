@@ -1,3 +1,5 @@
+
+
 // One immediate tooltip for all dynamically created controls and stat rows.
 const tooltip = document.createElement("div");
 tooltip.id = "game-tooltip";
@@ -92,3 +94,5 @@ new MutationObserver(() => {
       tooltipTarget.closest("[inert], [hidden], .hidden"))) hideTooltip();
 }).observe(document.body, { subtree: true, childList: true, attributes: true,
   attributeFilter: ["class", "hidden", "inert"] });
+
+export { setTooltip };

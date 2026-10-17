@@ -1,3 +1,7 @@
+import { buildingFootprint, buildings } from "./buildings.js";
+import { trees } from "./world-state.js";
+import { WORLD_DATA } from "./world.js";
+
 // Compile reference-image coordinates once, rather than during each movement.
 const mapCollision = (() => {
   const settings = WORLD_DATA.collision;
@@ -112,6 +116,10 @@ function segmentsIntersect(ax, ay, bx, by, cx, cy, dx, dy) {
 
 // Water is passable for spells. Solid scenery uses the same footprints as movement.
 function spellPathBlocked(ax, ay, bx, by) {
+  for (const building of buildings) {
+    const bounds = buildingFootprint(building);
+    if (segmentIntersectsRect(ax, ay, bx, by, bounds.left, bounds.top, bounds.right, bounds.bottom)) return true;
+  }
   for (const region of mapCollision.solid) {
     if (!segmentIntersectsRect(ax, ay, bx, by, region.left, region.top, region.right, region.bottom)) continue;
     if (pointInPolygon(ax, ay, region.points) || pointInPolygon(bx, by, region.points)) return true;
@@ -123,3 +131,5 @@ function spellPathBlocked(ax, ay, bx, by) {
     tree.x - tree.trunkWidth / 2, tree.y - tree.trunkHeight / 2,
     tree.x + tree.trunkWidth / 2, tree.y + tree.trunkHeight / 2));
 }
+
+export { mapCollision, collidesWithMap, spellPathBlocked };

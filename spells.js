@@ -1,92 +1,36 @@
+import { SPELLS } from "./action-definitions.js";
+import { ctx } from "./canvas.js";
+import { spellPathBlocked } from "./collision.js";
+import { damageEnemy } from "./enemies.js";
+import { getEquippedItem } from "./equipment.js";
+import { emit, on } from "./events.js";
+import { getItem } from "./items.js";
+import { showMessage } from "./messages.js";
+import { moveEntity } from "./movement.js";
+import { activeIgnites, fireballs, isPlaying, player, runtime, spellCooldowns, swordSwings } from "./state.js";
+import { getSpellStats } from "./stats.js";
+import { blocked } from "./world-state.js";
+
 // ==========================================
 // SPELL SYSTEM
 // ==========================================
 
 // Permanent five-digit IDs, independent of item IDs. Never reuse retired IDs.
-const SPELLS = {
-  "00001": {
-    id: "00001",
-    name: "Fireball",
-    icon: "🔥",
-    description: "Launches a fiery projectile at the selected enemy.",
-
-    damage: 35,
-    manaCost: 10,
-    range: 320,
-    cooldown: 0.5,
-    rules: "Movement, damage, Escape, weapon changes, or losing the target interrupt casting before release at no mana cost. Mana and cooldown begin on release. Released projectiles continue independently, stop at solid scenery, and expire after traveling their range.",
-    projectileSpeed: 300,
-    radius: 7,
-    castFrameDuration: 0.12,
-    castFrameCount: 4,
-
-    requiredWeaponCategory: "Casting",
-  },
-  "00002": {
-    id: "00002",
-    name: "Ignite",
-    icon: "♨️",
-    description: "Burns the target for 2 damage every second for 10 seconds.",
-
-    damagePerTick: 2,
-    manaCost: 15,
-    range: 240,
-    cooldown: 2,
-    rules: "Recasting refreshes the burn to 10 seconds without stacking or delaying the next tick. The burn continues if the target leaves range or line of sight. Mana and cooldown begin immediately.",
-    tickInterval: 1,
-    duration: 10,
-
-    requiredWeaponCategory: "Casting",
-  },
-  "00003": {
-    id: "00003",
-    name: "Sword Strike",
-    icon: "⚔️",
-    description: "Strike the selected enemy with your equipped Iron Sword.",
-    damage: 12,
-    manaCost: 0,
-    range: 48,
-    cooldown: 0.6,
-    requiredWeaponCategory: "Melee",
-    requiredWeaponId: "00002",
-    rules: "Instant melee hit. Damage includes the sword's damage bonus. Requires the Iron Sword, a target in melee range and a clear path. Uses no mana.",
-  },
-  "00004": {
-    id: "00004",
-    name: "Charge",
-    icon: "💨",
-    description: "Rush toward the selected enemy and stun it for 2 seconds on contact.",
-    manaCost: 0,
-    minRange: 150,
-    range: Infinity,
-    cooldown: 20,
-    chargeSpeed: 650,
-    stunDuration: 2,
-    requiredWeaponCategory: "Melee",
-    requiredWeaponId: "00002",
-    rules: "Requires at least 150 pixels of separation and the Iron Sword. Deals no damage. Terrain stops the charge; other attacks are unavailable while charging. Any enemy death resets its cooldown. Changing weapons or losing the target ends the charge without a cooldown refund.",
-  },
-};
-
-const fireballs = [];
-const spellCooldowns = Object.create(null);
-const swordSwings = [];
-let activeCharge = null;
 
 function chargeAttack() {
   const attack = SPELLS["00004"];
-  if (!canCastSpell(attack, selectedEnemy)) return;
-  const distance = Math.hypot(selectedEnemy.x + selectedEnemy.w / 2 - player.x - player.w / 2,
-    selectedEnemy.y + selectedEnemy.h / 2 - player.y - player.h / 2);
-  activeCharge = { target: selectedEnemy, remainingTravel: distance + 64 };
+  if (!canCastSpell(attack, runtime.selectedEnemy)) return;
+  const distance = Math.hypot(runtime.selectedEnemy.x + runtime.selectedEnemy.w / 2 - player.x - player.w / 2,
+    runtime.selectedEnemy.y + runtime.selectedEnemy.h / 2 - player.y - player.h / 2);
+  runtime.activeCharge = { target: runtime.selectedEnemy, remainingTravel: distance + 64 };
   spellCooldowns["00004"] = attack.cooldown;
 }
 
 function updateCharge(dt) {
-  if (!activeCharge) return;
-  const target = activeCharge.target;
+  if (!runtime.activeCharge) return;
+  const target = runtime.activeCharge.target;
   if (!isPlaying() || !target.alive || getEquippedItem("weapon")?.id !== SPELLS["00004"].requiredWeaponId) {
-    activeCharge = null;
+    runtime.activeCharge = null;
     return;
   }
   const dx = target.x + target.w / 2 - player.x - player.w / 2;
@@ -94,23 +38,23 @@ function updateCharge(dt) {
   const distance = Math.hypot(dx, dy);
   const contactDistance = (player.w + target.w) / 2 + 4;
   const travel = Math.min(SPELLS["00004"].chargeSpeed * dt,
-    Math.max(0, distance - contactDistance), activeCharge.remainingTravel);
+    Math.max(0, distance - contactDistance), runtime.activeCharge.remainingTravel);
   const moveX = distance ? dx / distance * travel : 0;
   const moveY = distance ? dy / distance * travel : 0;
   player.facing = Math.abs(dx) > Math.abs(dy)
     ? (dx < 0 ? "left" : "right") : (dy < 0 ? "up" : "down");
   const oldX = player.x, oldY = player.y;
   moveEntity(player, moveX, moveY);
-  activeCharge.remainingTravel -= travel;
+  runtime.activeCharge.remainingTravel -= travel;
   if (Math.abs(player.x - oldX - moveX) > 0.01 || Math.abs(player.y - oldY - moveY) > 0.01) {
-    activeCharge = null;
+    runtime.activeCharge = null;
     showMessage("Charge stopped by terrain.");
   } else if (distance - travel <= contactDistance + 0.01) {
     target.stunRemaining = Math.max(target.stunRemaining ?? 0, SPELLS["00004"].stunDuration);
-    activeCharge = null;
+    runtime.activeCharge = null;
     showMessage(`${target.name} is stunned for ${SPELLS["00004"].stunDuration} seconds!`);
-  } else if (activeCharge.remainingTravel <= 0) {
-    activeCharge = null;
+  } else if (runtime.activeCharge.remainingTravel <= 0) {
+    runtime.activeCharge = null;
     showMessage("Charge ended before reaching the target.");
   }
 }
@@ -122,8 +66,8 @@ function getActionWeaponRequirement(action) {
 
 function swordAttack() {
   const attack = getSpellStats(SPELLS["00003"]);
-  if (!canCastSpell(attack, selectedEnemy)) return;
-  const target = selectedEnemy;
+  if (!canCastSpell(attack, runtime.selectedEnemy)) return;
+  const target = runtime.selectedEnemy;
   const x = player.x + player.w / 2, y = player.y + player.h / 2;
   const dx = target.x + target.w / 2 - x, dy = target.y + target.h / 2 - y;
   player.facing = Math.abs(dx) > Math.abs(dy)
@@ -183,7 +127,7 @@ function validateSpellTarget(spell, target) {
 }
 
 function canCastSpell(spell, target) {
-  if (!isPlaying() || player.casting || activeCharge) return false;
+  if (!isPlaying() || player.casting || runtime.activeCharge) return false;
   if (spellCooldowns[spell.id] > 0) {
     showMessage(`${spell.name} is on cooldown (${spellCooldowns[spell.id].toFixed(1)}s).`);
     return false;
@@ -202,7 +146,7 @@ function cancelCasting(reason = "") {
 }
 
 function resetSpellState() {
-  activeCharge = null;
+  runtime.activeCharge = null;
   fireballs.length = 0;
   activeIgnites.length = 0;
   swordSwings.length = 0;
@@ -226,14 +170,13 @@ function spendMana(spell) {
   player.mana = Math.max(0, player.mana - spell.manaCost);
 
   // Immediately update the portrait bars.
-  updateCharacterFrame();
+  emit("resources:changed");
 }
 
 // ==========================================
 // DAMAGE OVER TIME EFFECTS
 // ==========================================
 
-const activeIgnites = [];
 
 function castIgnite() {
   if (!isPlaying()) return;
@@ -241,13 +184,13 @@ function castIgnite() {
 
   const spell = getSpellStats(SPELLS["00002"]);
 
-  if (!canCastSpell(spell, selectedEnemy)) return;
+  if (!canCastSpell(spell, runtime.selectedEnemy)) return;
 
   // Spend mana.
   spendMana(spell);
   spellCooldowns["00002"] = spell.cooldown;
 
-  const target = selectedEnemy;
+  const target = runtime.selectedEnemy;
 
   // Refresh Ignite if the target is already burning.
   const existingEffect = activeIgnites.find(
@@ -432,11 +375,11 @@ function castFireball() {
 
   const spell = SPELLS["00001"];
 
-  if (!canCastSpell(spell, selectedEnemy)) return;
+  if (!canCastSpell(spell, runtime.selectedEnemy)) return;
 
   // Face the selected enemy.
-  const dx = selectedEnemy.x - player.x;
-  const dy = selectedEnemy.y - player.y;
+  const dx = runtime.selectedEnemy.x - player.x;
+  const dy = runtime.selectedEnemy.y - player.y;
 
   player.facing =
     Math.abs(dx) > Math.abs(dy)
@@ -451,7 +394,7 @@ function castFireball() {
   player.casting = true;
   player.castReleased = false;
   player.castTime = 0;
-  player.castTarget = selectedEnemy;
+  player.castTarget = runtime.selectedEnemy;
   player.moving = false;
   player.frame = 0;
 }
@@ -554,3 +497,11 @@ function updateCombat(dt) {
     }
   }
 }
+
+function setupCombat() {
+  on("player:hurt", () => {
+    if (player.casting && !player.castReleased) cancelCasting("you took damage.");
+  });
+}
+
+export { chargeAttack, updateCharge, getActionWeaponRequirement, swordAttack, drawSwordSwings, updateSpellCooldowns, cancelCasting, resetSpellState, castIgnite, updateIgnites, drawIgniteEffects, CAST_FRAME_DURATION, drawFireball, castFireball, updateCasting, updateCombat, setupCombat };

@@ -1,3 +1,6 @@
+import { getEquipmentBonuses, getEquippedItem } from "./equipment.js";
+import { player } from "./state.js";
+
 // Balance rules shared by gameplay and stat explanations.
 const STAT_RULES = Object.freeze({
   attributeBaseline: 10,
@@ -53,3 +56,5 @@ function getSpellStats(spell, stats = getPlayerStats()) {
 function getDamageTaken(baseDamage, stats = getPlayerStats()) {
   return Math.max(STAT_RULES.minimumIncomingDamage, baseDamage - stats.armor);
 }
+
+export { STAT_RULES, getPlayerStats, refreshPlayerStats, getSpellStats, getDamageTaken };

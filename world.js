@@ -1,3 +1,5 @@
+
+
 // Shared world definition. Locations use tile coordinates plus pixel offsets.
 // Scenery and its collision footprint are defined together.
 const WORLD_DATA = {
@@ -120,6 +122,17 @@ const WORLD_DATA = {
     [36, 7], [43, 8], [52, 6], [61, 12],
   ],
   playerSpawn: { tileX: 33, tileY: 23, offsetX: 4, offsetY: 2 },
+  buildings: [{
+    id: "general-store",
+    name: "General Store",
+    image: "house.png",
+    tileX: 36, tileY: 24,
+    width: 200, height: 178,
+    footprint: { x: -66, y: -48, width: 136, height: 48 },
+    entrance: { x: -30, y: 12 },
+    interactionRange: 90,
+    shop: { stock: ["00001", "00002", "00003", "00004", "00005", "00006", "00007"] },
+  }],
   enemySpawns: [
     { id: "00001", tileX: 30, tileY: 9 },
     { id: "00001", tileX: 32, tileY: 13 },
@@ -135,3 +148,5 @@ function worldPosition({ tileX, tileY, offsetX = 0, offsetY = 0 }) {
     y: tileY * WORLD_DATA.tileSize + offsetY,
   };
 }
+
+export { WORLD_DATA, worldPosition };

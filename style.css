@@ -22,6 +22,51 @@
   pointer-events: none;
 }
 
+#shop-dialog {
+  position: fixed;
+  inset: 0;
+  z-index: 900;
+  display: grid;
+  place-items: center;
+  padding: 20px;
+  background: rgba(10, 17, 15, 0.78);
+}
+
+#shop-dialog[hidden] { display: none; }
+
+.shop-panel {
+  width: min(560px, 100%);
+  max-height: calc(100dvh - 40px);
+  overflow-y: auto;
+  padding: 20px;
+  border: 2px solid #9b8154;
+  border-radius: 8px;
+  background: #18221e;
+  color: #f2eadb;
+}
+
+.shop-panel header, .shop-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.shop-panel h2 { margin: 0; color: #f0d58c; }
+.shop-item { padding: 10px 0; border-bottom: 1px solid #514b39; }
+.shop-panel button {
+  padding: 8px 12px;
+  border: 1px solid #b89b61;
+  border-radius: 4px;
+  background: #5c4930;
+  color: #fff0c4;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+.shop-panel button:disabled { opacity: 0.45; cursor: default; }
+.shop-panel button:focus-visible { outline: 2px solid #f0d58c; outline-offset: 3px; }
+#shop-status { color: #c4bba9; font-size: 12px; line-height: 1.5; }
+
 html,
 body {
   margin: 0;

@@ -1,4 +1,8 @@
-const questProgress = Object.create(null);
+import { emit } from "./events.js";
+import { showMessage } from "./messages.js";
+import { gainXP } from "./player.js";
+import { QUEST_DEFINITIONS } from "./quests.js";
+import { isPlaying, player, questProgress } from "./state.js";
 
 function resetQuests() {
   for (const id of Object.keys(questProgress)) delete questProgress[id];
@@ -8,7 +12,7 @@ function resetQuests() {
       objectives: quest.objectives.map(() => 0),
     };
   }
-  renderQuestLog();
+  emit("quests:changed");
 }
 
 function acceptQuest(id) {
@@ -19,7 +23,7 @@ function acceptQuest(id) {
       questProgress[requiredId]?.status === "completed")) return false;
   progress.status = "active";
   showMessage(`Quest started: ${QUEST_DEFINITIONS[id].title}.`);
-  renderQuestLog();
+  emit("quests:changed");
   return true;
 }
 
@@ -43,7 +47,7 @@ function completeQuest(id) {
       acceptQuest(next.id);
     }
   }
-  renderQuestLog();
+  emit("quests:changed");
   return true;
 }
 
@@ -67,5 +71,7 @@ function recordQuestEvent(event) {
     // Completion renders the whole log, including any earlier progress changes.
     if (completeQuest(quest.id)) changed = false;
   }
-  if (changed) renderQuestLog();
+  if (changed) emit("quests:changed");
 }
+
+export { resetQuests, acceptQuest, recordQuestEvent };

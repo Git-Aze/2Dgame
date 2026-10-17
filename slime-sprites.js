@@ -1,3 +1,6 @@
+import { ctx } from "./canvas.js";
+import { enemies } from "./state.js";
+
 // Supplied sheet: four frames per row. Clip body outlines because the PNG
 // includes a baked background. This also works when opening index.html locally.
 const greenSlimeImage = new Image();
@@ -56,3 +59,5 @@ function updateSlimeAnimation(dt) {
     enemy.hurtTime = Math.max(0, enemy.hurtTime - dt);
   }
 }
+
+export { greenSlimeImage, redSlimeImage, drawSlimeSprite, updateSlimeAnimation };

@@ -1,197 +1,13 @@
-// ==========================================
-// ENEMY SYSTEM
-// ==========================================
+import { ENEMY_TYPES } from "./enemy-types.js";
+import { showMessage } from "./messages.js";
+import { moveEntity } from "./movement.js";
+import { damagePlayer, gainXP } from "./player.js";
+import { recordQuestEvent } from "./quest-system.js";
+import { enemies, isPlaying, player, runtime, spellCooldowns } from "./state.js";
+import { TILE } from "./world-state.js";
+import { WORLD_DATA } from "./world.js";
 
-let nextEnemyInstanceId = 1;
-
-// ==========================================
-// ENEMY DATABASE
-// ==========================================
-
-// Every enemy type has a unique ID.
-const ENEMY_TYPES = [
-  {
-    id: "00001",
-    name: "Green Slime",
-
-    // Health
-    maxHp: 60,
-
-    // Movement
-    speed: 55,
-    detectionRange: 180,
-    respawnTime: 20,
-    wanderRadius: 90,
-    wanderSpeed: 25,
-    wanderPauseMin: 1,
-    wanderPauseMax: 3,
-
-    // Combat
-    damage: 10,
-    attackRange: 30,
-    attackCooldown: 1.2,
-
-    // Rewards
-    xpReward: 25,
-
-    // Appearance
-    sprite: "slime",
-    width: 24,
-    height: 24,
-  },
-
-  {
-    id: "00002",
-    name: "Red Slime",
-
-    maxHp: 100,
-
-    speed: 70,
-    detectionRange: 200,
-    respawnTime: 30,
-    wanderRadius: 90,
-    wanderSpeed: 25,
-    wanderPauseMin: 1,
-    wanderPauseMax: 3,
-
-    damage: 15,
-    attackRange: 30,
-    attackCooldown: 1,
-
-    xpReward: 40,
-
-    sprite: "redSlime",
-    width: 24,
-    height: 24,
-  },
-
-  {
-    id: "00003",
-    name: "Wolf",
-
-    maxHp: 120,
-
-    speed: 110,
-    detectionRange: 250,
-    respawnTime: 40,
-    wanderRadius: 90,
-    wanderSpeed: 25,
-    wanderPauseMin: 1,
-    wanderPauseMax: 3,
-
-    damage: 20,
-    attackRange: 35,
-    attackCooldown: 0.9,
-
-    xpReward: 60,
-
-    sprite: "wolf",
-    width: 28,
-    height: 24,
-  },
-];
-
-function drawEnemy(enemy) {
-  if (!enemy.alive) return;
-
-  switch (enemy.sprite) {
-    case "slime":
-      drawSlime(enemy);
-      break;
-
-    case "redSlime":
-      if (drawSlimeSprite(enemy)) drawEnemyHealthBar(enemy);
-      else drawColoredSlime(enemy, "#d84b4b", "#ff8585");
-      break;
-
-    case "wolf":
-      drawWolf(enemy);
-      break;
-
-    default:
-      drawSlime(enemy);
-  }
-  if (enemy.stunRemaining > 0) {
-    ctx.save();
-    ctx.fillStyle = "#ffe6a3";
-    ctx.font = "bold 10px Arial";
-    ctx.textAlign = "center";
-    ctx.fillText(`STUN ${enemy.stunRemaining.toFixed(1)}s`, enemy.x + enemy.w / 2, enemy.y - 18);
-    ctx.restore();
-  }
-}
-
-function drawColoredSlime(enemy, bodyColor, highlightColor) {
-  const { x, y, w, h } = enemy;
-
-  ctx.fillStyle = bodyColor;
-  ctx.fillRect(x + 2, y + 8, w - 4, h - 10);
-
-  ctx.fillStyle = highlightColor;
-  ctx.fillRect(x + 5, y + 4, w - 10, h - 8);
-
-  ctx.fillStyle = "#222";
-  ctx.fillRect(x + 7, y + 11, 3, 4);
-  ctx.fillRect(x + w - 10, y + 11, 3, 4);
-
-  drawEnemyHealthBar(enemy);
-}
-
-function drawWolf(enemy) {
-  const { x, y, w, h } = enemy;
-
-  // Temporary wolf appearance.
-  ctx.fillStyle = "#65594d";
-  ctx.fillRect(x + 3, y + 7, w - 6, h - 11);
-
-  ctx.fillStyle = "#a59a87";
-  ctx.fillRect(x + 7, y + 4, w - 14, h - 8);
-
-  // Ears.
-  ctx.fillStyle = "#65594d";
-  ctx.fillRect(x + 5, y + 1, 5, 7);
-  ctx.fillRect(x + w - 10, y + 1, 5, 7);
-
-  // Eyes.
-  ctx.fillStyle = "#f2d36d";
-  ctx.fillRect(x + 8, y + 10, 3, 3);
-  ctx.fillRect(x + w - 11, y + 10, 3, 3);
-
-  drawEnemyHealthBar(enemy);
-}
-
-function drawEnemyHealthBar(enemy) {
-  const barWidth = 36;
-  const barHeight = 5;
-
-  const x = enemy.x + enemy.w / 2 - barWidth / 2;
-  const y = enemy.y - 10;
-
-  const percentage = Math.max(0, enemy.hp / enemy.maxHp);
-
-  ctx.fillStyle = "#251d20";
-  ctx.fillRect(x - 1, y - 1, barWidth + 2, barHeight + 2);
-
-  ctx.fillStyle = "#55df68";
-  ctx.fillRect(x, y, barWidth * percentage, barHeight);
-
-  // Target outline.
-  if (selectedEnemy === enemy) {
-    ctx.strokeStyle = "#ffe36e";
-    ctx.lineWidth = 2;
-
-    ctx.strokeRect(enemy.x - 3, enemy.y - 3, enemy.w + 6, enemy.h + 6);
-  }
-}
-
-// ==========================================
-// ACTIVE ENEMIES
-// ==========================================
-
-// These are the actual enemies in the world.
-const enemies = [];
-
-let selectedEnemy = null;
+// Enemy AI, spawning, damage and death handling.
 
 // All attacks use this path so a death awards XP and quest credit exactly once.
 function damageEnemy(enemy, damage, cause) {
@@ -211,7 +27,7 @@ function defeatEnemy(enemy, cause) {
   enemy.respawnTimer = enemy.respawnTime;
   enemy.stunRemaining = 0;
   spellCooldowns["00004"] = 0;
-  if (selectedEnemy === enemy) selectedEnemy = null;
+  if (runtime.selectedEnemy === enemy) runtime.selectedEnemy = null;
   if (player.castTarget === enemy) player.castTarget = null;
   showMessage(cause === "00002"
     ? `${enemy.name} burned to death!` : `${enemy.name} was defeated!`);
@@ -242,7 +58,7 @@ function spawnEnemy(enemyId, tileX, tileY) {
 
   // Create a new enemy instance from its type.
   const enemy = {
-    instanceId: nextEnemyInstanceId++,
+    instanceId: runtime.nextEnemyInstanceId++,
     id: type.id,
     name: type.name,
 
@@ -317,102 +133,8 @@ function spawnStartingEnemies() {
 // DRAW SLIME
 // ==========================================
 
-function drawSlime(enemy) {
-  if (!enemy.alive) return;
-  if (drawSlimeSprite(enemy)) {
-    drawEnemyHealthBar(enemy);
-    return;
-  }
 
-  const { x, y, w, h } = enemy;
 
-  // Shadow
-  ctx.fillStyle = "rgba(25, 35, 20, 0.3)";
-  ctx.beginPath();
-  ctx.ellipse(x + w / 2, y + h - 1, w / 2, 5, 0, 0, Math.PI * 2);
-  ctx.fill();
-
-  // Body
-  ctx.fillStyle = "#267541";
-  ctx.fillRect(x + 2, y + 9, w - 4, h - 11);
-
-  ctx.fillStyle = "#43b85e";
-  ctx.fillRect(x + 4, y + 5, w - 8, h - 9);
-  ctx.fillRect(x + 7, y + 2, w - 14, 5);
-
-  // Highlights
-  ctx.fillStyle = "#80e58a";
-  ctx.fillRect(x + 7, y + 5, 5, 3);
-  ctx.fillRect(x + 5, y + 9, 3, 4);
-
-  // Eyes
-  ctx.fillStyle = "#173b25";
-  ctx.fillRect(x + 7, y + 11, 3, 4);
-  ctx.fillRect(x + w - 10, y + 11, 3, 4);
-
-  // Mouth
-  ctx.fillRect(x + 11, y + 17, 3, 2);
-
-  // Target outline
-  if (selectedEnemy === enemy) {
-    ctx.strokeStyle = "#ffe36e";
-    ctx.lineWidth = 2;
-    ctx.strokeRect(x - 3, y - 3, w + 6, h + 6);
-  }
-
-  // Health bar
-  const barWidth = 36;
-  const barHeight = 5;
-  const barX = x + w / 2 - barWidth / 2;
-  const barY = y - 10;
-
-  ctx.fillStyle = "#251d20";
-  ctx.fillRect(barX - 1, barY - 1, barWidth + 2, barHeight + 2);
-
-  const healthPercent = Math.max(0, enemy.hp / enemy.maxHp);
-
-  ctx.fillStyle =
-    healthPercent > 0.5
-      ? "#55df68"
-      : healthPercent > 0.25
-        ? "#e9d64c"
-        : "#ed4b4b";
-
-  ctx.fillRect(barX, barY, barWidth * healthPercent, barHeight);
-}
-
-// ==========================================
-// ENEMY TARGETING
-// ==========================================
-
-function targetEnemyAtScreenPosition(screenX, screenY) {
-  if (!isPlaying()) return;
-  const bounds = canvas.getBoundingClientRect();
-  const worldX = (screenX - bounds.left) * viewWidth / bounds.width + Math.floor(cameraX);
-  const worldY = (screenY - bounds.top) * viewHeight / bounds.height + Math.floor(cameraY);
-
-  for (let i = enemies.length - 1; i >= 0; i--) {
-    const enemy = enemies[i];
-
-    if (!enemy.alive) continue;
-
-    if (
-      worldX >= enemy.x - 5 &&
-      worldX <= enemy.x + enemy.w + 5 &&
-      worldY >= enemy.y - 5 &&
-      worldY <= enemy.y + enemy.h + 5
-    ) {
-      selectedEnemy = enemy;
-
-      showMessage(
-        `${enemy.name} targeted (${enemy.hp}/${enemy.maxHp} HP).`);
-
-      return;
-    }
-  }
-
-  selectedEnemy = null;
-}
 
 // ==========================================
 // ENEMY AI
@@ -657,3 +379,5 @@ function updateEnemyReturn(enemy, dt) {
   moveEntity(enemy, (dx / distance) * moveDistance,
     (dy / distance) * moveDistance);
 }
+
+export { damageEnemy, spawnStartingEnemies, updateEnemies, respawnEnemy, updateEnemyRespawns };

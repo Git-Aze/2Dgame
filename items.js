@@ -1,3 +1,5 @@
+
+
 // ==================================================
 // ITEM DATABASE
 // ==================================================
@@ -20,6 +22,7 @@ const ITEMS = {
 
   "00001": {
     id: "00001",
+    buyPrice: 20,
     name: "Apprentice Staff",
     type: "weapon",
     weaponType: "Casting",
@@ -36,6 +39,7 @@ const ITEMS = {
 
   "00002": {
     id: "00002",
+    buyPrice: 30,
     name: "Iron Sword",
     type: "weapon",
     weaponType: "Melee",
@@ -57,6 +61,7 @@ const ITEMS = {
 
   "00003": {
     id: "00003",
+    buyPrice: 12,
     name: "Leather Cap",
     type: "head",
 
@@ -77,6 +82,7 @@ const ITEMS = {
 
   "00004": {
     id: "00004",
+    buyPrice: 25,
     name: "Leather Armor",
     type: "chest",
 
@@ -97,6 +103,7 @@ const ITEMS = {
 
   "00005": {
     id: "00005",
+    buyPrice: 20,
     name: "Wooden Shield",
     type: "offhand",
 
@@ -116,6 +123,7 @@ const ITEMS = {
 
   "00006": {
     id: "00006",
+    buyPrice: 15,
     name: "Leather Pants",
     type: "legs",
 
@@ -136,6 +144,7 @@ const ITEMS = {
 
   "00007": {
     id: "00007",
+    buyPrice: 12,
     name: "Traveler's Boots",
     type: "boots",
 
@@ -159,3 +168,5 @@ const ITEMS = {
 function getItem(itemId) {
   return ITEMS[itemId] ?? null;
 }
+
+export { getItem };

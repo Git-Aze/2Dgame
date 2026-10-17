@@ -4,9 +4,17 @@ A single-player, top-down RPG prototype built with plain JavaScript, HTML, CSS, 
 
 ## Play locally
 
-Open `index.html` in a modern desktop browser. Keep the source files and images together in the project folder. No installation or build step is required.
+The game uses native JavaScript modules and must be served over HTTP. Keep the source files and images together. No dependency installation or build step is required.
 
-You can also serve the folder with your editor's local web server and open its address in your browser.
+On Windows, run this from the project folder:
+
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File .\serve.ps1
+```
+
+Open **http://localhost:8000** in a modern desktop browser. Press **Ctrl+C** in the server terminal to stop it. The included development server listens only on your own computer; use `-Port 8080` if port 8000 is occupied.
+
+Your editor's local web server also works. Opening `index.html` directly with a `file://` URL no longer loads the module-based game.
 
 ## What you can do
 
@@ -18,6 +26,7 @@ You can also serve the folder with your editor's local web server and open its a
 - Arrange spells on the action bar using the spell book and drag-and-drop.
 - Earn XP from enemies and quests, level up, and spend attribute points.
 - Restart a fresh adventure after your character dies.
+- Visit the General Store at the map center. Click the house nearby or press **E** at its entrance to buy equipment with gold. Gameplay pauses while shopping; press **E**, **Escape**, or Close to leave.
 
 ## Your first adventure
 
@@ -39,6 +48,8 @@ Fireball has a 320-pixel range and a 0.5-second cooldown; Ignite has a 240-pixel
 | Open or close character sheet | C |
 | Open or close spell book | K |
 | Select an enemy | Left-click the enemy |
+| Open the shop nearby | E or click the building |
+| Close the shop | E, Escape, or Close |
 | Cast an assigned spell | 1–9 and 0, or click its action-bar slot |
 | Equip an item | Click it in the character sheet's inventory |
 | Unequip an item | Click its equipment slot |
@@ -62,21 +73,36 @@ Assign the next unused ID when adding an ability; never renumber existing IDs or
 | File | Purpose |
 | --- | --- |
 | `index.html`, `style.css` | Page layout, menus, and interface styling |
-| `game.js` | Game states, player, input, camera, rendering, and main loop |
+| `game.js` | Module initialization and the main loop |
+| `state.js`, `lifecycle.js` | Shared session data and start/death/restart transitions |
+| `player.js`, `update.js` | Player progression, damage, regeneration, and simulation updates |
+| `input.js`, `targeting.js` | Keyboard/mouse bindings and enemy selection |
+| `canvas.js`, `renderer.js` | Canvas sizing, camera, and world rendering |
+| `character-ui.js`, `screens.js` | Character sheet, resource HUD, and start/death screens |
+| `player-sprites.js`, `enemy-renderer.js` | Character sprites and enemy rendering |
 | `stats.js` | Shared stat formulas, resource limits, spell damage, and defense |
-| `tooltips.js` | Immediate hover and keyboard-focus tooltips |
-| `world.js` | Map settings, scenery, collision regions, and spawn locations |
-| `collision.js` | Background polygon collision checks |
-| `enemies.js` | Enemy definitions, AI, damage, death, and respawning |
+| `events.js`, `messages.js`, `tooltips.js` | UI notifications, message log, and immediate tooltips |
+| `world.js`, `world-state.js` | World definitions, scenery instances, and boundary data |
+| `buildings.js`, `building-renderer.js` | Building definitions, interaction, and drawing |
+| `shops.js`, `shop-ui.js` | Purchase rules and shop interface |
+| `collision.js`, `movement.js` | Geometry checks and entity movement |
+| `enemy-types.js`, `enemies.js` | Enemy definitions, AI, damage, death, and respawning |
 | `slime-sprites.js` | Green and red slime sprite-sheet frames and animation |
-| `items.js`, `inventory.js` | Item definitions, inventory, and equipment |
-| `spells.js` | Spell casting, projectiles, and damage-over-time effects |
+| `items.js`, `inventory.js`, `equipment.js` | Item definitions, inventory actions, and equipment bonuses |
+| `inventory-ui.js` | Inventory/equipment interface and item tooltips |
+| `action-definitions.js`, `spells.js` | Ability definitions, casting, projectiles, charge, and damage over time |
 | `spellbook.js`, `actionbar.js` | Spell selection and action-bar controls |
 | `quests.js` | Quest definitions, prerequisites, objectives, and rewards |
 | `quest-system.js`, `quest-ui.js` | Quest progress, completion, and display |
 | `*.png` | Map and sprite assets |
 | `todo.md` | Numbered development tasks and verification checklist |
 | `AGENTS.md` | Guidelines for coding agents working on the project |
+
+Modules declare dependencies with `import`/`export`; they do not expose gameplay globals on `window`. Gameplay changes notify UI modules through `events.js`. See [docs/architecture.md](docs/architecture.md) for the dependency and event conventions.
+
+## Verification
+
+With the local server running, open **http://localhost:8000/tests/smoke.html**. The browser runs gameplay checks in a separate game frame and displays a PASS/FAIL result. Checks cover startup, input, equipment and stats, quests, spells and melee attacks, shop purchases, tooltips, sprites, and death/restart behavior.
 
 ## Development status
 

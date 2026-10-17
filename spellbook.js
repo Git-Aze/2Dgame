@@ -1,3 +1,8 @@
+import { SPELLS } from "./action-definitions.js";
+import { getActionWeaponRequirement } from "./spells.js";
+import { isPlaying } from "./state.js";
+import { getSpellStats } from "./stats.js";
+
 // ==========================================
 // SPELL BOOK SYSTEM
 // ==========================================
@@ -107,13 +112,9 @@ entry.addEventListener("dragend", () => {
 // ==========================================
 
 // Open and close with K.
-window.addEventListener("keydown", (event) => {
-  if (event.key.toLowerCase() === "k" && !event.repeat) {
-    event.preventDefault();
-    toggleSpellBook();
-  }
-});
 
+
+function setupSpellBook() {
 // Close button.
 document
   .getElementById("close-spell-book")
@@ -123,3 +124,7 @@ document
 
     document.getElementById("spell-book").classList.add("hidden");
   });
+
+}
+
+export { toggleSpellBook, renderSpellBook, setupSpellBook };

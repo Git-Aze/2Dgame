@@ -1,48 +1,15 @@
-// ==================================================
-// INVENTORY SYSTEM
-// ==================================================
-//
-// items.js     = defines what items are
-// inventory.js = handles owning/equipping items
-// game.js      = game/player/combat logic
-//
-// Inventory and equipment store ITEM IDs only.
-// Example: "00002"
-// ==================================================
-
-// --------------------------------------------------
-// INVENTORY SETTINGS
-// --------------------------------------------------
-
-const INVENTORY_SIZE = 20;
-
-// --------------------------------------------------
-// PLAYER INVENTORY
-// --------------------------------------------------
-
-const inventory = {
-  items: [],
-  equipment: {
-    head: null,
-    chest: null,
-    weapon: null,
-    offhand: null,
-    legs: null,
-    boots: null,
-  },
-};
-
-// --------------------------------------------------
-// INVENTORY HELPERS
-// --------------------------------------------------
+import { emit } from "./events.js";
+import { getItem } from "./items.js";
+import { showMessage } from "./messages.js";
+import { recordQuestEvent } from "./quest-system.js";
+import { cancelCasting } from "./spells.js";
+import { INVENTORY_SIZE, inventory, isPlaying } from "./state.js";
+import { refreshPlayerStats } from "./stats.js";
 
 function hasInventorySpace() {
   return inventory.items.length < INVENTORY_SIZE;
 }
 
-// --------------------------------------------------
-// ADD ITEM
-// --------------------------------------------------
 
 function addItem(itemId) {
   const item = getItem(itemId);
@@ -64,9 +31,6 @@ function addItem(itemId) {
   return true;
 }
 
-// --------------------------------------------------
-// EQUIP ITEM
-// --------------------------------------------------
 
 function equipItem(itemId) {
   if (!isPlaying()) return false;
@@ -113,14 +77,11 @@ function equipItem(itemId) {
   refreshPlayerStats();
 
   showMessage(`${item.name} equipped.`);
-  updateCharacterSheet();
+  emit("player:changed");
   recordQuestEvent({ type: "itemEquipped", itemId });
   return true;
 }
 
-// --------------------------------------------------
-// UNEQUIP ITEM
-// --------------------------------------------------
 
 function unequipItem(slot) {
   if (!isPlaying()) return false;
@@ -149,56 +110,10 @@ function unequipItem(slot) {
   if (item) {
     showMessage(`${item.name} unequipped.`);
   }
-  updateCharacterSheet();
+  emit("player:changed");
   return true;
 }
 
-// --------------------------------------------------
-// GET EQUIPPED ITEM
-// --------------------------------------------------
-
-function getEquippedItem(slot) {
-  const itemId = inventory.equipment[slot];
-
-  if (!itemId) return null;
-
-  return getItem(itemId);
-}
-
-// --------------------------------------------------
-// EQUIPMENT STAT BONUSES
-// --------------------------------------------------
-
-function getEquipmentBonuses() {
-  const bonuses = {
-    strength: 0,
-    vitality: 0,
-    intelligence: 0,
-    dexterity: 0,
-    armor: 0,
-    damage: 0,
-  };
-
-  for (const itemId of Object.values(inventory.equipment)) {
-    if (!itemId) continue;
-
-    const item = getItem(itemId);
-
-    if (!item || !item.stats) continue;
-
-    for (const [stat, value] of Object.entries(item.stats)) {
-      if (bonuses[stat] !== undefined) {
-        bonuses[stat] += value;
-      }
-    }
-  }
-
-  return bonuses;
-}
-
-// --------------------------------------------------
-// DEBUG / TEST STARTING ITEMS
-// --------------------------------------------------
 
 function giveStartingItems() {
   addItem("00001"); // Apprentice Staff
@@ -210,147 +125,4 @@ function giveStartingItems() {
   addItem("00007"); // Traveler's Boots
 }
 
-// ==================================================
-// INVENTORY UI
-// ==================================================
-
-function renderInventory() {
-  const inventoryGrid = document.getElementById("inventory-grid");
-
-  if (!inventoryGrid) return;
-
-  inventoryGrid.innerHTML = "";
-
-  for (let i = 0; i < INVENTORY_SIZE; i++) {
-    const itemId = inventory.items[i];
-
-    const slot = document.createElement("button");
-
-    slot.className = "inventory-slot";
-
-    // ----------------------------------------------
-    // EMPTY SLOT
-    // ----------------------------------------------
-
-    if (!itemId) {
-      slot.classList.add("empty");
-      slot.disabled = true;
-
-      inventoryGrid.appendChild(slot);
-
-      continue;
-    }
-
-    // ----------------------------------------------
-    // ITEM SLOT
-    // ----------------------------------------------
-
-    const item = getItem(itemId);
-
-    if (!item) {
-      console.error(`Inventory contains unknown item "${itemId}".`);
-
-      inventoryGrid.appendChild(slot);
-
-      continue;
-    }
-
-    const icon = document.createElement("span");
-
-    icon.className = "inventory-icon";
-    icon.textContent = item.icon;
-
-    const idLabel = document.createElement("span");
-
-    idLabel.className = "inventory-item-id";
-    idLabel.textContent = item.id;
-
-    slot.appendChild(icon);
-    slot.appendChild(idLabel);
-
-    // Tooltip
-    setTooltip(slot, createItemTooltip(item));
-
-    // Click item to equip it.
-    slot.addEventListener("click", () => {
-      equipItem(itemId);
-    });
-
-    inventoryGrid.appendChild(slot);
-  }
-}
-
-function createItemTooltip(item) {
-  const lines = [];
-
-  lines.push(item.name);
-  lines.push(`ID: ${item.id}`);
-  lines.push("");
-  lines.push(item.description);
-
-  if (item.stats) {
-    lines.push("");
-
-    for (const [stat, value] of Object.entries(item.stats)) {
-      const statName = stat.charAt(0).toUpperCase() + stat.slice(1);
-
-      lines.push(`${statName}: +${value}`);
-    }
-  }
-
-  return lines.join("\n");
-}
-
-function renderEquipment() {
-  for (const slot of Object.keys(inventory.equipment)) {
-    const nameElement = document.getElementById(`equipment-${slot}`);
-
-    const iconElement = document.getElementById(`equipment-icon-${slot}`);
-
-    if (!nameElement || !iconElement) {
-      continue;
-    }
-
-    const item = getEquippedItem(slot);
-
-    // ----------------------------------------------
-    // EMPTY
-    // ----------------------------------------------
-
-    if (!item) {
-      nameElement.textContent = "Empty";
-      iconElement.textContent = "+";
-      setTooltip(nameElement.closest(".equipment-slot"), "Empty equipment slot");
-
-      continue;
-    }
-
-    // ----------------------------------------------
-    // EQUIPPED ITEM
-    // ----------------------------------------------
-
-    nameElement.textContent = item.name;
-
-    iconElement.textContent = item.icon;
-
-    const button = nameElement.closest(".equipment-slot");
-
-    if (button) {
-      setTooltip(button, createItemTooltip(item) + "\n\nClick to unequip");
-    }
-  }
-}
-
-function setupEquipmentButtons() {
-  const equipmentButtons = document.querySelectorAll(".equipment-slot");
-
-  equipmentButtons.forEach((button) => {
-    button.addEventListener("click", () => {
-      const slot = button.dataset.equipmentSlot;
-
-      if (!slot) return;
-
-      unequipItem(slot);
-    });
-  });
-}
+export { hasInventorySpace, addItem, equipItem, unequipItem, giveStartingItems };

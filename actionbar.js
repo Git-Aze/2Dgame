@@ -1,17 +1,13 @@
+import { SPELLS } from "./action-definitions.js";
+import { showMessage } from "./messages.js";
+import { castFireball, castIgnite, chargeAttack, getActionWeaponRequirement, swordAttack } from "./spells.js";
+import { ACTION_BAR_SIZE, actionBarSpells, isPlaying } from "./state.js";
+import { getSpellStats } from "./stats.js";
+import { setTooltip } from "./tooltips.js";
+
 // ==========================================
 // ACTION BAR SYSTEM
 // ==========================================
-
-const ACTION_BAR_SIZE = 10;
-
-// Each slot contains a spell ID or null.
-const actionBarSpells = Array(ACTION_BAR_SIZE).fill(null);
-
-// Start with Fireball in slot 1.
-actionBarSpells[0] = "00001";
-actionBarSpells[1] = "00002";
-actionBarSpells[2] = "00003";
-actionBarSpells[3] = "00004";
 
 // ==========================================
 // ASSIGN AND REMOVE SPELLS
@@ -211,27 +207,8 @@ function setupActionBar() {
   });
 
   // Number keys 1–9 and 0.
-  window.addEventListener("keydown", (event) => {
-    if (event.repeat || event.ctrlKey || event.altKey || event.metaKey) {
-      return;
-    }
 
-    const tag = event.target?.tagName;
-
-    if (tag === "INPUT" || tag === "TEXTAREA" ||
-        event.target?.isContentEditable) {
-      return;
-    }
-
-    if (/^[0-9]$/.test(event.key)) {
-      const slotIndex = event.key === "0"
-        ? 9
-        : Number(event.key) - 1;
-
-      castActionBarSlot(slotIndex);
-    }
-  });
 
 }
 
-setupActionBar();
+export { assignSpellToSlot, castActionBarSlot, renderActionBar, setupActionBar };

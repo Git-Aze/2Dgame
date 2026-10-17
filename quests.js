@@ -1,3 +1,5 @@
+
+
 // Definitions are separate from each adventure's changing quest progress.
 const QUEST_DEFINITIONS = {
   firstSteps: {
@@ -16,3 +18,5 @@ const QUEST_DEFINITIONS = {
     rewards: { xp: 75, gold: 20 },
   },
 };
+
+export { QUEST_DEFINITIONS };

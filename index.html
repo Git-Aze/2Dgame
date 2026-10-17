@@ -260,20 +260,14 @@
         <p class="game-overlay-controls">Move: WASD / arrows · Character: C · Spells: K<br />Click an enemy to target · Cast: 1–0</p>
       </div>
     </section>
-    <script src="tooltips.js"></script>
-    <script src="world.js"></script>
-    <script src="collision.js"></script>
-    <script src="items.js"></script>
-    <script src="inventory.js"></script>
-    <script src="stats.js"></script>
-    <script src="quests.js"></script>
-    <script src="quest-system.js"></script>
-    <script src="quest-ui.js"></script>
-    <script src="enemies.js"></script>
-    <script src="slime-sprites.js"></script>
-    <script src="spells.js"></script>
-    <script src="spellbook.js"></script>
-    <script src="actionbar.js"></script>
-    <script src="game.js"></script>
+    <section id="shop-dialog" hidden role="dialog" aria-modal="true" aria-labelledby="shop-title">
+      <div class="shop-panel">
+        <header><h2 id="shop-title">Shop</h2><button type="button" id="close-shop" aria-label="Close shop">Close</button></header>
+        <p id="shop-gold"></p>
+        <div id="shop-stock"></div>
+        <p id="shop-status" role="status"></p>
+      </div>
+    </section>
+    <script type="module" src="game.js"></script>
   </body>
 </html>
