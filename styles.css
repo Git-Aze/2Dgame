@@ -129,7 +129,7 @@ body {
   line-height: 1.6;
 }
 
-#start-game-button {
+.game-overlay-panel button {
   padding: 12px 28px;
   margin-top: 12px;
   border: 1px solid #d8bd7a;
@@ -140,11 +140,11 @@ body {
   cursor: pointer;
 }
 
-#start-game-button:hover {
+.game-overlay-panel button:hover {
   background: #76603c;
 }
 
-#start-game-button:focus-visible {
+.game-overlay-panel button:focus-visible {
   outline: 2px solid #f0d58c;
   outline-offset: 4px;
 }
@@ -1159,4 +1159,27 @@ body {
 
   text-shadow: 1px 1px 2px black;
   pointer-events: none;
+}
+#pause-menu {
+  position: fixed;
+  inset: 0;
+  z-index: 1100;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  overflow-y: auto;
+  background: rgba(10, 17, 15, 0.82);
+}
+
+#pause-menu[hidden] { display: none; }
+#pause-menu-title { color: #f0d58c; }
+.pause-menu-actions { display: grid; gap: 8px; }
+.pause-menu-actions button { width: 100%; margin-top: 0; }
+.pause-menu-actions button:disabled { opacity: 0.45; cursor: default; }
+#menu-load-options { padding: 8px; border: 1px solid #9b8154; }
+#menu-load-options button + button { margin-top: 8px; }
+
+#save-status,
+#save-overlay-status {
+  font-size: 14px;
 }

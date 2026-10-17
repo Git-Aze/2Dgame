@@ -12,6 +12,8 @@ import { resetQuests } from "./quests/quest-system.js";
 import { setupQuestUI } from "./ui/quest-ui.js";
 import { render } from "./rendering/renderer.js";
 import { setupScreens } from "./ui/screens.js";
+import { setupSaveUI } from "./ui/save-ui.js";
+import { setupPauseMenu } from "./ui/pause-menu-ui.js";
 import { setupShopUI } from "./ui/shop-ui.js";
 import { setupShops } from "./shops/shops.js";
 import { setupSpellBook } from "./ui/spellbook.js";
@@ -31,6 +33,8 @@ function initializeGame() {
   setupShops();
   setupLifecycle();
   setupScreens();
+  setupPauseMenu();
+  setupSaveUI();
   setupActionBar();
   setupSpellBook();
   setupInput();

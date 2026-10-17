@@ -28,9 +28,14 @@ Subscriptions are installed during startup, never on each restart. Notifications
 | `shop:requested` | A nearby building interaction requests its shop |
 | `shop:opened`, `shop:closed` | Update the modal, focus, and background interaction |
 | `shop:changed` | Refresh stock, affordability, inventory capacity, and gold |
+| `menu:changed` | Pause modal visibility, keyboard focus, background interaction, and save availability |
 
 Resource bars also update during active simulation. Live character-sheet updates only change displayed resources and preserve inventory controls. Opening the shop pauses simulation using `isPlaying()`; closing it clears held keys and frame timing.
 
+`src/core/pause-menu.js` owns pause transitions through `runtime.menuOpen`. `isPlaying()` gates simulation and gameplay actions while the menu is open, preserving casts and transient effects. Menu transitions clear held input and frame timing. `src/ui/pause-menu-ui.js` owns the dialog, focus trap, and restart controls; save controls remain in `save-ui.js`. Loading or changing session state closes the menu. Escape from a shop closes the shop and opens the pause menu.
+
 ## Verification
+
+Persistence lives in `src/persistence/saves.js`, with controls in `src/ui/save-ui.js`. Version 1 snapshots whitelist persistent fields and stable IDs; validation completes before loading mutates shared objects. Loading reuses `resetAdventure()` to clear transient state, restores progress in place, recalculates derived stats, and emits normal UI events. The starting spawn is checked before applying a save. No save/load listeners are registered during loading. `localStorage` holds a current snapshot and previous valid backup; export/import works independently of browser storage. Unsupported versions are rejected until explicit migrations exist. `tests/save-checks.js` checks validation, storage recovery, round trips, quest rewards, and actual controls without leaving test saves behind.
 
 Run `serve.ps1` and open `/tests/smoke.html`. The checks import public module APIs and operate inside an isolated iframe. They do not add debug globals or change the normal game entry point. A restart resets adventure data without registering duplicate handlers.

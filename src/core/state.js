@@ -78,10 +78,10 @@ const initialActionBar = [...actionBarSpells];
 const runtime = {
   cameraX: 0, cameraY: 0, viewWidth: 0, viewHeight: 0,
   gameState: "start", lastTime: 0, nextEnemyInstanceId: 1,
-  selectedEnemy: null, activeShop: null, activeCharge: null,
+  selectedEnemy: null, activeShop: null, activeCharge: null, menuOpen: false,
 };
 function isPlaying() {
-  return runtime.gameState === "playing" && player.hp > 0 && !runtime.activeShop;
+  return runtime.gameState === "playing" && player.hp > 0 && !runtime.activeShop && !runtime.menuOpen;
 }
 
 export { player, keys, inventory, INVENTORY_SIZE, enemies, fireballs, activeIgnites, swordSwings, spellCooldowns, questProgress, ACTION_BAR_SIZE, actionBarSpells, initialPlayerState, initialActionBar, runtime, isPlaying };

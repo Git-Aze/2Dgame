@@ -1,6 +1,6 @@
 # Project improvement tasks
 
-Goal: deliver a complete, reliable five-minute experience using the existing village and enemies before expanding content.
+Goal: Build TopDownSoloRPG into a polished single-player, 2D top-down action RPG where players explore connected areas, complete quests, fight varied enemies and bosses, collect loot, trade with merchants, and develop their character through equipment, abilities, and meaningful stat choices. Support a complete adventure with clear onboarding, responsive controls, helpful feedback, adjustable settings, and saved progress, backed by a maintainable codebase and reliable performance.
 
 ## 1. Stabilize gameplay — highest priority
 
@@ -58,12 +58,12 @@ Completion target: a new player can explore, fight, level up, and see character 
 
 ### Focused verification
 
-- [ ] 3.10 Verify equipping, swapping, and unequipping items, including a full inventory.
+- [x] 3.10 Verify equipping, swapping, and unequipping items, including a full inventory. Browser checks cover every equipment slot, UI labels, stat changes, health clamping, item conservation, duplicate copies, full-backpack swaps, and blocked unequipping.
 - [x] 3.11 Verify enemy kills award XP exactly once for both direct damage and damage over time.
 - [x] 3.12 Verify kill quest progress, one-time rewards, simultaneous damage and quest reset on restart.
-- [ ] 3.13 Verify XP overflow and multiple level-ups from one reward.
+- [x] 3.13 Verify XP overflow and multiple level-ups from one reward. Browser checks cover exact thresholds, carried XP, rounded level costs, five attribute points per level, HUD/sheet updates, invalid rewards, and restart resets.
 - [x] 3.14 Verify dead players cannot move or cast and can restart correctly with Space or the restart button.
-- [ ] 3.15 Verify player and enemy collision against obstacles and world boundaries.
+- [x] 3.15 Verify player and enemy collision against obstacles and world boundaries. Browser checks cover real map regions, trunks, buildings, bridges/dock, all four boundaries, fast movement from four directions, sliding, blocked tiles, enemy wander/chase/return, and safe spawns/respawns.
 - [x] 3.16 Verify HUD placement at device pixel ratios 1 and 2.
 
 Completion target: new spells and enemies can be added without duplicating core gameplay logic.
@@ -87,8 +87,8 @@ Completion target: predictable frame times on intended devices, supported by mea
 
 - [x] 5.01 Validate dropped spell IDs, source slot bounds, and source spell assignments before changing the action bar.
 
-- [ ] 5.02 Add versioned saves for player progression, equipment, inventory, and action-bar assignments.
-- [ ] 5.03 Handle missing, invalid, and older save data safely.
+- [x] 5.02 Add versioned manual browser saves for progression, resources, inventory, equipment, quests, and action-bar assignments; Continue, JSON export/import, and safe-spawn loading with fresh enemies.
+- [x] 5.03 Validate saves before applying them; safely handle missing/corrupt data, storage errors, and unsupported versions. Retain the previous valid save as a recovery backup; test round trips, UI controls, and reward preservation. Add explicit migrations when a newer format is introduced.
 - [ ] 5.04 Make the inventory grid adapt to narrow viewports.
 - [ ] 5.05 Limit character-sheet height to the viewport and allow scrolling.
 - [ ] 5.06 Show visible controls for opening the character sheet (C) and spell book (K).
@@ -193,6 +193,7 @@ Completion target: defeated enemies can drop loot that the player can identify a
 - [ ] 16.04 Add visual-effect preferences for flashes, screen shake, and floating combat text where implemented.
 - [ ] 16.05 Persist settings independently of adventure progress and update control hints to reflect bindings.
 - [ ] 16.06 Verify menus and text entry do not trigger gameplay actions.
+- [x] 16.07 Add an Escape pause menu with Continue, Save, Export, Load (browser/file), Restart, and a Settings placeholder; move save/export controls out of the HUD and verify paused simulation, focus, loading, and restart.
 
 ## 17. Minimap
 

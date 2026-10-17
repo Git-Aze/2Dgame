@@ -19,7 +19,7 @@ function setupScreens() {
     document.getElementById("game-overlay-description").textContent = dead
       ? "Press Space to restart. Your adventure will begin again from the start."
       : "Explore Greenfield Village, equip your gear, and battle the creatures nearby.";
-    button.textContent = dead ? "Restart game" : "Start game";
+    button.textContent = dead ? "Restart game" : "New game";
     document.getElementById("game-overlay-hint").textContent = dead ? "Press Space to restart" : "Press Space to start";
     button.focus();
   });

@@ -255,11 +255,36 @@
         <p class="game-overlay-eyebrow">A top-down adventure</p>
         <h1 id="game-overlay-title">TopDownSoloRPG</h1>
         <p id="game-overlay-description">Explore Greenfield Village, equip your gear, and battle the creatures nearby.</p>
-        <button type="button" id="start-game-button">Start game</button>
+        <button type="button" id="start-game-button">New game</button>
+        <button type="button" id="continue-game-button" hidden>Continue</button>
+        <button type="button" id="import-save-button">Import save</button>
+        <input type="file" id="import-save-file" accept=".json,application/json" aria-label="Import saved adventure" hidden />
+        <p id="save-overlay-status" role="status"></p>
+        <p class="game-overlay-controls">Starting or restarting begins a fresh adventure. Your browser save is kept until you press Save again.</p>
         <p id="game-overlay-hint">Press Space to start</p>
         <p class="game-overlay-controls">Move: WASD / arrows · Character: C · Spells: K<br />Click an enemy to target · Cast: 1–0</p>
       </div>
     </section>
+    <section id="pause-menu" hidden role="dialog" aria-modal="true" aria-labelledby="pause-menu-title">
+      <div class="game-overlay-panel">
+        <h2 id="pause-menu-title">Game paused</h2>
+        <div class="pause-menu-actions">
+          <button type="button" id="menu-continue-button">Continue</button>
+          <button type="button" id="save-game-button">Save</button>
+          <button type="button" id="export-save-button">Export</button>
+          <button type="button" id="menu-load-button" aria-expanded="false" aria-controls="menu-load-options">Load</button>
+          <div id="menu-load-options" hidden>
+            <button type="button" id="menu-load-save-button">Load browser save</button>
+            <button type="button" id="menu-import-button">Import save file</button>
+          </div>
+          <button type="button" id="menu-restart-button">Restart</button>
+          <button type="button" id="menu-settings-button" disabled>Settings</button>
+        </div>
+        <p id="save-status" role="status"></p>
+        <p class="game-overlay-controls">Escape to continue. Restart begins a fresh adventure and keeps your browser save.</p>
+      </div>
+    </section>
+
     <section id="shop-dialog" hidden role="dialog" aria-modal="true" aria-labelledby="shop-title">
       <div class="shop-panel">
         <header><h2 id="shop-title">Shop</h2><button type="button" id="close-shop" aria-label="Close shop">Close</button></header>

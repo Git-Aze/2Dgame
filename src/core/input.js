@@ -5,8 +5,8 @@ import { toggleCharacterSheet } from "../ui/character-ui.js";
 import { startGame } from "./lifecycle.js";
 import { closeShop } from "../shops/shops.js";
 import { toggleSpellBook } from "../ui/spellbook.js";
-import { cancelCasting } from "../combat/spells.js";
-import { isPlaying, keys, player, runtime } from "./state.js";
+import { setMenuOpen } from "./pause-menu.js";
+import { isPlaying, keys, runtime } from "./state.js";
 import { targetEnemyAtScreenPosition } from "../combat/targeting.js";
 
 function setupInput() {
@@ -19,6 +19,17 @@ function setupInput() {
 
   window.addEventListener("keydown", (event) => {
     const key = event.key.toLowerCase();
+    // Let focused controls handle Space themselves (including Continue/import).
+    if (key === " " && event.target?.tagName === "BUTTON" && event.target.id !== "start-game-button") return;
+    if (key === "escape" && runtime.gameState === "playing") {
+      event.preventDefault();
+      if (!event.repeat) {
+        if (runtime.activeShop) closeShop();
+        setMenuOpen(!runtime.menuOpen);
+      }
+      return;
+    }
+    if (runtime.menuOpen) return;
     if (runtime.activeShop) {
       if (key === "e" || key === "escape") {
         event.preventDefault();
@@ -43,7 +54,6 @@ function setupInput() {
       const building = buildings.find((candidate) => candidate.shop && buildingIsNearby(candidate));
       if (building) interactWithBuilding(building);
     }
-    if (key === "escape" && player.casting) cancelCasting("cancelled.");
 
     if (["w", "a", "s", "d", "arrowup", "arrowdown", "arrowleft", "arrowright", " "].includes(key)) {
       event.preventDefault();
