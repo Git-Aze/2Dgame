@@ -3,31 +3,46 @@ const ctx = canvas.getContext("2d");
 
 let cameraX = 0;
 let cameraY = 0;
+let viewWidth = 0;
+let viewHeight = 0;
 
 function resizeCanvas() {
   const dpr = Math.min(window.devicePixelRatio || 1, 2);
+  const bounds = canvas.getBoundingClientRect();
+  viewWidth = bounds.width;
+  viewHeight = bounds.height;
 
-  canvas.width = Math.round(window.innerWidth * dpr);
-  canvas.height = Math.round(window.innerHeight * dpr);
+  canvas.width = Math.round(viewWidth * dpr);
+  canvas.height = Math.round(viewHeight * dpr);
 
   // Draw using CSS pixel coordinates.
-  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  ctx.setTransform(canvas.width / viewWidth, 0, 0, canvas.height / viewHeight, 0, 0);
   ctx.imageSmoothingEnabled = false;
 }
 
 window.addEventListener("resize", resizeCanvas);
 resizeCanvas();
 
-const TILE = 32;
-const WORLD_W = 72;
-const WORLD_H = 48;
+const TILE = WORLD_DATA.tileSize;
+const WORLD_W = WORLD_DATA.width;
+const WORLD_H = WORLD_DATA.height;
 
 const WORLD_PIXEL_W = WORLD_W * TILE;
 const WORLD_PIXEL_H = WORLD_H * TILE;
 
-// The ground is one image, while houses remain separate objects.
+// The ground is one image; actors and trees are drawn separately.
 const groundMapImage = new Image();
-groundMapImage.src = "ground_map.png";
+groundMapImage.src = WORLD_DATA.background;
+
+const treeImage = new Image();
+treeImage.src = WORLD_DATA.tree.image;
+
+// Tile coordinates mark the center of each trunk's ground footprint.
+// Keep paths and the starting area open.
+const trees = WORLD_DATA.trees.map(([tileX, tileY]) => ({
+  ...WORLD_DATA.tree,
+  ...worldPosition({ tileX, tileY, offsetX: TILE / 2, offsetY: TILE / 2 }),
+}));
 
 
 // --------------------------------------------------
@@ -35,8 +50,7 @@ groundMapImage.src = "ground_map.png";
 // --------------------------------------------------
 
 const player = {
-  x: 33 * TILE + 4,
-  y: 23 * TILE + 2,
+  ...worldPosition(WORLD_DATA.playerSpawn),
   w: 24,
   h: 28,
   speed: 145,
@@ -74,23 +88,74 @@ const player = {
 };
 
 const keys = Object.create(null);
+const initialPlayerState = structuredClone(player);
+const initialActionBar = [...actionBarSpells];
+let gameState = "start";
 const blocked = new Set();
-const npcs = [];
-
-const house = { x: 19, y: 5, w: 5, h: 5 };
-// Building positions use ground-level footprints; their roofs extend northward.
-const villageBuildings = [
-  { ...house, kind: "hall", sign: "Elder Hall", roof: "#754b48" },
-  { x: 7, y: 4, w: 5, h: 4, kind: "tavern", sign: "Tavern", roof: "#5b4549" },
-  { x: 26, y: 5, w: 5, h: 4, kind: "smith", sign: "Smithy", roof: "#51565c" },
-  { x: 6, y: 16, w: 5, h: 4, kind: "shop", sign: "General Store", roof: "#695744" },
-  { x: 20, y: 17, w: 4, h: 4, kind: "home", sign: "", roof: "#765247" },
-];
-const clearing = { x: 29 * TILE, y: 12 * TILE };
-
-let questStarted = false;
-let questComplete = false;
 let lastTime = 0;
+
+function isPlaying() {
+  return gameState === "playing" && player.hp > 0;
+}
+
+function setGameState(state) {
+  gameState = state;
+  for (const key in keys) keys[key] = false;
+  lastTime = 0;
+  const overlay = document.getElementById("game-overlay");
+  const playing = state === "playing";
+  overlay.hidden = playing;
+  document.getElementById("game-container").inert = !playing;
+
+  if (playing) {
+    document.getElementById("start-game-button").blur();
+    return;
+  }
+
+  player.moving = false;
+  player.casting = false;
+  player.castTime = 0;
+  player.castTarget = null;
+  player.frame = 0;
+  selectedEnemy = null;
+  document.getElementById("character-sheet").classList.add("hidden");
+  document.getElementById("spell-book").classList.add("hidden");
+  const dead = state === "dead";
+  document.getElementById("game-overlay-title").textContent = dead ? "You died" : WORLD_DATA.name;
+  document.getElementById("game-overlay-description").textContent = dead
+    ? "Press Space to restart. Your adventure will begin again from the start."
+    : "Explore Greenfield Village, equip your gear, and battle the creatures nearby.";
+  document.getElementById("start-game-button").textContent = dead ? "Restart game" : "Start game";
+  document.getElementById("game-overlay-hint").textContent = dead
+    ? "Press Space to restart" : "Press Space to start";
+  document.getElementById("start-game-button").focus();
+}
+
+function startGame() {
+  if (gameState === "playing") return;
+  if (gameState === "dead") {
+    Object.assign(player, structuredClone(initialPlayerState));
+    selectedEnemy = null;
+    fireballs.length = 0;
+    activeIgnites.length = 0;
+    enemies.length = 0;
+    nextEnemyInstanceId = 1;
+    spawnStartingEnemies();
+    inventory.items.length = 0;
+    for (const slot of Object.keys(inventory.equipment)) inventory.equipment[slot] = null;
+    actionBarSpells.splice(0, actionBarSpells.length, ...initialActionBar);
+    messageHistory.length = 0;
+    document.getElementById("message-log-entries").replaceChildren();
+    giveStartingItems();
+    updateCharacterSheet();
+    updateCharacterFrame();
+    updateXPBar();
+    renderActionBar();
+    resetQuests();
+  }
+  setGameState("playing");
+  acceptQuest("firstSteps");
+}
 function tileKey(x, y) {
   return `${x},${y}`;
 }
@@ -107,40 +172,20 @@ function isBlocked(x, y) {
 // WORLD GENERATION
 // --------------------------------------------------
 
-for (let x = 0; x < WORLD_W; x++) {
-  blockTile(x, 0);
-  blockTile(x, WORLD_H - 1);
-}
-
-for (let y = 0; y < WORLD_H; y++) {
-  blockTile(0, y);
-  blockTile(WORLD_W - 1, y);
-}
-
-// Building footprints and a clear path around every entrance.
-for (const building of villageBuildings) {
-  for (let x = building.x; x < building.x + building.w; x++) {
-    for (let y = building.y; y < building.y + building.h; y++) {
-      blockTile(x, y);
-    }
+for (let edge = 0; edge < WORLD_DATA.collision.boundaryTiles; edge++) {
+  for (let x = 0; x < WORLD_W; x++) {
+    blockTile(x, edge);
+    blockTile(x, WORLD_H - 1 - edge);
   }
-  const doorX = building.x + Math.floor(building.w / 2);
-  for (let y = building.y + building.h; y <= building.y + building.h + 1; y++) {
-    blocked.delete(tileKey(doorX, y));
+  for (let y = 0; y < WORLD_H; y++) {
+    blockTile(edge, y);
+    blockTile(WORLD_W - 1 - edge, y);
   }
 }
-// Background-image cliffs and waterways will need hand-authored collision
-// polygons later; only world boundaries and buildings currently block movement.
 
-// Elder Rowan.
-npcs.push({
-  x: 34 * TILE + 4,
-  y: 25 * TILE,
-  name: "Elder Rowan",
-  facing: "down",
-  animTime: 0,
-  frame: 0,
-});
+// Background water, cliffs and painted tree trunks are defined in world.js.
+
+document.getElementById("location").textContent = WORLD_DATA.name;
 
 // --------------------------------------------------
 // PIXEL ART SPRITE GENERATOR
@@ -171,26 +216,15 @@ function pixel(s, x, y, color, w = 1, h = 1) {
 // Frames are generated for each direction and
 // two walking steps, with a separate idle frame.
 
-function makeCharacterSprites(kind) {
-  const isPlayer = kind === "player";
-
-  const palette = isPlayer
-    ? {
-        hair: "#493025",
-        skin: "#efbd91",
-        shirt: "#397bd1",
-        shirtShade: "#2455a0",
-        pants: "#343a60",
-        boots: "#593d2c",
-      }
-    : {
-        hair: "#ded4b5",
-        skin: "#e8b992",
-        shirt: "#719b55",
-        shirtShade: "#466b3c",
-        pants: "#66513b",
-        boots: "#493a2e",
-      };
+function makeCharacterSprites() {
+  const palette = {
+    hair: "#493025",
+    skin: "#efbd91",
+    shirt: "#397bd1",
+    shirtShade: "#2455a0",
+    pants: "#343a60",
+    boots: "#593d2c",
+  };
 
   const directions = ["down", "up", "left", "right"];
   const result = {};
@@ -247,7 +281,7 @@ function makeCharacterSprites(kind) {
           }
 
           // Tiny clothing highlight.
-          pixel(s, 7, 8, isPlayer ? "#76b7f2" : "#a5c879", 2, 2);
+          pixel(s, 7, 8, "#76b7f2", 2, 2);
         }),
       );
     }
@@ -256,8 +290,7 @@ function makeCharacterSprites(kind) {
   return result;
 }
 
-const playerSprites = makeCharacterSprites("player");
-const elderSprites = makeCharacterSprites("elder");
+const playerSprites = makeCharacterSprites();
 
 
 // Detailed character image. Save player-sprites.png next to game.js.
@@ -344,8 +377,6 @@ function showMessage(message) {
 
   if (/damage|fireball|slime|defeated|attack/i.test(message)) {
     entry.classList.add("combat");
-  } else if (/quest|elder|reward|completed/i.test(message)) {
-    entry.classList.add("quest");
   }
 
   messageHistory.push(entry);
@@ -365,13 +396,20 @@ function showMessage(message) {
   log.scrollTop = log.scrollHeight;
 }
 
-function collides(x, y) {
-  const margin = 3;
+function collides(x, y, entity = player) {
+  const margin = WORLD_DATA.collision.entityMargin;
+
+  if (x + margin < 0 || y + margin < 0 ||
+      x + entity.w - margin > WORLD_PIXEL_W ||
+      y + entity.h - margin > WORLD_PIXEL_H) return true;
+
+  if (collidesWithMap(x + margin, y + margin,
+      x + entity.w - margin, y + entity.h - margin)) return true;
 
   const left = Math.floor((x + margin) / TILE);
-  const right = Math.floor((x + player.w - margin) / TILE);
+  const right = Math.floor((x + entity.w - margin) / TILE);
   const top = Math.floor((y + margin) / TILE);
-  const bottom = Math.floor((y + player.h - margin) / TILE);
+  const bottom = Math.floor((y + entity.h - margin) / TILE);
 
   for (let ty = top; ty <= bottom; ty++) {
     for (let tx = left; tx <= right; tx++) {
@@ -379,27 +417,28 @@ function collides(x, y) {
     }
   }
 
-  // The house also blocks the player.
-  if (
-    x + player.w > house.x * TILE &&
-    x < (house.x + house.w) * TILE &&
-    y + player.h > house.y * TILE &&
-    y < (house.y + house.h) * TILE
-  ) {
-    return true;
-  }
+  return trees.some((tree) =>
+    x + entity.w - margin > tree.x - tree.trunkWidth / 2 &&
+    x + margin < tree.x + tree.trunkWidth / 2 &&
+    y + entity.h - margin > tree.y - tree.trunkHeight / 2 &&
+    y + margin < tree.y + tree.trunkHeight / 2
+  );
+}
 
-  return false;
+function moveEntity(entity, dx, dy) {
+  // Small steps prevent fast movement from skipping thin shorelines or trunks.
+  const steps = Math.max(1, Math.ceil(Math.max(Math.abs(dx), Math.abs(dy)) / (TILE / 4)));
+  const stepX = dx / steps;
+  const stepY = dy / steps;
+  for (let step = 0; step < steps; step++) {
+    if (!collides(entity.x + stepX, entity.y, entity)) entity.x += stepX;
+    if (!collides(entity.x, entity.y + stepY, entity)) entity.y += stepY;
+  }
 }
 
 function movePlayer(dx, dy) {
-  if (!collides(player.x + dx, player.y)) {
-    player.x += dx;
-  }
-
-  if (!collides(player.x, player.y + dy)) {
-    player.y += dy;
-  }
+  if (!isPlaying()) return;
+  moveEntity(player, dx, dy);
 }
 
 function getPlayerStats() {
@@ -462,6 +501,7 @@ function gainXP(amount) {
 
 
 function toggleCharacterSheet() {
+  if (!isPlaying()) return;
   const sheet = document.getElementById("character-sheet");
 
   if (!sheet) return;
@@ -513,6 +553,7 @@ const SPENDABLE_ATTRIBUTES = [
 ];
 
 function spendAttributePoint(attribute) {
+  if (!isPlaying()) return;
   // Validate the attribute.
   if (!SPENDABLE_ATTRIBUTES.includes(attribute)) return;
 
@@ -563,17 +604,26 @@ function updateCharacterSheet() {
 }
 
 canvas.addEventListener("click", (event) => {
+  if (!isPlaying()) return;
   targetEnemyAtScreenPosition(event.clientX, event.clientY);
 });
 
 
 
 // --------------------------------------------------
-// INPUT AND NPC INTERACTION
+// INPUT
 // --------------------------------------------------
 
 window.addEventListener("keydown", (event) => {
   const key = event.key.toLowerCase();
+
+  if (!isPlaying()) {
+    if (key === " " && !event.ctrlKey && !event.altKey && !event.metaKey) {
+      event.preventDefault();
+      if (!event.repeat) startGame();
+    }
+    return;
+  }
 
   if (key === "c" && !event.repeat) {
     toggleCharacterSheet();
@@ -596,10 +646,6 @@ window.addEventListener("keydown", (event) => {
   }
 
   keys[key] = true;
-
-  if (key === "e" && !event.repeat) {
-    interact();
-  }
 });
 
 
@@ -612,98 +658,9 @@ window.addEventListener("blur", () => {
   for (const key in keys) keys[key] = false;
 });
 
-function nearbyNPC() {
-  const px = player.x + player.w / 2;
-  const py = player.y + player.h / 2;
-
-  return npcs.find((npc) => {
-    const nx = npc.x + 16;
-    const ny = npc.y + 16;
-    return Math.hypot(px - nx, py - ny) < 54;
-  });
-}
-
-function interact() {
-  const npc = nearbyNPC();
-
-  if (!npc) {
-    showMessage("There is nobody nearby to talk to.");
-    return;
-  }
-
-  if (!questStarted) {
-    questStarted = true;
-    showMessage("Elder Rowan: Welcome! Find the golden clearing to the east.");
-  } else if (!questComplete) {
-    showMessage(
-      "Elder Rowan: Follow the path east to find the golden clearing.",
-    );
-  } else {
-    showMessage("Elder Rowan: You found it! Thank you, traveler.");
-  }
-}
-
 // --------------------------------------------------
 // WORLD RENDERING
 // --------------------------------------------------
-
-// Three-quarter-view scenery: the Y position of an object's feet controls overlap.
-function drawVillageBuilding(b) {
-  const x = b.x * TILE, y = b.y * TILE;
-  const w = b.w * TILE, h = b.h * TILE;
-  const front = y + h;
-  const roofTop = y - 58;
-  ctx.fillStyle = "rgba(10,16,12,.34)";
-  ctx.fillRect(x - 10, front - 8, w + 22, 16);
-  // Stone foundation and side wall.
-  ctx.fillStyle = "#403e39";
-  ctx.fillRect(x - 4, y + 26, w + 8, h - 18);
-  ctx.fillStyle = "#9c917b";
-  ctx.fillRect(x + 3, y + 28, w - 6, h - 30);
-  ctx.fillStyle = "#6b6258";
-  ctx.fillRect(x + w - 19, y + 28, 16, h - 30);
-  // Timber supports and horizontal beams.
-  ctx.fillStyle = "#4e3b31";
-  for (let xx = x + 6; xx < x + w; xx += 32) ctx.fillRect(xx, y + 32, 5, h - 35);
-  ctx.fillRect(x + 2, y + 54, w - 4, 6);
-  ctx.fillRect(x + 2, front - 12, w - 4, 6);
-  // Sloping roof in 3/4 perspective.
-  ctx.fillStyle = "#292c2e";
-  ctx.beginPath();
-  ctx.moveTo(x - 17, y + 32); ctx.lineTo(x + 20, roofTop);
-  ctx.lineTo(x + w - 18, roofTop); ctx.lineTo(x + w + 18, y + 32);
-  ctx.closePath(); ctx.fill();
-  ctx.fillStyle = b.roof;
-  ctx.beginPath();
-  ctx.moveTo(x - 11, y + 28); ctx.lineTo(x + 23, roofTop + 6);
-  ctx.lineTo(x + w - 21, roofTop + 6); ctx.lineTo(x + w + 10, y + 28);
-  ctx.closePath(); ctx.fill();
-  ctx.strokeStyle = "rgba(26,21,20,.28)";
-  ctx.lineWidth = 3;
-  for (let yy = roofTop + 19; yy < y + 27; yy += 12) {
-    ctx.beginPath(); ctx.moveTo(x + 15 - (yy - roofTop) * .27, yy);
-    ctx.lineTo(x + w - 13 + (yy - roofTop) * .27, yy); ctx.stroke();
-  }
-  // Door and lit windows on the south wall.
-  const doorX = x + Math.floor(w / 2) - 13;
-  ctx.fillStyle = "#332820"; ctx.fillRect(doorX - 3, front - 53, 32, 49);
-  ctx.fillStyle = "#77543b"; ctx.fillRect(doorX + 1, front - 48, 24, 44);
-  ctx.fillStyle = "#dfb96b"; ctx.fillRect(doorX + 20, front - 25, 3, 3);
-  for (const wx of [x + 22, x + w - 41]) {
-    if (Math.abs(wx - doorX) < 34) continue;
-    ctx.fillStyle = "#44382d"; ctx.fillRect(wx - 3, front - 65, 27, 28);
-    ctx.fillStyle = "#c4a66b"; ctx.fillRect(wx + 1, front - 61, 19, 20);
-    ctx.fillStyle = "#5b4a35"; ctx.fillRect(wx + 9, front - 61, 3, 20);
-  }
-  if (b.sign) {
-    ctx.fillStyle = "#3d2b21";
-    ctx.fillRect(x + 8, front - 33, 48, 16);
-    ctx.fillStyle = "#e7cf9e";
-    ctx.font = "bold 9px Arial";
-    ctx.textAlign = "center";
-    ctx.fillText(b.sign, x + 32, front - 22);
-  }
-}
 
 function drawWorld() {
   // Draw the complete background image in world coordinates.
@@ -716,15 +673,15 @@ function drawWorld() {
   }
 
   const layers = [];
-  for (const b of villageBuildings) {
-    layers.push({ depth: (b.y + b.h) * TILE - 8, draw() { drawVillageBuilding(b); }});
-  }
-  for (const npc of npcs) {
-    layers.push({ depth: npc.y + 28, draw() {
-      drawSprite(elderSprites[npc.facing][npc.frame], npc.x, npc.y, 2);
-      ctx.fillStyle = "#fff"; ctx.font = "12px Arial";
-      ctx.textAlign = "center"; ctx.fillText(npc.name, npc.x + 16, npc.y - 7);
-    }});
+  if (treeImage.complete && treeImage.naturalWidth) {
+    for (const tree of trees) {
+      layers.push({ depth: tree.y, draw() {
+        ctx.drawImage(treeImage,
+          Math.round(tree.x - tree.width / 2),
+          Math.round(tree.y - tree.height + tree.trunkHeight / 2),
+          tree.width, tree.height);
+      }});
+    }
   }
   layers.push({ depth: player.y + player.h, draw() {
     const castFrame = Math.min(3, Math.floor(player.castTime / CAST_FRAME_DURATION));
@@ -734,13 +691,18 @@ function drawWorld() {
       drawSprite(playerSprites[player.facing][player.frame], player.x - 4, player.y - 2, 2);
     }
   }});
+  for (const enemy of enemies) {
+    if (enemy.alive) {
+      layers.push({ depth: enemy.y + enemy.h, draw() { drawEnemy(enemy); }});
+    }
+  }
   layers.sort((a,b) => a.depth - b.depth);
   for (const layer of layers) layer.draw();
-  drawEnemies();
 }
 
 // Calculate damage.
 function damagePlayer(baseDamage) {
+  if (!isPlaying()) return 0;
   const stats = getPlayerStats();
 
   const armor = stats.armor;
@@ -752,6 +714,11 @@ function damagePlayer(baseDamage) {
   player.hp = Math.max(0, player.hp - finalDamage);
 
   showMessage(`You take ${finalDamage} damage. (${armor} armor)`);
+
+  if (player.hp <= 0) {
+    setGameState("dead");
+    updateCharacterFrame();
+  }
 
   return finalDamage;
 }
@@ -792,22 +759,11 @@ function drawUI() {
 
   // Health panel.
   ctx.fillStyle = "rgba(20, 25, 28, 0.85)";
-  ctx.fillRect(canvas.width - 155, 12, 143, 35);
+  ctx.fillRect(viewWidth - 155, 12, 143, 35);
 
   ctx.fillStyle = "#ff7777";
   ctx.font = "14px Arial";
-  ctx.fillText(`♥ HP: ${player.hp} / ${player.maxHp}`, canvas.width - 144, 34);
-
-  // Interaction prompt.
-  if (nearbyNPC()) {
-    ctx.fillStyle = "rgba(20, 25, 28, 0.9)";
-    ctx.fillRect(canvas.width / 2 - 50, canvas.height - 76, 100, 32);
-
-    ctx.fillStyle = "#ffffff";
-    ctx.font = "bold 14px Arial";
-    ctx.textAlign = "center";
-    ctx.fillText("E  Talk", canvas.width / 2, canvas.height - 55);
-  }
+  ctx.fillText(`♥ HP: ${player.hp} / ${player.maxHp}`, viewWidth - 144, 34);
 
 }
 
@@ -917,6 +873,7 @@ function updateCharacterFrame() {
 // --------------------------------------------------
 
 function update(dt) {
+  if (!isPlaying()) return;
   updateCasting(dt);
   let dx = 0;
   let dy = 0;
@@ -957,47 +914,9 @@ function update(dt) {
     player.animTime = 0;
   }
 
-  // Animate NPCs gently while they idle.
-  for (const npc of npcs) {
-    npc.animTime += dt;
-
-    if (npc.animTime >= 0.65) {
-      npc.animTime = 0;
-      npc.frame = npc.frame === 0 ? 1 : 0;
-    }
-  }
-
-  // Quest completion.
-  const px = player.x + player.w / 2;
-  const py = player.y + player.h / 2;
-
-  if (
-    questStarted &&
-    !questComplete &&
-    Math.hypot(px - (clearing.x + 16), py - (clearing.y + 16)) < 46
-  ) {
-    questComplete = true;
-    showMessage("Quest complete! Return to Elder Rowan.");
-  }
-  const questTitle = document.getElementById("quest-title");
-  const questDescription = document.getElementById("quest-description");
-
-  if (questTitle && questDescription) {
-    if (questComplete) {
-      questTitle.textContent = "Quest Complete!";
-      questDescription.textContent =
-        "Return to Elder Rowan to report your discovery.";
-    } else if (questStarted) {
-      questTitle.textContent = "The Golden Clearing";
-      questDescription.textContent =
-        "Travel east and find the golden clearing.";
-    } else {
-      questTitle.textContent = "A New Adventure";
-      questDescription.textContent = "Talk to Elder Rowan to begin your quest.";
-    }
-  }
-
   updateEnemies(dt);
+  // A lethal enemy attack must stop combat and regeneration this frame.
+  if (!isPlaying()) return;
   updateEnemyRespawns(dt);
   updateCombat(dt);
   updateManaRegeneration(dt);
@@ -1013,20 +932,20 @@ function render() {
   cameraX = Math.max(
     0,
     Math.min(
-      player.x + player.w / 2 - window.innerWidth / 2,
-      WORLD_PIXEL_W - window.innerWidth,
+      player.x + player.w / 2 - viewWidth / 2,
+      WORLD_PIXEL_W - viewWidth,
     ),
   );
 
   cameraY = Math.max(
     0,
     Math.min(
-      player.y + player.h / 2 - window.innerHeight / 2,
-      WORLD_PIXEL_H - window.innerHeight,
+      player.y + player.h / 2 - viewHeight / 2,
+      WORLD_PIXEL_H - viewHeight,
     ),
   );
 
-  ctx.clearRect(0, 0, window.innerWidth, window.innerHeight);
+  ctx.clearRect(0, 0, viewWidth, viewHeight);
   ctx.imageSmoothingEnabled = false;
 
   ctx.save();
@@ -1034,7 +953,7 @@ function render() {
 // Apply the camera transformation.
 ctx.translate(-Math.floor(cameraX), -Math.floor(cameraY));
 
-// Draw terrain, enemies, NPCs, and player.
+// Draw terrain, enemies, and player.
 drawWorld();
 
 // Draw Fireball projectiles.
@@ -1081,4 +1000,8 @@ setupEquipmentButtons();
 renderInventory();
 renderEquipment();
 updateXPBar();
+updateCharacterFrame();
+resetQuests();
+document.getElementById("start-game-button").addEventListener("click", startGame);
+setGameState("start");
 requestAnimationFrame(loop);

@@ -184,6 +184,30 @@ const enemies = [];
 
 let selectedEnemy = null;
 
+// All attacks use this path so a death awards XP and quest credit exactly once.
+function damageEnemy(enemy, damage, cause) {
+  if (!isPlaying() || !enemy || !enemy.alive ||
+      !Number.isFinite(damage) || damage <= 0) return 0;
+  const dealt = Math.min(enemy.hp, damage);
+  enemy.hp = Math.max(0, enemy.hp - damage);
+  if (enemy.hp <= 0) defeatEnemy(enemy, cause);
+  return dealt;
+}
+
+function defeatEnemy(enemy, cause) {
+  if (!isPlaying() || !enemy || !enemy.alive || enemy.hp > 0) return false;
+  enemy.hp = 0;
+  enemy.alive = false;
+  enemy.respawnTimer = enemy.respawnTime;
+  if (selectedEnemy === enemy) selectedEnemy = null;
+  if (player.castTarget === enemy) player.castTarget = null;
+  showMessage(cause === "ignite"
+    ? `${enemy.name} burned to death!` : `${enemy.name} was defeated!`);
+  gainXP(enemy.xpReward ?? 0);
+  recordQuestEvent({ type: "enemyDefeated", enemyTypeId: enemy.id });
+  return true;
+}
+
 // ==========================================
 // ENEMY DATABASE LOOKUP
 // ==========================================
@@ -266,16 +290,9 @@ function spawnEnemy(enemyId, tileX, tileY) {
 // ==========================================
 
 function spawnStartingEnemies() {
-  // Three green slimes.
-  spawnEnemy("00001", 30, 9);
-  spawnEnemy("00001", 32, 13);
-  spawnEnemy("00001", 28, 16);
-
-  // One red slime.
-  spawnEnemy("00002", 34, 12);
-
-  // One wolf.
-  spawnEnemy("00003", 38, 15);
+  for (const spawn of WORLD_DATA.enemySpawns) {
+    spawnEnemy(spawn.id, spawn.tileX, spawn.tileY);
+  }
 }
 
 // ==========================================
@@ -347,8 +364,10 @@ function drawSlime(enemy) {
 // ==========================================
 
 function targetEnemyAtScreenPosition(screenX, screenY) {
-  const worldX = screenX + cameraX;
-  const worldY = screenY + cameraY;
+  if (!isPlaying()) return;
+  const bounds = canvas.getBoundingClientRect();
+  const worldX = (screenX - bounds.left) * viewWidth / bounds.width + Math.floor(cameraX);
+  const worldY = (screenY - bounds.top) * viewHeight / bounds.height + Math.floor(cameraY);
 
   for (let i = enemies.length - 1; i >= 0; i--) {
     const enemy = enemies[i];
@@ -445,9 +464,8 @@ function updateEnemies(dt) {
           distanceToPlayer - enemy.attackRange,
         );
 
-        enemy.x += (dx / distanceToPlayer) * moveDistance;
-
-        enemy.y += (dy / distanceToPlayer) * moveDistance;
+        moveEntity(enemy, (dx / distanceToPlayer) * moveDistance,
+          (dy / distanceToPlayer) * moveDistance);
       }
 
       // Attack player when close enough.
@@ -462,6 +480,7 @@ function updateEnemies(dt) {
 
         if (player.hp <= 0) {
           showMessage("You have been defeated!");
+          return;
         }
       }
     }
@@ -473,16 +492,6 @@ function updateEnemies(dt) {
     if (enemy.aiState === "return") {
       updateEnemyReturn(enemy, dt);
     }
-  }
-}
-
-// ==========================================
-// DRAW ALL ENEMIES
-// ==========================================
-
-function drawEnemies() {
-  for (const enemy of enemies) {
-    drawEnemy(enemy);
   }
 }
 
@@ -584,8 +593,8 @@ function updateEnemyWander(enemy, dt) {
   // Move toward the destination.
   const moveDistance = Math.min(enemy.wanderSpeed * dt, distance);
 
-  enemy.x += (dx / distance) * moveDistance;
-  enemy.y += (dy / distance) * moveDistance;
+  moveEntity(enemy, (dx / distance) * moveDistance,
+    (dy / distance) * moveDistance);
 }
 
 // Return to the spawn area after chasing.
@@ -612,6 +621,6 @@ function updateEnemyReturn(enemy, dt) {
   // Move back toward spawn.
   const moveDistance = Math.min(enemy.speed * dt, distance);
 
-  enemy.x += (dx / distance) * moveDistance;
-  enemy.y += (dy / distance) * moveDistance;
+  moveEntity(enemy, (dx / distance) * moveDistance,
+    (dy / distance) * moveDistance);
 }

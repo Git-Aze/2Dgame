@@ -3,6 +3,7 @@
 // ==========================================
 
 function toggleSpellBook() {
+  if (!isPlaying()) return;
   const spellBook = document.getElementById("spell-book");
 
   if (!spellBook) return;

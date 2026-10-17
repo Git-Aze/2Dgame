@@ -62,6 +62,7 @@ function spendMana(spell) {
 const activeIgnites = [];
 
 function castIgnite() {
+  if (!isPlaying()) return;
   if (player.casting) return;
 
   const spell = SPELLS.ignite;
@@ -149,26 +150,12 @@ function updateIgnites(dt) {
     ) {
       effect.ticksApplied++;
 
-      target.hp = Math.max(0, target.hp - effect.damagePerTick);
-      console.log("IGNITE TICK:", target.name, "HP:", target.hp);
-
       showMessage(
         `${target.name} takes ${effect.damagePerTick} Ignite damage!`);
+      damageEnemy(target, effect.damagePerTick, "ignite");
 
       // Check if Ignite killed the enemy.
-      if (target.hp <= 0) {
-        target.hp = 0;
-        target.alive = false;
-        target.respawnTimer = target.respawnTime;
-
-        gainXP(target.xpReward ?? 0);
-
-        if (selectedEnemy === target) {
-          selectedEnemy = null;
-        }
-
-        showMessage(`${target.name} burned to death!`);
-
+      if (!target.alive) {
         break;
       }
     }
@@ -287,6 +274,7 @@ function launchFireball(target) {
 // ==========================================
 
 function castFireball() {
+  if (!isPlaying()) return;
   if (player.casting) return;
 
   const spell = SPELLS.fireball;
@@ -395,26 +383,13 @@ function updateCombat(dt) {
     const travel = fireball.speed * dt;
 
     if (distance <= travel + target.w / 2) {
-      target.hp = Math.max(0, target.hp - fireball.damage);
-
       showMessage(
         `Fireball hit ${target.name} for ${fireball.damage} damage!`);
+      damageEnemy(target, fireball.damage, "fireball");
 
       fireballs.splice(i, 1);
 
-      if (target.hp <= 0 && target.alive) {
-        target.hp = 0;
-        target.alive = false;
-        target.respawnTimer = target.respawnTime;
-
-        gainXP(target.xpReward ?? 0);
-
-        if (selectedEnemy === target) {
-          selectedEnemy = null;
-        }
-
-        showMessage(`${target.name} was defeated!`);
-      } else if (target.alive) {
+      if (target.alive) {
         showMessage(`${target.name}: ${target.hp}/${target.maxHp} HP`);
       }
     } else {

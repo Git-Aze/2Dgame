@@ -69,6 +69,7 @@ function addItem(itemId) {
 // --------------------------------------------------
 
 function equipItem(itemId) {
+  if (!isPlaying()) return false;
   const item = getItem(itemId);
 
   if (!item) {
@@ -111,6 +112,7 @@ function equipItem(itemId) {
 
   showMessage(`${item.name} equipped.`);
   updateCharacterSheet();
+  recordQuestEvent({ type: "itemEquipped", itemId });
   return true;
 }
 
@@ -119,6 +121,7 @@ function equipItem(itemId) {
 // --------------------------------------------------
 
 function unequipItem(slot) {
+  if (!isPlaying()) return false;
   if (!(slot in inventory.equipment)) {
     return false;
   }

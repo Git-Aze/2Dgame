@@ -16,6 +16,7 @@ actionBarSpells[1] = "ignite";
 // ==========================================
 
 function assignSpellToSlot(spellId, slotIndex) {
+  if (!isPlaying()) return;
   if (!Object.hasOwn(SPELLS, spellId)) return;
   if (!Number.isInteger(slotIndex) ||
       slotIndex < 0 || slotIndex >= ACTION_BAR_SIZE) return;
@@ -26,6 +27,7 @@ function assignSpellToSlot(spellId, slotIndex) {
 }
 
 function clearActionBarSlot(slotIndex) {
+  if (!isPlaying()) return;
   actionBarSpells[slotIndex] = null;
   renderActionBar();
 }
@@ -35,6 +37,7 @@ function clearActionBarSlot(slotIndex) {
 // ==========================================
 
 function castActionBarSlot(slotIndex) {
+  if (!isPlaying()) return;
   const spellId = actionBarSpells[slotIndex];
 
   if (!spellId) return;
@@ -118,6 +121,8 @@ function setupActionBar() {
       event.stopPropagation();
 
       slot.classList.remove("drag-over");
+
+      if (!isPlaying()) return;
 
       if (!event.dataTransfer) return;
 

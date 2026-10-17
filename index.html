@@ -191,13 +191,12 @@
       </div>
 
       <canvas id="game" width="800" height="576"></canvas>
-      <aside id="quest-log">
+      <aside id="quest-log" aria-label="Quests">
         <h2>Quests</h2>
-        <p id="quest-title">A New Adventure</p>
-        <p id="quest-description">Talk to Elder Rowan.</p>
+        <div id="quest-list" aria-live="polite"></div>
       </aside>
 
-      <p class="help">Move: WASD or arrow keys · Interact: E</p>
+      <p class="help">Move: WASD or arrow keys · Character: C · Spells: K</p>
 
       <div id="action-bar">
         <button class="action-slot" id="slot-1" title="Fireball (1)">
@@ -245,8 +244,24 @@
         <div id="message-log-entries"></div>
       </div>
     </main>
+    <section id="game-overlay" role="dialog" aria-modal="true"
+      aria-labelledby="game-overlay-title" aria-describedby="game-overlay-description">
+      <div class="game-overlay-panel">
+        <p class="game-overlay-eyebrow">A top-down adventure</p>
+        <h1 id="game-overlay-title">Greenfield Village</h1>
+        <p id="game-overlay-description">Explore Greenfield Village, equip your gear, and battle the creatures nearby.</p>
+        <button type="button" id="start-game-button">Start game</button>
+        <p id="game-overlay-hint">Press Space to start</p>
+        <p class="game-overlay-controls">Move: WASD / arrows · Character: C · Spells: K<br />Click an enemy to target · Cast: 1–0</p>
+      </div>
+    </section>
+    <script src="world.js"></script>
+    <script src="collision.js"></script>
     <script src="items.js"></script>
     <script src="inventory.js"></script>
+    <script src="quests.js"></script>
+    <script src="quest-system.js"></script>
+    <script src="quest-ui.js"></script>
     <script src="enemies.js"></script>
     <script src="spells.js"></script>
     <script src="spellbook.js"></script>
