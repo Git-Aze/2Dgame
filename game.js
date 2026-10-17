@@ -121,7 +121,7 @@ function setGameState(state) {
   document.getElementById("character-sheet").classList.add("hidden");
   document.getElementById("spell-book").classList.add("hidden");
   const dead = state === "dead";
-  document.getElementById("game-overlay-title").textContent = dead ? "You died" : WORLD_DATA.name;
+  document.getElementById("game-overlay-title").textContent = dead ? "You died" : document.title;
   document.getElementById("game-overlay-description").textContent = dead
     ? "Press Space to restart. Your adventure will begin again from the start."
     : "Explore Greenfield Village, equip your gear, and battle the creatures nearby.";

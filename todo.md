@@ -47,7 +47,7 @@ Completion target: a new player can explore, fight, level up, and see character 
 - [x] 3.05 Consolidate duplicate equipment display logic.
 - [x] 3.06 Remove or document unused terrain rendering, decoration data, and legacy UI code.
 - [ ] 3.07 Review unused assets such as `house.png` and `tree.png`; retain only if needed or document their intended use.
-- [ ] 3.08 Add a README with local run instructions, controls, and project structure.
+- [x] 3.08 Add a README with local run instructions, controls, and project structure.
 - [ ] 3.09 Reconcile the existing `todo.txt` with this checklist.
 
 ### Focused verification
