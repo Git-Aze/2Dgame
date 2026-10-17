@@ -1,0 +1,1031 @@
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+}
+
+html {
+  min-height: 100%;
+}
+
+body {
+  background: #151b24;
+  color: #f2eadb;
+  font-family: Arial, sans-serif;
+}
+
+/* Force the game container to fill the viewport */
+#game-container {
+  position: fixed;
+  inset: 0;
+  width: 100vw;
+  height: 100vh;
+  height: 100dvh;
+  margin: 0;
+  padding: 0;
+  border: none;
+  overflow: hidden;
+}
+
+/* The canvas fills the entire game container */
+#game {
+  display: block;
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  border: none;
+  border-radius: 0;
+  image-rendering: pixelated;
+}
+
+/* Controls hint */
+.help {
+  position: absolute;
+  right: 12px;
+  bottom: 12px;
+  left: auto;
+  transform: none;
+  z-index: 20;
+
+  width: max-content;
+  max-width: 260px;
+  margin: 0;
+  padding: 6px 9px;
+
+  text-align: right;
+  color: #ddd6c8;
+  font-size: 11px;
+  line-height: 1.3;
+
+  background: rgba(20, 25, 28, 0.78);
+  border-radius: 5px;
+  pointer-events: none;
+}
+
+#quest-log {
+  position: absolute;
+  top: 50%;
+  right: 24px;
+  transform: translateY(-50%);
+  z-index: 20;
+
+  width: 240px;
+  padding: 18px;
+
+  color: #f2eadb;
+  background: rgba(25, 32, 28, 0.88);
+  border: 2px solid #9b8154;
+  border-radius: 8px;
+
+  font-family: Georgia, serif;
+  pointer-events: none;
+}
+
+#quest-log h2 {
+  margin: 0 0 14px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid #9b8154;
+  font-size: 20px;
+}
+
+#quest-title {
+  margin: 0 0 8px;
+  color: #f0d58c;
+  font-weight: bold;
+}
+
+#quest-description {
+  margin: 0;
+  color: #e0e0d6;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+#action-bar {
+  position: absolute;
+  z-index: 30;
+  bottom: 14px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+
+  gap: 4px;
+  padding: 5px;
+
+  background: rgba(20, 25, 28, 0.92);
+  border: 2px solid #9b8154;
+  border-radius: 8px;
+}
+
+.action-slot {
+  position: relative;
+
+  width: 42px;
+  height: 42px;
+  padding: 0;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  background: #292e32;
+  border: 2px solid #64615a;
+  border-radius: 5px;
+  color: white;
+  cursor: pointer;
+}
+
+.action-slot:hover {
+  background: #41464a;
+  border-color: #d8bd7a;
+}
+
+.action-slot:focus-visible {
+  outline: 2px solid #f0d58c;
+  outline-offset: 2px;
+}
+
+.slot-number {
+  position: absolute;
+  top: 2px;
+  left: 4px;
+  color: #d8d2c4;
+  font: 9px Arial, sans-serif;
+}
+
+.spell-icon {
+  font-size: 22px;
+}
+
+#slot-1 {
+  border-color: #d89a4a;
+  box-shadow: inset 0 0 8px rgba(255, 115, 30, 0.25);
+}
+
+#slot-1 .spell-icon {
+  filter: drop-shadow(0 0 4px #ff652e);
+}
+
+@media (max-width: 600px) {
+  #action-bar {
+    gap: 3px;
+    padding: 5px;
+    bottom: 10px;
+  }
+
+  .action-slot {
+    width: min(8.5vw, 42px);
+    height: min(8.5vw, 42px);
+  }
+}
+
+/* RPG message log */
+#message-log {
+  position: absolute;
+  left: 18px;
+  bottom: 18px;
+  width: 320px;
+  height: 150px;
+  padding: 10px 12px;
+  box-sizing: border-box;
+
+  background: rgba(15, 19, 22, 0.82);
+  border: 2px solid #796747;
+  border-radius: 8px;
+
+  color: #eee4ce;
+  font: 13px/1.5 Arial, sans-serif;
+
+  overflow-y: auto;
+  overflow-x: hidden;
+
+  pointer-events: auto;
+  z-index: 20;
+
+  scrollbar-width: thin;
+  scrollbar-color: #796747 rgba(15, 19, 22, 0.4);
+}
+
+#message-log-entries {
+  display: flex;
+  flex-direction: column;
+  min-height: 100%;
+  overflow-wrap: anywhere;
+}
+
+.message-log-entry {
+  margin-top: 3px;
+  text-shadow: 1px 1px 2px #000;
+}
+
+.message-log-entry.combat {
+  color: #ffbd70;
+}
+
+.message-log-entry.quest {
+  color: #b8e6a0;
+}
+
+@media (max-width: 600px) {
+  #message-log {
+    left: 8px;
+    bottom: 75px;
+    width:  min(260px, 65vw);
+    height: 110px;
+    font-size: 11px;
+  }
+}
+
+/* Area name - top right */
+#location {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  z-index: 25;
+
+  padding: 6px 10px;
+
+  color: #d8d2c4;
+  font-size: 11px;
+  font-weight: bold;
+  text-align: center;
+
+  background: rgba(20, 25, 28, 0.78);
+  border: 1px solid #796747;
+  border-radius: 5px;
+
+  pointer-events: none;
+}
+/* =========================
+   Character frame
+   ========================= */
+
+#character-frame {
+  position: absolute;
+  top: 14px;
+  left: 14px;
+  z-index: 25;
+
+  display: flex;
+  align-items: center;
+  gap: 9px;
+
+  min-width: 230px;
+  padding: 7px 10px 7px 7px;
+
+  background: rgba(20, 25, 28, 0.88);
+  border: 2px solid #796747;
+  border-radius: 7px;
+
+  color: #f2eadb;
+  font-family: Arial, sans-serif;
+
+  pointer-events: none;
+}
+
+/* Portrait box */
+#character-portrait {
+  width: 52px;
+  height: 52px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  flex-shrink: 0;
+
+  background: #252b2e;
+  border: 2px solid #9b8154;
+  border-radius: 4px;
+
+  overflow: hidden;
+}
+
+#portrait-canvas {
+  width: 48px;
+  height: 48px;
+
+  image-rendering: pixelated;
+}
+
+#character-name {
+  margin-bottom: 6px;
+
+  color: #f0d58c;
+  font-size: 13px;
+  font-weight: bold;
+}
+
+/* ========================================
+   CHARACTER SHEET
+   ======================================== */
+
+#character-sheet {
+  position: absolute;
+
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+
+  width: 620px;
+  max-width: calc(100vw - 40px);
+
+  z-index: 100;
+
+  background: rgba(24, 28, 30, 0.97);
+
+  border: 3px solid #796747;
+  border-radius: 8px;
+
+  color: #eee4ce;
+
+  box-shadow:
+    0 0 0 2px #28231c,
+    0 8px 30px rgba(0, 0, 0, 0.55);
+}
+
+#character-sheet.hidden {
+  display: none !important;
+}
+
+
+/* Header */
+
+#character-sheet-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  padding: 12px 16px;
+
+  background: #302b23;
+
+  border-bottom: 2px solid #796747;
+}
+
+#character-sheet-header h2 {
+  margin: 0;
+
+  color: #e7cf91;
+  font-size: 18px;
+}
+
+#close-character-sheet {
+  width: 28px;
+  height: 28px;
+
+  padding: 0;
+
+  background: #3b3430;
+
+  border: 1px solid #796747;
+  border-radius: 4px;
+
+  color: #ddd6c8;
+  font-size: 20px;
+
+  cursor: pointer;
+}
+
+#close-character-sheet:hover {
+  background: #51463e;
+}
+
+
+/* Main layout */
+
+#character-sheet-content {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+
+  gap: 20px;
+
+  padding: 18px;
+}
+
+.character-sheet-section {
+  min-width: 0;
+}
+
+
+/* Character portrait */
+
+.sheet-character-header {
+  display: flex;
+  align-items: center;
+
+  gap: 12px;
+
+  margin-bottom: 18px;
+}
+
+#sheet-portrait {
+  width: 64px;
+  height: 64px;
+
+  background: #28363a;
+
+  border: 2px solid #9b8154;
+  border-radius: 5px;
+
+  image-rendering: pixelated;
+}
+
+.sheet-character-header h3 {
+  margin: 0 0 4px 0;
+
+  color: #f0d58c;
+  font-size: 16px;
+}
+
+.sheet-character-header p {
+  margin: 0;
+
+  color: #aaa294;
+  font-size: 12px;
+}
+
+
+
+
+/* Section headings */
+
+.sheet-section-title {
+  margin: 12px 0 7px 0;
+  padding-bottom: 5px;
+
+  color: #d6c28c;
+
+  font-size: 12px;
+  text-transform: uppercase;
+
+  border-bottom: 1px solid #514837;
+}
+
+
+/* Stats */
+
+.stat-row {
+  display: flex;
+  justify-content: space-between;
+
+  padding: 5px 7px;
+
+  font-size: 12px;
+
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.stat-row span:last-child {
+  color: #ffffff;
+  font-weight: bold;
+}
+
+/* Footer */
+
+#character-sheet-footer {
+  padding: 8px;
+
+  color: #8e887d;
+
+  font-size: 10px;
+  text-align: center;
+
+  border-top: 1px solid #514837;
+}
+
+/* ========================================
+   CHARACTER INVENTORY
+   ======================================== */
+
+#inventory-section {
+  grid-column: 1 / -1;
+  margin-top: 4px;
+}
+
+#inventory-grid {
+  display: grid;
+  grid-template-columns: repeat(10, 46px);
+  gap: 6px;
+}
+
+
+/* Individual inventory slot */
+
+.inventory-slot {
+  position: relative;
+
+  width: 46px;
+  height: 46px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  padding: 0;
+
+  background: #252a2d;
+
+  border: 2px solid #514b41;
+  border-radius: 4px;
+
+  color: white;
+
+  cursor: pointer;
+}
+
+.inventory-slot:hover:not(.empty) {
+  background: #343a3e;
+  border-color: #b09662;
+}
+
+
+/* Empty inventory slot */
+
+.inventory-slot.empty {
+  cursor: default;
+  opacity: 0.45;
+}
+
+
+/* Item icon */
+
+.inventory-icon {
+  font-size: 24px;
+  pointer-events: none;
+}
+
+
+/* Item ID */
+
+.inventory-item-id {
+  position: absolute;
+
+  right: 2px;
+  bottom: 1px;
+
+  color: #aaa294;
+
+  font-size: 7px;
+
+  pointer-events: none;
+}
+
+
+/* ========================================
+   EQUIPMENT
+   ======================================== */
+
+.equipment-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.equipment-slot {
+  position: relative;
+
+  min-height: 86px;
+
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+
+  padding: 7px;
+
+  background: #292e32;
+
+  border: 2px solid #514b41;
+  border-radius: 5px;
+
+  color: #eee4ce;
+
+  cursor: pointer;
+}
+
+.equipment-slot:hover {
+  background: #33393d;
+  border-color: #a58b5b;
+}
+
+.equipment-label {
+  position: absolute;
+
+  top: 4px;
+  left: 6px;
+
+  color: #928b7f;
+
+  font-size: 8px;
+  text-transform: uppercase;
+}
+
+.equipment-icon {
+  margin-top: 7px;
+
+  font-size: 28px;
+  line-height: 30px;
+}
+
+.equipment-name {
+  width: 100%;
+
+  margin-top: 5px;
+
+  overflow: hidden;
+
+  color: #e7cf91;
+
+  font-size: 9px;
+  text-align: center;
+
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+/* ========================================
+   EXPERIENCE BAR
+   ======================================== */
+
+#xp-bar-container {
+  position: absolute;
+  bottom: 2px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 30;
+
+  width: 455px;
+  max-width: calc(100vw - 24px);
+
+  pointer-events: none;
+}
+
+#xp-bar {
+  position: relative;
+  width: 100%;
+  height: 8px;
+
+  background: #22252b;
+  border: 1px solid #8c7448;
+  border-radius: 3px;
+
+  overflow: hidden;
+}
+
+#xp-bar-fill {
+  width: 0%;
+  height: 100%;
+
+  background: linear-gradient(
+    to bottom,
+    #c19bff,
+    #7546bd
+  );
+
+  transition: width 0.2s ease;
+}
+
+#xp-bar-text {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+
+  color: #ffffff;
+  font-size: 8px;
+  font-weight: bold;
+  white-space: nowrap;
+
+  text-shadow: 1px 1px 2px #000;
+}
+
+/* Attribute allocation */
+
+.attribute-points-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px;
+  margin: 8px 0;
+  border: 1px solid #75643d;
+  border-radius: 4px;
+  background: #302a20;
+  color: #e8cc79;
+  font-size: 12px;
+}
+
+.attribute-controls {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.attribute-plus {
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  border: 1px solid #8a7847;
+  border-radius: 4px;
+  background: #453a27;
+  color: #f4df9b;
+  font-size: 16px;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+.attribute-plus:hover:not(:disabled) {
+  background: #68552f;
+}
+
+.attribute-plus:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+
+#character-sheet-header {
+  position: relative;
+}
+
+#close-character-sheet {
+  position: relative;
+  z-index: 100;
+  pointer-events: auto;
+  cursor: pointer;
+}
+
+/* ========================================
+   SPELL BOOK
+   ======================================== */
+
+#spell-book {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+
+  width: 550px;
+  max-width: calc(100vw - 40px);
+  max-height: 80vh;
+
+  z-index: 110;
+
+  display: flex;
+  flex-direction: column;
+
+  background: rgba(24, 28, 30, 0.98);
+  border: 3px solid #796747;
+  border-radius: 8px;
+
+  color: #eee4ce;
+  font-family: Georgia, serif;
+
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.6);
+}
+
+#spell-book.hidden {
+  display: none !important;
+}
+
+/* Header */
+
+#spell-book-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  padding: 12px 16px;
+
+  background: #302b23;
+  border-bottom: 2px solid #796747;
+}
+
+#spell-book-header h2 {
+  margin: 0;
+  color: #e7cf91;
+  font-size: 18px;
+}
+
+#close-spell-book {
+  width: 28px;
+  height: 28px;
+  padding: 0;
+
+  background: #3b3430;
+  border: 1px solid #796747;
+  border-radius: 4px;
+
+  color: #ddd6c8;
+  font-size: 20px;
+
+  cursor: pointer;
+}
+
+#close-spell-book:hover {
+  background: #51463e;
+}
+
+/* Scrollable spell list */
+
+#spell-book-content {
+  padding: 16px;
+  overflow-y: auto;
+  min-height: 0;
+}
+
+#spell-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+/* Individual spell */
+
+.spell-book-entry {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+
+  padding: 12px;
+
+  background: #292e32;
+  border: 2px solid #514b41;
+  border-radius: 6px;
+}
+
+.spell-book-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  width: 52px;
+  height: 52px;
+  flex-shrink: 0;
+
+  background: #3b3430;
+  border: 2px solid #9b8154;
+  border-radius: 6px;
+
+  font-size: 28px;
+}
+
+.spell-book-details {
+  flex: 1;
+  min-width: 0;
+}
+
+.spell-book-name {
+  color: #f0d58c;
+  font-size: 16px;
+  font-weight: bold;
+  margin-bottom: 5px;
+}
+
+.spell-book-description {
+  color: #c9c1b3;
+  font-size: 12px;
+  line-height: 1.5;
+  margin-bottom: 6px;
+}
+
+.spell-book-stats {
+  color: #a5c879;
+  font-size: 11px;
+  line-height: 1.5;
+}
+
+/* Footer */
+
+#spell-book-footer {
+  padding: 10px;
+  border-top: 1px solid #514837;
+
+  color: #8e887d;
+  font-size: 11px;
+  text-align: center;
+}
+/* ========================================
+   SPELL DRAG AND DROP
+   ======================================== */
+
+.spell-book-entry {
+  cursor: grab;
+  user-select: none;
+}
+
+.spell-book-entry:active {
+  cursor: grabbing;
+}
+
+.spell-book-entry.dragging {
+  opacity: 0.45;
+}
+
+.action-slot.drag-over {
+  border-color: #f0d58c;
+  background: #55482d;
+  box-shadow: 0 0 12px rgba(240, 213, 140, 0.6);
+}
+
+.action-slot .spell-icon {
+  pointer-events: none;
+  user-select: none;
+}
+
+/* ========================================
+   CHARACTER HEALTH AND MANA BARS
+   ======================================== */
+
+#character-info {
+  flex: 1;
+  min-width: 140px;
+}
+
+/* Shared styling for both bars */
+
+.character-resource-bar {
+  position: relative;
+  width: 100%;
+  height: 15px;
+
+  border: 1px solid;
+  border-radius: 4px;
+  overflow: hidden;
+
+  box-sizing: border-box;
+  margin-bottom: 4px;
+}
+
+/* Health bar */
+
+#character-hp-bar {
+  background: #381717;
+  border-color: #754040;
+}
+
+#character-hp-fill {
+  width: 100%;
+  height: 100%;
+
+  background: linear-gradient(
+    to bottom,
+    #ff6666,
+    #b91c1c
+  );
+
+  transition: width 0.15s ease;
+}
+
+/* Mana bar */
+
+#character-mana-bar {
+  background: #172338;
+  border-color: #41536c;
+}
+
+#character-mana-fill {
+  width: 100%;
+  height: 100%;
+
+  background: linear-gradient(
+    to bottom,
+    #4aaaff,
+    #1760c4
+  );
+
+  transition: width 0.15s ease;
+}
+
+/* Identical text styling for both bars */
+
+#character-hp-text,
+#character-mana-text {
+  position: absolute;
+  inset: 0;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  min-width: 0;
+
+  color: white;
+  font-family: Arial, sans-serif;
+  font-size: 10px;
+  font-weight: bold;
+  text-align: center;
+
+  text-shadow: 1px 1px 2px black;
+  pointer-events: none;
+}

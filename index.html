@@ -1,0 +1,256 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>My Top-Down RPG</title>
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <main id="game-container">
+      <!-- Area name -->
+      <div id="location">Greenfield Village</div>
+
+      <!-- Character frame -->
+      <div id="character-frame">
+        <div id="character-portrait">
+          <canvas id="portrait-canvas" width="48" height="48"></canvas>
+        </div>
+
+        <div id="character-info">
+          <div id="character-name">Adventurer</div>
+          <div class="character-resource-bar" id="character-hp-bar">
+            <div id="character-hp-fill"></div>
+            <span id="character-hp-text">100 / 100</span>
+          </div>
+
+          <div class="character-resource-bar" id="character-mana-bar">
+            <div id="character-mana-fill"></div>
+            <span id="character-mana-text">50 / 50</span>
+          </div>
+        </div>
+      </div>
+      <!-- Character Sheet -->
+      <div id="character-sheet" class="hidden">
+        <div id="character-sheet-header">
+          <h2>Character</h2>
+          <button id="close-character-sheet">×</button>
+        </div>
+
+        <div id="character-sheet-content">
+          <!-- LEFT SIDE -->
+          <section class="character-sheet-section">
+            <div class="sheet-character-header">
+              <canvas id="sheet-portrait" width="64" height="64"> </canvas>
+
+              <div>
+                <h3 id="sheet-name">Adventurer</h3>
+                <p id="sheet-level">Level 1</p>
+              </div>
+            </div>
+
+            <h3 class="sheet-section-title">Attributes</h3>
+
+            <div class="attribute-points-row">
+              <span>Available Points</span>
+              <strong id="attribute-points">0</strong>
+            </div>
+
+            <div class="stat-row">
+              <span>Strength</span>
+              <div class="attribute-controls">
+                <span id="stat-strength">10</span>
+                <button class="attribute-plus" data-attribute="strength">
+                  +
+                </button>
+              </div>
+            </div>
+
+            <div class="stat-row">
+              <span>Vitality</span>
+              <div class="attribute-controls">
+                <span id="stat-vitality">10</span>
+                <button class="attribute-plus" data-attribute="vitality">
+                  +
+                </button>
+              </div>
+            </div>
+
+            <div class="stat-row">
+              <span>Intelligence</span>
+              <div class="attribute-controls">
+                <span id="stat-intelligence">10</span>
+                <button class="attribute-plus" data-attribute="intelligence">
+                  +
+                </button>
+              </div>
+            </div>
+
+            <div class="stat-row">
+              <span>Dexterity</span>
+              <div class="attribute-controls">
+                <span id="stat-dexterity">10</span>
+                <button class="attribute-plus" data-attribute="dexterity">
+                  +
+                </button>
+              </div>
+            </div>
+
+            <div class="stat-row">
+              <span>Armor</span>
+              <span id="stat-armor">0</span>
+            </div>
+
+            <h3 class="sheet-section-title">Resources</h3>
+
+            <div class="stat-row">
+              <span>Health</span>
+              <span id="sheet-health">100 / 100</span>
+            </div>
+
+            <div class="stat-row">
+              <span>Mana</span>
+              <span id="sheet-mana">50 / 50</span>
+            </div>
+
+            <div class="stat-row">
+              <span>Gold</span>
+              <span id="sheet-gold">0</span>
+            </div>
+          </section>
+
+          <!-- RIGHT SIDE -->
+          <section class="character-sheet-section">
+            <h3 class="sheet-section-title">Equipment</h3>
+
+            <div class="equipment-grid">
+              <button class="equipment-slot" data-equipment-slot="head">
+                <span class="equipment-label">Head</span>
+                <span class="equipment-icon" id="equipment-icon-head">+</span>
+                <span class="equipment-name" id="equipment-head">Empty</span>
+              </button>
+
+              <button class="equipment-slot" data-equipment-slot="chest">
+                <span class="equipment-label">Chest</span>
+                <span class="equipment-icon" id="equipment-icon-chest">+</span>
+                <span class="equipment-name" id="equipment-chest">Empty</span>
+              </button>
+
+              <button class="equipment-slot" data-equipment-slot="weapon">
+                <span class="equipment-label">Weapon</span>
+                <span class="equipment-icon" id="equipment-icon-weapon">+</span>
+                <span class="equipment-name" id="equipment-weapon">Empty</span>
+              </button>
+
+              <button class="equipment-slot" data-equipment-slot="offhand">
+                <span class="equipment-label">Off Hand</span>
+                <span class="equipment-icon" id="equipment-icon-offhand"
+                  >+</span
+                >
+                <span class="equipment-name" id="equipment-offhand">Empty</span>
+              </button>
+
+              <button class="equipment-slot" data-equipment-slot="legs">
+                <span class="equipment-label">Legs</span>
+                <span class="equipment-icon" id="equipment-icon-legs">+</span>
+                <span class="equipment-name" id="equipment-legs">Empty</span>
+              </button>
+
+              <button class="equipment-slot" data-equipment-slot="boots">
+                <span class="equipment-label">Boots</span>
+                <span class="equipment-icon" id="equipment-icon-boots">+</span>
+                <span class="equipment-name" id="equipment-boots">Empty</span>
+              </button>
+            </div>
+          </section>
+        </div>
+
+        <!-- BOTTOM -->
+        <!-- INVENTORY -->
+        <section id="inventory-section">
+          <h3 class="sheet-section-title">Inventory</h3>
+
+          <div id="inventory-grid"></div>
+        </section>
+
+        <div id="character-sheet-footer">Press C to close</div>
+      </div>
+
+      <!-- SPELL BOOK -->
+      <div id="spell-book" class="hidden">
+        <div id="spell-book-header">
+          <h2>Spell Book</h2>
+          <button type="button" id="close-spell-book">×</button>
+        </div>
+
+        <div id="spell-book-content">
+          <div id="spell-list"></div>
+        </div>
+
+        <div id="spell-book-footer">Press K to close</div>
+      </div>
+
+      <canvas id="game" width="800" height="576"></canvas>
+      <aside id="quest-log">
+        <h2>Quests</h2>
+        <p id="quest-title">A New Adventure</p>
+        <p id="quest-description">Talk to Elder Rowan.</p>
+      </aside>
+
+      <p class="help">Move: WASD or arrow keys · Interact: E</p>
+
+      <div id="action-bar">
+        <button class="action-slot" id="slot-1" title="Fireball (1)">
+          <span class="slot-number">1</span>
+          <span class="spell-icon">🔥</span>
+        </button>
+        <button class="action-slot" data-slot="2">
+          <span class="slot-number">2</span>
+        </button>
+        <button class="action-slot" data-slot="3">
+          <span class="slot-number">3</span>
+        </button>
+        <button class="action-slot" data-slot="4">
+          <span class="slot-number">4</span>
+        </button>
+        <button class="action-slot" data-slot="5">
+          <span class="slot-number">5</span>
+        </button>
+        <button class="action-slot" data-slot="6">
+          <span class="slot-number">6</span>
+        </button>
+        <button class="action-slot" data-slot="7">
+          <span class="slot-number">7</span>
+        </button>
+        <button class="action-slot" data-slot="8">
+          <span class="slot-number">8</span>
+        </button>
+        <button class="action-slot" data-slot="9">
+          <span class="slot-number">9</span>
+        </button>
+        <button class="action-slot" data-slot="10">
+          <span class="slot-number">0</span>
+        </button>
+      </div>
+
+      <!-- Experience Bar -->
+      <div id="xp-bar-container">
+        <div id="xp-bar">
+          <div id="xp-bar-fill"></div>
+          <span id="xp-bar-text">0 / 100 XP</span>
+        </div>
+      </div>
+
+      <div id="message-log">
+        <div id="message-log-entries"></div>
+      </div>
+    </main>
+    <script src="items.js"></script>
+    <script src="inventory.js"></script>
+    <script src="enemies.js"></script>
+    <script src="spells.js"></script>
+    <script src="spellbook.js"></script>
+    <script src="actionbar.js"></script>
+    <script src="game.js"></script>
+  </body>
+</html>

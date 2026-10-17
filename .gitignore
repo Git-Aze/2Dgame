@@ -1,0 +1,28 @@
+# Operating system files
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+# Local editor settings
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Logs and temporary files
+*.log
+*.tmp
+
+# Local environment variables and secrets
+.env
+.env.*
+!.env.example
+
+# Dependencies, if added later
+node_modules/
+
+# Temporary browser verification files
+.*-check.html
+.*-check-output.txt
+.*-check-errors.txt
+.*-check-profile/
