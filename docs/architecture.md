@@ -1,16 +1,16 @@
 # Module architecture
 
-`index.html` loads one entry point: `game.js`. The browser resolves dependencies through explicit imports. There is no bundler or required package installation.
+`index.html` loads one entry point: `src/game.js`. The browser resolves dependencies through explicit imports. There is no bundler or required package installation.
 
 ## Ownership
 
-- Data definitions live in `world.js`, `items.js`, `enemy-types.js`, `action-definitions.js`, and `quests.js`. Permanent IDs remain five-digit strings.
-- `state.js` owns mutable player, inventory, enemy, quest, and combat data. Its `runtime` object owns session state, camera coordinates, selected targets, and active shop/charge references. Imported scalar bindings are never reassigned by another module.
-- Gameplay modules own state transitions and rules: `player.js`, `inventory.js`, `equipment.js`, `stats.js`, `enemies.js`, `spells.js`, `quest-system.js`, `shops.js`, `movement.js`, and `collision.js`.
-- UI and render modules read those models and call explicit actions. Rendering does not advance simulation time. Input bindings are registered in `input.js`; panels own their click/drag handlers.
-- `game.js` initializes event subscriptions and input once, then calls `update(dt)` and `render()` through `requestAnimationFrame`.
+- Data definitions live in `src/world/world.js`, `src/data/items.js`, `src/data/enemy-types.js`, `src/data/action-definitions.js`, and `src/quests/quests.js`. Permanent IDs remain five-digit strings.
+- `src/core/state.js` owns mutable player, inventory, enemy, quest, and combat data. Its `runtime` object owns session state, camera coordinates, selected targets, and active shop/charge references. Imported scalar bindings are never reassigned by another module.
+- Gameplay modules own state transitions and rules: `src/player/player.js`, `src/player/inventory.js`, `src/player/equipment.js`, `src/player/stats.js`, `src/combat/enemies.js`, `src/combat/spells.js`, `src/quests/quest-system.js`, `src/shops/shops.js`, `src/world/movement.js`, and `src/world/collision.js`.
+- UI and render modules read those models and call explicit actions. Rendering does not advance simulation time. Input bindings are registered in `src/core/input.js`; panels own their click/drag handlers.
+- `src/game.js` initializes event subscriptions and input once, then calls `update(dt)` and `render()` through `requestAnimationFrame`.
 
-Keep imports acyclic. Gameplay must not import a panel merely to refresh it: announce a change through `events.js` instead. New session data should have one owner rather than a second copy in a renderer or panel.
+Keep imports acyclic. Gameplay must not import a panel merely to refresh it: announce a change through `src/core/events.js` instead. New session data should have one owner rather than a second copy in a renderer or panel.
 
 ## Events
 

@@ -54,6 +54,8 @@ Completion target: a new player can explore, fight, level up, and see character 
 - [x] 3.07 Use `house.png` for the central General Store and `tree.png` for world trees; building definitions support additional houses.
 - [x] 3.08 Add a README with local run instructions, controls, and project structure.
 
+- [x] 3.09 Organize modules into src/ feature folders and sprites into assets/images/; update imports, asset URLs, tests, and documentation.
+
 ### Focused verification
 
 - [ ] 3.10 Verify equipping, swapping, and unequipping items, including a full inventory.

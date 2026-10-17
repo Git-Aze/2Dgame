@@ -4,7 +4,7 @@ A single-player, top-down RPG prototype built with plain JavaScript, HTML, CSS, 
 
 ## Play locally
 
-The game uses native JavaScript modules and must be served over HTTP. Keep the source files and images together. No dependency installation or build step is required.
+The game uses native JavaScript modules and must be served over HTTP. Keep the folder structure intact. No dependency installation or build step is required.
 
 On Windows, run this from the project folder:
 
@@ -72,33 +72,33 @@ Assign the next unused ID when adding an ability; never renumber existing IDs or
 
 | File | Purpose |
 | --- | --- |
-| `index.html`, `style.css` | Page layout, menus, and interface styling |
-| `game.js` | Module initialization and the main loop |
-| `state.js`, `lifecycle.js` | Shared session data and start/death/restart transitions |
-| `player.js`, `update.js` | Player progression, damage, regeneration, and simulation updates |
-| `input.js`, `targeting.js` | Keyboard/mouse bindings and enemy selection |
-| `canvas.js`, `renderer.js` | Canvas sizing, camera, and world rendering |
-| `character-ui.js`, `screens.js` | Character sheet, resource HUD, and start/death screens |
-| `player-sprites.js`, `enemy-renderer.js` | Character sprites and enemy rendering |
-| `stats.js` | Shared stat formulas, resource limits, spell damage, and defense |
-| `events.js`, `messages.js`, `tooltips.js` | UI notifications, message log, and immediate tooltips |
-| `world.js`, `world-state.js` | World definitions, scenery instances, and boundary data |
-| `buildings.js`, `building-renderer.js` | Building definitions, interaction, and drawing |
-| `shops.js`, `shop-ui.js` | Purchase rules and shop interface |
-| `collision.js`, `movement.js` | Geometry checks and entity movement |
-| `enemy-types.js`, `enemies.js` | Enemy definitions, AI, damage, death, and respawning |
-| `slime-sprites.js` | Green and red slime sprite-sheet frames and animation |
-| `items.js`, `inventory.js`, `equipment.js` | Item definitions, inventory actions, and equipment bonuses |
-| `inventory-ui.js` | Inventory/equipment interface and item tooltips |
-| `action-definitions.js`, `spells.js` | Ability definitions, casting, projectiles, charge, and damage over time |
-| `spellbook.js`, `actionbar.js` | Spell selection and action-bar controls |
-| `quests.js` | Quest definitions, prerequisites, objectives, and rewards |
-| `quest-system.js`, `quest-ui.js` | Quest progress, completion, and display |
-| `*.png` | Map and sprite assets |
+| `index.html`, `styles.css` | Page layout, menus, and interface styling |
+| `src/game.js` | Module initialization and the main loop |
+| `src/core/state.js`, `src/core/lifecycle.js` | Shared session data and start/death/restart transitions |
+| `src/player/player.js`, `src/core/update.js` | Player progression, damage, regeneration, and simulation updates |
+| `src/core/input.js`, `src/combat/targeting.js` | Keyboard/mouse bindings and enemy selection |
+| `src/rendering/canvas.js`, `src/rendering/renderer.js` | Canvas sizing, camera, and world rendering |
+| `src/ui/character-ui.js`, `src/ui/screens.js` | Character sheet, resource HUD, and start/death screens |
+| `src/rendering/player-sprites.js`, `src/rendering/enemy-renderer.js` | Character sprites and enemy rendering |
+| `src/player/stats.js` | Shared stat formulas, resource limits, spell damage, and defense |
+| `src/core/events.js`, `src/ui/messages.js`, `src/ui/tooltips.js` | UI notifications, message log, and immediate tooltips |
+| `src/world/world.js`, `src/world/world-state.js` | World definitions, scenery instances, and boundary data |
+| `src/world/buildings.js`, `src/rendering/building-renderer.js` | Building definitions, interaction, and drawing |
+| `src/shops/shops.js`, `src/ui/shop-ui.js` | Purchase rules and shop interface |
+| `src/world/collision.js`, `src/world/movement.js` | Geometry checks and entity movement |
+| `src/data/enemy-types.js`, `src/combat/enemies.js` | Enemy definitions, AI, damage, death, and respawning |
+| `src/rendering/slime-sprites.js` | Green and red slime sprite-sheet frames and animation |
+| `src/data/items.js`, `src/player/inventory.js`, `src/player/equipment.js` | Item definitions, inventory actions, and equipment bonuses |
+| `src/ui/inventory-ui.js` | Inventory/equipment interface and item tooltips |
+| `src/data/action-definitions.js`, `src/combat/spells.js` | Ability definitions, casting, projectiles, charge, and damage over time |
+| `src/ui/spellbook.js`, `src/ui/actionbar.js` | Spell selection and action-bar controls |
+| `src/quests/quests.js` | Quest definitions, prerequisites, objectives, and rewards |
+| `src/quests/quest-system.js`, `src/ui/quest-ui.js` | Quest progress, completion, and display |
+| `assets/images/*.png` | Map and sprite assets |
 | `todo.md` | Numbered development tasks and verification checklist |
 | `AGENTS.md` | Guidelines for coding agents working on the project |
 
-Modules declare dependencies with `import`/`export`; they do not expose gameplay globals on `window`. Gameplay changes notify UI modules through `events.js`. See [docs/architecture.md](docs/architecture.md) for the dependency and event conventions.
+Modules declare dependencies with `import`/`export`; they do not expose gameplay globals on `window`. Gameplay changes notify UI modules through `src/core/events.js`. See [docs/architecture.md](docs/architecture.md) for the dependency and event conventions.
 
 ## Verification
 
