@@ -117,6 +117,7 @@ function setGameState(state) {
 
   player.moving = false;
   player.casting = false;
+  activeCharge = null;
   player.castReleased = false;
   player.castTime = 0;
   player.castTarget = null;
@@ -792,22 +793,6 @@ function drawCharacterPortrait() {
   pctx.drawImage(sprite, 0, 0, 16, 16, 0, 0, 48, 48);
 }
 
-// --------------------------------------------------
-// SCREEN UI
-// --------------------------------------------------
-
-function drawUI() {
-  ctx.textAlign = "left";
-
-  // Health panel.
-  ctx.fillStyle = "rgba(20, 25, 28, 0.85)";
-  ctx.fillRect(viewWidth - 155, 12, 143, 35);
-
-  ctx.fillStyle = "#ff7777";
-  ctx.font = "14px Arial";
-  ctx.fillText(`♥ HP: ${player.hp} / ${player.maxHp}`, viewWidth - 144, 34);
-
-}
 
 // ==========================================
 // MANA REGENERATION SYSTEM
@@ -900,6 +885,13 @@ function update(dt) {
   if (keys["a"] || keys["arrowleft"]) dx -= 1;
   if (keys["d"] || keys["arrowright"]) dx += 1;
 
+  const charging = activeCharge !== null;
+  if (charging) {
+    updateCharge(dt);
+    dx = 0;
+    dy = 0;
+  }
+
   if (player.casting && (dx !== 0 || dy !== 0)) cancelCasting("you moved.");
   updateCasting(dt);
   player.moving = dx !== 0 || dy !== 0;
@@ -929,11 +921,16 @@ function update(dt) {
     player.animTime = 0;
   }
 
+  if (charging) {
+    player.moving = true;
+    player.frame = 1;
+  }
   updateEnemies(dt);
   // A lethal enemy attack must stop combat and regeneration this frame.
   if (!isPlaying()) return;
   updateEnemyRespawns(dt);
   updateCombat(dt);
+  updateSlimeAnimation(dt);
   updateManaRegeneration(dt, stats);
   updateHealthRegeneration(dt, stats);
   updateCharacterFrame();
@@ -978,12 +975,11 @@ for (const fireball of fireballs) {
 
 // Draw Ignite flames using world coordinates.
 drawIgniteEffects();
+drawSwordSwings();
 
 // Restore screen coordinates.
 ctx.restore();
 
-// Draw the UI.
-drawUI();
 }
 
 function loop(timestamp) {

@@ -13,6 +13,8 @@ You can also serve the folder with your editor's local web server and open its a
 - Explore the map, cross bridges, and navigate around water, cliffs, and tree trunks.
 - Equip weapons and armor from your inventory and inspect your character's attributes.
 - Target green slimes, red slimes, and wolves, then cast Fireball or Ignite.
+- Equip the Iron Sword and use Sword Strike (default key **3**) against nearby enemies. It costs no mana and has a 0.6-second cooldown.
+- With the sword equipped, use Charge (**4**) on an enemy at least 150 pixels away. Rush into melee range and stun it for 2 seconds. Charge costs no mana, stops at obstacles, and has a 20-second cooldown that resets whenever an enemy dies.
 - Arrange spells on the action bar using the spell book and drag-and-drop.
 - Earn XP from enemies and quests, level up, and spend attribute points.
 - Restart a fresh adventure after your character dies.
@@ -46,6 +48,17 @@ Fireball has a 320-pixel range and a 0.5-second cooldown; Ignite has a 240-pixel
 
 ## Project structure
 
+Spells and attacks use permanent five-digit string IDs, in a separate namespace from items:
+
+| ID | Spell or attack |
+| --- | --- |
+| `00001` | Fireball |
+| `00002` | Ignite |
+| `00003` | Sword Strike |
+| `00004` | Charge |
+
+Assign the next unused ID when adding an ability; never renumber existing IDs or reuse retired ones.
+
 | File | Purpose |
 | --- | --- |
 | `index.html`, `style.css` | Page layout, menus, and interface styling |
@@ -55,6 +68,7 @@ Fireball has a 320-pixel range and a 0.5-second cooldown; Ignite has a 240-pixel
 | `world.js` | Map settings, scenery, collision regions, and spawn locations |
 | `collision.js` | Background polygon collision checks |
 | `enemies.js` | Enemy definitions, AI, damage, death, and respawning |
+| `slime-sprites.js` | Green and red slime sprite-sheet frames and animation |
 | `items.js`, `inventory.js` | Item definitions, inventory, and equipment |
 | `spells.js` | Spell casting, projectiles, and damage-over-time effects |
 | `spellbook.js`, `actionbar.js` | Spell selection and action-bar controls |
@@ -68,4 +82,4 @@ Fireball has a 320-pixel range and a 0.5-second cooldown; Ignite has a 240-pixel
 
 Hover over stats in the character sheet for explanations. Strength increases maximum health, Dexterity increases movement speed, Vitality improves health regeneration, and Intelligence improves mana regeneration. Equipment bonuses count toward these effects.
 
-This is an evolving prototype. Progress is kept in memory: reloading the page or restarting after death resets the adventure. Saving, melee attacks, and attribute-based spell damage are not implemented yet. See [todo.md](todo.md) for planned improvements.
+This is an evolving prototype. Progress is kept in memory: reloading the page or restarting after death resets the adventure. Saving and attribute-based spell damage are not implemented yet. See [todo.md](todo.md) for planned improvements.

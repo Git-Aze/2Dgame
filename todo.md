@@ -34,8 +34,14 @@ Completion target: exploration and combat work without obvious world or state in
 - [x] 2.08 Ensure the character sheet displays shared gameplay stats and updates live resources without rebuilding inventory. Show spell damage, mana cost and casting details on action-bar hover tooltips. Use instant shared tooltips for spells, stats and items, with keyboard-focus support.
 - [x] 2.09 Enforce spell range and line of sight against cliffs and tree trunks; water remains passable for spells.
 - [x] 2.10 Define Fireball interruption and release costs, spell cooldowns, and non-stacking Ignite refreshes that preserve tick timing.
+- [x] 2.11 Add Sword Strike requiring the Iron Sword (`00002`), with melee range, weapon damage, cooldown and a visible swing.
+- [x] 2.12 Add Charge: sword required, minimum 150px distance, terrain-aware dash, 2-second stun, 20-second cooldown reset by enemy deaths.
+- [x] 2.13 Give spells and attacks permanent incremental five-digit IDs; update action-bar assignments, cooldowns and combat references.
 
 Completion target: a new player can explore, fight, level up, and see character choices affect gameplay.
+
+- [x] 2.14 Render green slimes with green_slime.png, with idle/movement/hit animation and existing combat overlays.
+- [x] 2.15 Render red slimes with red_slime.png using shared animation timing and existing combat overlays.
 
 ## 3. Strengthen the codebase
 

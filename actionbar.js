@@ -8,8 +8,10 @@ const ACTION_BAR_SIZE = 10;
 const actionBarSpells = Array(ACTION_BAR_SIZE).fill(null);
 
 // Start with Fireball in slot 1.
-actionBarSpells[0] = "fireball";
-actionBarSpells[1] = "ignite";
+actionBarSpells[0] = "00001";
+actionBarSpells[1] = "00002";
+actionBarSpells[2] = "00003";
+actionBarSpells[3] = "00004";
 
 // ==========================================
 // ASSIGN AND REMOVE SPELLS
@@ -43,11 +45,17 @@ function castActionBarSlot(slotIndex) {
   if (!spellId) return;
 
   switch (spellId) {
-    case "fireball":
+    case "00004":
+      chargeAttack();
+      break;
+    case "00003":
+      swordAttack();
+      break;
+    case "00001":
       castFireball();
       break;
 
-    case "ignite":
+    case "00002":
       castIgnite();
       break;
 
@@ -90,14 +98,14 @@ function renderActionBar() {
 }
 
 function createActionTooltip(spell, key) {
-  const lines = [`${spell.name} (${key})`, spell.description];
+  const lines = [`${spell.name} (${key})`, `ID: ${spell.id}`, spell.description];
   if (spell.damage !== undefined) lines.push(`Damage: ${spell.damage} per hit`);
   if (spell.damagePerTick !== undefined) {
     const ticks = Math.floor(spell.duration / spell.tickInterval);
     lines.push(`Damage: ${spell.damagePerTick} every ${spell.tickInterval}s for ${spell.duration}s (${ticks * spell.damagePerTick} total)`);
   }
   lines.push(`Mana cost: ${spell.manaCost}`);
-  lines.push(`Range: ${spell.range} pixels · Cooldown: ${spell.cooldown}s`);
+  lines.push(`Range: ${spell.minRange ? `${spell.minRange}–` : ""}${Number.isFinite(spell.range) ? spell.range : "unlimited"} pixels · Cooldown: ${spell.cooldown}s`);
   lines.push("Requires line of sight. Cliffs and tree trunks block spells; water does not.");
   lines.push(spell.rules);
   if (spell.castFrameDuration && spell.castFrameCount) {
@@ -105,7 +113,7 @@ function createActionTooltip(spell, key) {
   } else {
     lines.push("Cast time: instant");
   }
-  if (spell.requiredWeaponCategory) lines.push(`Requires: ${spell.requiredWeaponCategory} weapon`);
+  if (spell.requiredWeaponCategory) lines.push(`Requires: ${getActionWeaponRequirement(spell)}`);
   lines.push("Select an enemy to cast. Right-click to remove.");
   return lines.filter(Boolean).join("\n");
 }

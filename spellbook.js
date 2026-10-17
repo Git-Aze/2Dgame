@@ -70,7 +70,7 @@ entry.addEventListener("dragend", () => {
     stats.className = "spell-book-stats";
 
     const statParts = [];
-    statParts.push(`Range: ${spell.range}px`, `Cooldown: ${spell.cooldown}s`, "Requires line of sight");
+    statParts.push(`Range: ${spell.minRange ? `${spell.minRange}–` : ""}${Number.isFinite(spell.range) ? spell.range : "unlimited"}px`, `Cooldown: ${spell.cooldown}s`, "Requires line of sight");
 
     if (spell.damage !== undefined) {
       statParts.push(`Damage: ${spell.damage}`);
@@ -85,7 +85,7 @@ entry.addEventListener("dragend", () => {
 
     if (spell.requiredWeaponCategory != null) {
       statParts.push(
-        `Required weapon: ${spell.requiredWeaponCategory}`
+        `Required weapon: ${getActionWeaponRequirement(spell)}`
       );
     }
 

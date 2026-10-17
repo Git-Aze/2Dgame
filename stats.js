@@ -42,9 +42,10 @@ function getSpellStats(spell, stats = getPlayerStats()) {
   const weapon = getEquippedItem("weapon");
   return {
     ...spell,
-    // Direct spells benefit from casting weapons; DOT keeps its base tick rate.
+    // Direct attacks use matching weapons; DOT keeps its base tick damage.
     ...(spell.damage !== undefined ? {
-      damage: spell.damage + (weapon?.weaponType === "Casting" ? stats.weaponDamage : 0),
+      damage: spell.damage + (weapon?.weaponType === spell.requiredWeaponCategory &&
+        (!spell.requiredWeaponId || weapon.id === spell.requiredWeaponId) ? stats.weaponDamage : 0),
     } : {}),
   };
 }

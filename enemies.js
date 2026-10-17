@@ -100,7 +100,8 @@ function drawEnemy(enemy) {
       break;
 
     case "redSlime":
-      drawColoredSlime(enemy, "#d84b4b", "#ff8585");
+      if (drawSlimeSprite(enemy)) drawEnemyHealthBar(enemy);
+      else drawColoredSlime(enemy, "#d84b4b", "#ff8585");
       break;
 
     case "wolf":
@@ -109,6 +110,14 @@ function drawEnemy(enemy) {
 
     default:
       drawSlime(enemy);
+  }
+  if (enemy.stunRemaining > 0) {
+    ctx.save();
+    ctx.fillStyle = "#ffe6a3";
+    ctx.font = "bold 10px Arial";
+    ctx.textAlign = "center";
+    ctx.fillText(`STUN ${enemy.stunRemaining.toFixed(1)}s`, enemy.x + enemy.w / 2, enemy.y - 18);
+    ctx.restore();
   }
 }
 
@@ -190,6 +199,7 @@ function damageEnemy(enemy, damage, cause) {
       !Number.isFinite(damage) || damage <= 0) return 0;
   const dealt = Math.min(enemy.hp, damage);
   enemy.hp = Math.max(0, enemy.hp - damage);
+  enemy.hurtTime = 0.25;
   if (enemy.hp <= 0) defeatEnemy(enemy, cause);
   return dealt;
 }
@@ -199,9 +209,11 @@ function defeatEnemy(enemy, cause) {
   enemy.hp = 0;
   enemy.alive = false;
   enemy.respawnTimer = enemy.respawnTime;
+  enemy.stunRemaining = 0;
+  spellCooldowns["00004"] = 0;
   if (selectedEnemy === enemy) selectedEnemy = null;
   if (player.castTarget === enemy) player.castTarget = null;
-  showMessage(cause === "ignite"
+  showMessage(cause === "00002"
     ? `${enemy.name} burned to death!` : `${enemy.name} was defeated!`);
   gainXP(enemy.xpReward ?? 0);
   recordQuestEvent({ type: "enemyDefeated", enemyTypeId: enemy.id });
@@ -260,8 +272,14 @@ function spawnEnemy(enemyId, tileX, tileY) {
     xpReward: type.xpReward,
 
     sprite: type.sprite,
+    spriteTime: 0,
+    spriteMoving: false,
+    spriteLastX: tileX * TILE + (TILE - type.width) / 2,
+    spriteLastY: tileY * TILE + (TILE - type.height) / 2,
+    hurtTime: 0,
 
     alive: true,
+    stunRemaining: 0,
 
     // Wandering configuration.
     wanderRadius: type.wanderRadius ?? 90,
@@ -301,6 +319,10 @@ function spawnStartingEnemies() {
 
 function drawSlime(enemy) {
   if (!enemy.alive) return;
+  if (drawSlimeSprite(enemy)) {
+    drawEnemyHealthBar(enemy);
+    return;
+  }
 
   const { x, y, w, h } = enemy;
 
@@ -402,6 +424,11 @@ function updateEnemies(dt) {
 
   for (const enemy of enemies) {
     if (!enemy.alive) continue;
+
+    if (enemy.stunRemaining > 0) {
+      enemy.stunRemaining = Math.max(0, enemy.stunRemaining - dt);
+      continue;
+    }
 
     // Update attack cooldown.
     if (enemy.attackTimer > 0) {
@@ -516,6 +543,12 @@ function respawnEnemy(enemy) {
 
   // Reset combat state.
   enemy.attackTimer = 0;
+  enemy.spriteTime = 0;
+  enemy.spriteMoving = false;
+  enemy.spriteLastX = enemy.x;
+  enemy.spriteLastY = enemy.y;
+  enemy.hurtTime = 0;
+  enemy.stunRemaining = 0;
 
   // Mark enemy as alive again.
   enemy.alive = true;
