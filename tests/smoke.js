@@ -32,6 +32,7 @@ import { runLootChecks } from "./loot-checks.js";
 import { runCombatFeedbackChecks } from "./combat-feedback-checks.js";
 import { runPauseChecks } from "./pause-checks.js";
 import { runAreaChecks } from "./area-checks.js";
+import { runCaveArenaChecks } from "./cave-arena-checks.js";
 
 let checks = 0;
 const errors = [];
@@ -293,6 +294,7 @@ try {
   runLootChecks(assert);
   runCombatFeedbackChecks(assert);
   runAreaChecks(assert);
+  runCaveArenaChecks(assert);
   render();
   assert(errors.length === 0, `Browser errors: ${errors.join("; ")}`);
   const result = `PASS: ${checks} gameplay checks`;

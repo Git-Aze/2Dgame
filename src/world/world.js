@@ -3,6 +3,7 @@
 // Shared world definition. Locations use tile coordinates plus pixel offsets.
 // Scenery and its collision footprint are defined together.
 import { CAVE_DATA } from "./cave-world.js";
+import { CAVE_ARENA_DATA } from "./cave-arena.js";
 
 const VILLAGE_DATA = {
   id: "village",
@@ -155,7 +156,7 @@ function worldPosition({ tileX, tileY, offsetX = 0, offsetY = 0 }) {
   };
 }
 
-const AREAS = Object.freeze({ village: VILLAGE_DATA, cave: CAVE_DATA });
+const AREAS = Object.freeze({ village: VILLAGE_DATA, cave: CAVE_DATA, "cave-arena": CAVE_ARENA_DATA });
 let WORLD_DATA = VILLAGE_DATA;
 
 function selectWorldDefinition(id) {

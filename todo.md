@@ -171,6 +171,8 @@ Completion target: defeated enemies can drop loot that the player can identify a
 - [ ] 13.04 Add named discoverable locations and discovery feedback.
 - [x] 13.05 Define how enemies, dropped loot, and player position behave when changing areas. Enemies pause off-area; corpses retain area IDs; travel uses safe arrivals. Version 4 saves retain the active area and all corpses, loading at a safe spawn with fresh enemies.
 - [x] 13.06 Verify transitions cannot place the player inside obstacles or duplicate entities and rewards.
+- [x] 13.07 Retrace cave collision against the artwork: block walls, pool banks, water, and chasms; preserve connected floor paths and both bridge decks. Check blocked positions, movement at edges, and corridor reachability.
+- [x] 13.08 Add an empty Cave Arena using cave_boss_area.png, accessible from the cave's northeast chamber. Include wall collision, connected floor/stairs, a return exit, and save/load support; no boss or monsters.
 
 ## 14. Quest variety
 

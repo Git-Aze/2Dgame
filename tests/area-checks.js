@@ -2,7 +2,7 @@ import { player, runtime, enemies, corpses, fireballs, spellCooldowns } from "..
 import { resetAdventure } from "../src/core/lifecycle.js";
 import { WORLD_DATA } from "../src/world/world.js";
 import { enterArea, interactWithPortal } from "../src/world/areas.js";
-import { collides } from "../src/world/movement.js";
+import { collides, moveEntity } from "../src/world/movement.js";
 import { spellPathBlocked } from "../src/world/collision.js";
 import { groundMapImage, trees } from "../src/world/world-state.js";
 import { buildings } from "../src/world/buildings.js";
@@ -29,6 +29,32 @@ function runAreaChecks(assert) {
   assert(collides(50, 50) && collides(1200, 900), "Cave walls and central pool block movement");
   assert(!collides(1490, 910), "Cave water bridge is traversable");
   assert(spellPathBlocked(300, 1200, 300, 200), "Cave walls block attacks through disconnected chambers");
+  // Reference-image points are independent of the scaled world and camera.
+  const at = (x, y) => ({ x: x * 1.5 - player.w / 2, y: y * 1.5 - player.h / 2, w: player.w, h: player.h });
+  for (const [x, y] of [[1100,730],[1200,750],[1200,880],[1300,900],
+    [900,420],[960,470],[1050,700],[400,680],[500,820],[1300,425],
+    [280,510],[400,540],[890,110],[1220,180],[1290,450],[1400,485],[800,480],[970,610]]) {
+    const position = at(x, y);
+    assert(collides(position.x, position.y), `Cave wall, bank, water, or chasm at ${x},${y} is blocked`);
+  }
+  for (const [x, y] of [[200,800],[350,200],[200,480],[500,510],[610,650],
+    [690,800],[740,900],[900,940],[1030,900],[1060,802],[1170,802],
+    [1310,802],[1390,760],[1350,600],[1190,480],[1320,280],[1000,610],[1030,645],[750,220],[800,780],[900,750]]) {
+    const position = at(x, y);
+    assert(!collides(position.x, position.y), `Cave floor or bridge at ${x},${y} remains open`);
+  }
+  const waterApproach = at(1010,610);
+  assert(!collides(waterApproach.x, waterApproach.y), "Water-bridge movement check starts on its deck");
+  moveEntity(waterApproach, -150, 0);
+  assert(waterApproach.x + 3 >= 988 * 1.5, "Movement cannot step sideways off the water bridge");
+  const bridgeApproach = at(1170,802);
+  assert(!collides(bridgeApproach.x, bridgeApproach.y), "Chasm-bridge movement check starts on its deck");
+  moveEntity(bridgeApproach, 0, -150);
+  assert(bridgeApproach.y + 3 >= 792 * 1.5, "Movement cannot step off the chasm bridge into the cliff");
+  const cliffApproach = at(1200,600);
+  assert(!collides(cliffApproach.x, cliffApproach.y), "Chasm movement check starts on chamber floor");
+  moveEntity(cliffApproach, 0, 240);
+  assert(cliffApproach.y < 690 * 1.5, "Movement from the east chamber stops at the chasm rim");
   // Flood-fill actor-sized positions to verify every chamber is reachable.
   const step = 12, queue = [[player.x, player.y]], visited = new Set([`${player.x},${player.y}`]);
   for (let index = 0; index < queue.length; index++) {
@@ -39,6 +65,10 @@ function runAreaChecks(assert) {
     }
   }
   for (const enemy of enemies) assert(queue.some(([x,y]) => Math.hypot(x-enemy.x,y-enemy.y) < 24), `Cave chamber containing ${enemy.name} at ${enemy.x},${enemy.y} is reachable`);
+  for (const [x, y] of [[750,220],[800,780],[900,750],[1000,610],[1170,802]]) {
+    const destination = at(x, y);
+    assert(queue.some(([px,py]) => Math.hypot(px-destination.x,py-destination.y) < 18), `Cave corridor or bridge at ${x},${y} is connected to the entrance`);
+  }
   const caveEnemy = enemies[0];
   damageEnemy(caveEnemy, 10000);
   const corpse = corpses[0];
