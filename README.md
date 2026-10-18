@@ -18,12 +18,15 @@ Your editor's local web server also works. Opening `index.html` directly with a 
 
 ## What you can do
 
+Press **Ctrl+M** to toggle collision borders for the current area, including while paused. Green outlines mark floor regions, red marks solid obstacles and scenery footprints, blue marks water, cyan marks bridges/crossings, yellow marks passages through solid scenery, and purple marks blocked tiles. Overlapping floor-region outlines show the component polygons; their shared edges do not block movement. The overlay follows the camera and area changes and is not stored in saves.
+
 - Explore the map, cross bridges, and navigate around water, cliffs, and tree trunks.
 - Enter the northeast cave by approaching its mouth and pressing **E**, or clicking it nearby. Explore its chambers, fight level-1 creatures, and loot them. Use the southwest cave exit to return to the village.
 - The opening in the cave's northeast chamber leads to **Cave Arena**. Press **E** or click nearby to enter. Its central floor and northern platform are explorable, with no enemies or boss yet. Return through the southern entrance.
 - Travel preserves your character and pauses enemies in the area you leave. Unlooted corpses stay in their own area. Saves restore the active area at its safe entrance with fresh enemies; older saves load in the village. Restart begins a fresh village adventure.
 - Equip weapons and armor from your inventory and inspect your character's attributes.
 - Target green slimes, red slimes, and wolves, then cast Fireball or Ignite.
+- Direct attacks (Fireball, Sword Strike, and Ranged Attack) have a **5% base critical chance** and deal **double damage** on a crit. Casting Fireball while its target is burning from Ignite guarantees a critical hit, even if the burn expires before release or impact. Ignite ticks do not crit. Critical damage displays **CRIT!**; action-bar tooltips show your current chance. Future items can add critical chance bonuses.
 - Enemies navigate around trees, buildings, cliffs, and water while chasing, wandering, or returning home, using bridges when needed. Solid obstacles also block their melee attacks.
 - Equip any sword and use Sword Strike (default key **3**) against nearby enemies. It costs no mana and has a 0.6-second cooldown.
 - Buy the Common **Short Bow** (`01000`, 25 gold) or **Throwing Dagger** (`01001`, 18 gold) at the General Store. Equip it and use **Ranged Attack** (default key **5** in new adventures). Bow range is 280 pixels; dagger range is 180 pixels. Both have a 0.8-second cooldown and use no mana or ammunition. Throwing does not consume the dagger. Existing saves can assign Ranged Attack from the spell book.

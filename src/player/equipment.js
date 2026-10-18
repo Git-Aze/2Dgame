@@ -18,6 +18,7 @@ function getEquipmentBonuses() {
     dexterity: 0,
     armor: 0,
     damage: 0,
+    critChance: 0,
   };
 
   for (const itemId of Object.values(inventory.equipment)) {

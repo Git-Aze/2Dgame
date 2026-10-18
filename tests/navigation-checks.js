@@ -7,7 +7,7 @@ import { player, enemies } from "../src/core/state.js";
 import { updateEnemies, respawnEnemy } from "../src/combat/enemies.js";
 
 export function runNavigationChecks(assert) {
-  const terrain = [mapCollision.solid, mapCollision.water, mapCollision.crossings, trees, buildings];
+  const terrain = [mapCollision.walkable, mapCollision.floorHoles, mapCollision.solid, mapCollision.water, mapCollision.crossings, trees, buildings];
   const savedTerrain = terrain.map((list) => [...list]);
   const savedPlayer = structuredClone(player);
   const savedEnemies = enemies.map((enemy) => structuredClone(enemy));

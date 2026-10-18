@@ -5,7 +5,7 @@ const SPELLS = {
     id: "00001",
     name: "Fireball",
     icon: "🔥",
-    description: "Launches a fiery projectile at the selected enemy.",
+    description: "Launches a fiery projectile. Casting on a burning target guarantees a critical hit for double damage, even if the burn expires before impact.",
 
     damage: 35,
     manaCost: 10,

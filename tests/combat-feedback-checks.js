@@ -18,7 +18,7 @@ import { mapCollision } from "../src/world/collision.js";
 
 export function runCombatFeedbackChecks(assert) {
   const snapshot = JSON.stringify(createSave());
-  const terrain = [mapCollision.solid, mapCollision.water, trees, buildings];
+  const terrain = [mapCollision.walkable, mapCollision.floorHoles, mapCollision.solid, mapCollision.water, trees, buildings];
   const savedTerrain = terrain.map((list) => [...list]);
   const slot = (index) => document.querySelectorAll("#action-bar .action-slot")[index];
   try {

@@ -24,11 +24,12 @@ function runCaveArenaChecks(assert) {
   assert(player.hp === 73 && player.mana === 21 && inventory.items.join(",") === items, "Arena travel preserves character and inventory");
   const at = (x, y) => ({ x: x * 1.5 - player.w / 2, y: y * 1.5 - player.h / 2, w: player.w, h: player.h });
   for (const [x,y] of [[200,200],[300,600],[600,750],[940,750],[760,60],[600,170],[930,170],
-    [350,470],[1200,480],[500,590],[1020,590],[1300,400],[230,400]]) {
+    [350,470],[1200,480],[500,590],[1020,590],[1300,400],[230,400],
+    [430,280],[1000,630],[850,900],[760,70]]) {
     const point = at(x,y);
     assert(collides(point.x,point.y), `Arena wall, cliff, water, or rock at ${x},${y} blocks movement`);
   }
-  const destinations = [[770,930],[770,810],[770,700],[770,500],[450,450],[1080,450],[770,265],[770,190]];
+  const destinations = [[770,930],[770,810],[770,700],[770,500],[450,450],[1080,450],[770,265],[770,190],[400,380],[970,580],[750,900],[450,330],[820,900],[770,115]];
   for (const [x,y] of destinations) {
     const point = at(x,y);
     assert(!collides(point.x,point.y), `Arena floor or stairs at ${x},${y} is open`);

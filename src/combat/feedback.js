@@ -8,10 +8,10 @@ function clearCombatFeedback() {
   combatFeedback.time = 0;
 }
 
-function addDamage({ target, amount, cause }, incoming = false) {
+function addDamage({ target, amount, cause, critical = false }, incoming = false) {
   if (!(amount > 0)) return;
   const numbers = combatFeedback.numbers;
-  const kind = incoming ? "incoming" : cause === "00002" ? "dot" : "direct";
+  const kind = incoming ? "incoming" : critical ? "critical" : cause === "00002" ? "dot" : "direct";
   let lane = 0;
   while (lane < 5 && numbers.some((number) => number.target === target && number.lane === lane)) lane++;
   const combined = lane === 5 ? numbers.findLast((number) => number.target === target && number.kind === kind && number.age < 0.2) : null;

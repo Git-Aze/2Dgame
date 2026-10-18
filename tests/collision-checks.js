@@ -8,16 +8,16 @@ import { updateEnemies, respawnEnemy } from "../src/combat/enemies.js";
 export function runCollisionChecks(assert) {
   const actors = [player, ...enemies];
   const savedActors = actors.map((actor) => structuredClone(actor));
-  const savedTerrain = [mapCollision.solid, mapCollision.water, mapCollision.crossings, trees, buildings].map((list) => [...list]);
+  const savedTerrain = [mapCollision.walkable, mapCollision.floorHoles, mapCollision.solid, mapCollision.water, mapCollision.crossings, trees, buildings].map((list) => [...list]);
   const savedBlocked = [...blocked];
-  const terrain = [mapCollision.solid, mapCollision.water, mapCollision.crossings, trees, buildings];
+  const terrain = [mapCollision.walkable, mapCollision.floorHoles, mapCollision.solid, mapCollision.water, mapCollision.crossings, trees, buildings];
   const rectangle = (left, top, right, bottom) => ({
     left, top, right, bottom, points: [[left, top], [right, top], [right, bottom], [left, bottom]],
   });
   try {
     for (const actor of actors) {
       assert(!collides(actor.x, actor.y, actor), `${actor.name}: starting footprint is clear`);
-      for (const region of [...mapCollision.solid, ...mapCollision.water]) {
+      for (const region of [...mapCollision.solid, ...mapCollision.floorHoles]) {
         const [x, y] = region.points[0];
         assert(collides(x - actor.w / 2, y - actor.h / 2, actor), `${actor.name}: real map region ${region.id} blocks footprint`);
       }

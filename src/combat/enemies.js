@@ -14,13 +14,13 @@ import { WORLD_DATA } from "../world/world.js";
 // Enemy AI, spawning, damage and death handling.
 
 // All attacks use this path so a death awards XP and quest credit exactly once.
-function damageEnemy(enemy, damage, cause) {
+function damageEnemy(enemy, damage, cause, critical = false) {
   if (!isPlaying() || !enemy || !enemy.alive ||
       !Number.isFinite(damage) || damage <= 0) return 0;
   const dealt = Math.min(enemy.hp, damage);
   enemy.hp = Math.round(Math.max(0, enemy.hp - damage) * 10) / 10;
   enemy.hurtTime = 0.25;
-  emit("enemy:hurt", { target: enemy, amount: dealt, cause });
+  emit("enemy:hurt", { target: enemy, amount: dealt, cause, critical });
   if (enemy.hp <= 0) defeatEnemy(enemy, cause);
   return dealt;
 }

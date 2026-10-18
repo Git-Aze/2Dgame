@@ -14,7 +14,7 @@ import { render } from "../src/rendering/renderer.js";
 
 export function runAttributeDamageChecks(assert) {
   const snapshot = JSON.stringify(createSave());
-  const terrain = [mapCollision.solid, mapCollision.water, trees, buildings];
+  const terrain = [mapCollision.walkable, mapCollision.floorHoles, mapCollision.solid, mapCollision.water, trees, buildings];
   const savedTerrain = terrain.map((list) => [...list]);
   const near = (a, b) => Math.abs(a - b) < 0.00001;
   try {

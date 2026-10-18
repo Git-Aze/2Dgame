@@ -32,6 +32,7 @@ function compileMapCollision() {
     solid: [...settings.solid, ...trunks].map(compile),
     crossings: settings.crossings.map(compile),
     walkable: (settings.walkable ?? []).map(compile),
+    floorHoles: (settings.floorHoles ?? []).map(compile),
     solidPassages: (settings.solidPassages ?? []).map(compile),
   };
 }
@@ -113,6 +114,11 @@ function collidesWithMap(left, top, right, bottom) {
     pointInPolygon(left, bottom, points) && pointInPolygon(right, bottom, points));
   if (!inPassage && mapCollision.solid.some((region) =>
     polygonIntersectsRect(region, left, top, right, bottom))) return true;
+  if (mapCollision.floorHoles.some((region) => polygonIntersectsRect(region, left, top, right, bottom))) return true;
+
+  // A traced floor can already exclude all water. Keep its water regions for
+  // spell visibility and debug drawing without clipping that floor a second time.
+  if (mapCollision.walkable.length && WORLD_DATA.collision.waterBlocksMovement === false) return false;
 
   // Crossings are convex polygons. All four corners must be inside so actors
   // cannot step sideways off a bridge or dock into the water.
@@ -142,7 +148,8 @@ function spellPathBlocked(ax, ay, bx, by) {
     for (let i = 0; i <= steps; i++) {
       const x = ax + (bx - ax) * i / steps, y = ay + (by - ay) * i / steps;
       const contains = (region) => x >= region.left && x <= region.right && y >= region.top && y <= region.bottom && pointInPolygon(x, y, region.points);
-      if (!mapCollision.walkable.some(contains) && !mapCollision.water.some(contains)) return true;
+      if (!mapCollision.water.some(contains) &&
+          (!mapCollision.walkable.some(contains) || mapCollision.floorHoles.some(contains))) return true;
     }
   }
   for (const building of buildings) {

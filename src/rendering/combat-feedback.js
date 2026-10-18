@@ -44,7 +44,7 @@ function drawCombatFeedback() {
     ctx.globalAlpha = Math.min(1, (1 - progress) * 3);
     ctx.font = number.kind === "dot" ? "bold 11px Arial" : "bold 14px Arial";
     ctx.fillStyle = number.kind === "incoming" ? "#ff7777" : number.kind === "dot" ? "#ffa64d" : "#fff0af";
-    const text = `-${number.amount}${number.kind === "dot" ? " DOT" : ""}`;
+    const text = `-${number.amount}${number.kind === "critical" ? " CRIT!" : number.kind === "dot" ? " DOT" : ""}`;
     const y = number.y - progress * 25;
     ctx.strokeText(text, number.x, y);
     ctx.fillText(text, number.x, y);

@@ -12,6 +12,8 @@ const STAT_RULES = Object.freeze({
   baseManaRegen: 2,
   manaRegenPerIntelligence: 0.1,
   minimumIncomingDamage: 1,
+  baseCritChance: 0.05,
+  criticalDamageMultiplier: 2,
 });
 
 function getPlayerStats() {
@@ -24,6 +26,7 @@ function getPlayerStats() {
     strength, vitality, intelligence, dexterity,
     armor: player.armor + bonuses.armor,
     weaponDamage: bonuses.damage,
+    critChance: Math.max(0, Math.min(1, STAT_RULES.baseCritChance + bonuses.critChance)),
     maxHp: player.baseMaxHp + Math.max(0, strength - STAT_RULES.attributeBaseline) * STAT_RULES.healthPerStrength,
     maxMana: player.baseMaxMana,
     moveSpeed: player.speed * (1 + Math.max(0, dexterity - STAT_RULES.attributeBaseline) * STAT_RULES.speedPerDexterity),
@@ -54,6 +57,7 @@ function getSpellStats(spell, stats = getPlayerStats()) {
     // while direct hits also include matching weapon damage. Round to tenths.
     ...(spell.damage !== undefined ? {
       damage: roundDamage(spell.damage + weaponDamage + attributeDamage),
+      critChance: stats.critChance,
     } : {}),
     ...(spell.damagePerTick !== undefined ? { damagePerTick: roundDamage(spell.damagePerTick + attributeDamage) } : {}),
     ...(spell.useWeaponRange && weapon?.weaponType === "Ranged" ? { range: weapon.range } : {}),

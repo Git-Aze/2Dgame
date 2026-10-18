@@ -28,6 +28,12 @@ function setupInput() {
 
   window.addEventListener("keydown", (event) => {
     const key = event.key.toLowerCase();
+    if (key === "m" && event.ctrlKey && !event.altKey && !event.metaKey &&
+        !["INPUT", "TEXTAREA", "SELECT"].includes(event.target?.tagName) && !event.target?.isContentEditable) {
+      event.preventDefault();
+      if (!event.repeat) runtime.debugCollisions = !runtime.debugCollisions;
+      return;
+    }
     // Let focused controls handle Space themselves (including Continue/import).
     if (key === " " && event.target?.tagName === "BUTTON" && event.target.id !== "start-game-button") return;
     if (key === "escape" && runtime.gameState === "playing") {

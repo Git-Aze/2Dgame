@@ -43,6 +43,7 @@ Completion target: a new player can explore, fight, level up, and see character 
 - [x] 2.14 Render green slimes with green_slime.png, with idle/movement/hit animation and existing combat overlays.
 - [x] 2.15 Render red slimes with red_slime.png using shared animation timing and existing combat overlays.
 - [x] 2.16 Add 1.1 damage per offensive attribute point above 10: Strength for melee, Intelligence for casting (including Ignite ticks), and Dexterity for ranged; retain existing stat benefits and update explanations. Add Common item-level-1 bow/dagger (`01000`–`01001`) and Ranged Attack (`00005`) with projectiles, range/cooldown checks, shop access, and save/load verification.
+- [x] 2.17 Add 5% base critical chance and double damage for direct player hits, with additive item stats.critChance bonuses capped at 100%. Fireball cast on an actively burning target guarantees a crit; retain that result through flight, show CRIT feedback, and explain chance in tooltips. Ignite ticks remain non-critical.
 
 ## 3. Strengthen the codebase
 
@@ -173,6 +174,12 @@ Completion target: defeated enemies can drop loot that the player can identify a
 - [x] 13.06 Verify transitions cannot place the player inside obstacles or duplicate entities and rewards.
 - [x] 13.07 Retrace cave collision against the artwork: block walls, pool banks, water, and chasms; preserve connected floor paths and both bridge decks. Check blocked positions, movement at edges, and corridor reachability.
 - [x] 13.08 Add an empty Cave Arena using cave_boss_area.png, accessible from the cave's northeast chamber. Include wall collision, connected floor/stairs, a return exit, and save/load support; no boss or monsters.
+- [x] 13.09 Add Ctrl+M collision debug borders for the active area, following the camera and area transitions. Include floor regions, solids, water, crossings, passages, tree/building footprints, and blocked tiles.
+- [x] 13.10 Trace Cave Arena's walkable floor from the inside of cave_boss_area_border.png, aligned to the ground map. Preserve obstacle footprints, travel, and floor connectivity.
+- [x] 13.11 Retrace the replacement Cave Arena border reference (936x932, offset 300,92), updating the upper chamber and entrance corridor; recheck floor connectivity and travel.
+- [x] 13.12 Slide normal player movement along sloped collision borders in the intended direction, without crossing walls, water, or corners. Preserve Charge and enemy movement.
+- [x] 13.13 Trace the cave's floor and enclosed chasm from cave_groundmap_border.png (1420x933, offset 72,91). Preserve bridges, connected chambers, portals, enemy spawns, and spell visibility over water; use the central rock's base footprint for passage clearance.
+- [x] 13.14 Trace village collision from ground_map_border.png at native 1536x1024 size, including enclosed blocked regions. Preserve scenery footprints, crossings, shop/cave access, spell visibility over water, and clear enemy spawns.
 
 ## 14. Quest variety
 

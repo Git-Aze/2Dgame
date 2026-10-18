@@ -39,6 +39,7 @@ const player = {
   casting: false,
   castReleased: false,
   castTime: 0,
+  castGuaranteedCritical: false,
   castTarget: null,
 };
 
@@ -82,6 +83,7 @@ const runtime = {
   cameraX: 0, cameraY: 0, viewWidth: 0, viewHeight: 0,
   gameState: "start", areaId: "village", lastTime: 0, nextEnemyInstanceId: 1, nextCorpseId: 1,
   selectedEnemy: null, activeShop: null, activeCharge: null, menuOpen: false,
+  debugCollisions: false,
 };
 function isPlaying() {
   return runtime.gameState === "playing" && player.hp > 0 && !runtime.activeShop && !runtime.menuOpen;

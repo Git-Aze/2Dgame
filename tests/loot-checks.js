@@ -15,7 +15,7 @@ import { buildings } from "../src/world/buildings.js";
 
 export function runLootChecks(assert) {
   const snapshot = JSON.stringify(createSave());
-  const terrain = [mapCollision.solid, mapCollision.water, trees, buildings];
+  const terrain = [mapCollision.walkable, mapCollision.floorHoles, mapCollision.solid, mapCollision.water, trees, buildings];
   const savedTerrain = terrain.map((list) => [...list]);
   const sequence = (...values) => { let index = 0; return () => values[index++ % values.length]; };
   const withRandom = (random, action) => {

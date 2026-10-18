@@ -14,7 +14,7 @@ import { toggleCharacterSheet } from "../src/ui/character-ui.js";
 
 export function runRarityChecks(assert) {
   const snapshot = JSON.stringify(createSave());
-  const terrain = [mapCollision.solid, mapCollision.water, trees, buildings];
+  const terrain = [mapCollision.walkable, mapCollision.floorHoles, mapCollision.solid, mapCollision.water, trees, buildings];
   const savedTerrain = terrain.map((list) => [...list]);
   const swords = ["02000", "02001", "02002", "02003", "02004"];
   try {

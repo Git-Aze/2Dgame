@@ -2,6 +2,7 @@ import { SPELLS } from "../data/action-definitions.js";
 import { ctx } from "../rendering/canvas.js";
 import { spellPathBlocked } from "../world/collision.js";
 import { damageEnemy } from "./enemies.js";
+import { rollPlayerHit } from "./critical-hits.js";
 import { getEquippedItem, meetsWeaponRequirement } from "../player/equipment.js";
 import { emit, on } from "../core/events.js";
 import { getItem } from "../data/items.js";
@@ -77,8 +78,9 @@ function swordAttack() {
     ? (dx < 0 ? "left" : "right") : (dy < 0 ? "up" : "down");
   spellCooldowns["00003"] = attack.cooldown;
   swordSwings.push({ x, y, angle: Math.atan2(dy, dx), elapsed: 0, duration: 0.18 });
-  showMessage(`Sword Strike hit ${target.name} for ${attack.damage} damage!`);
-  damageEnemy(target, attack.damage, "00003");
+  const hit = rollPlayerHit(attack.damage);
+  showMessage(`Sword Strike ${hit.critical ? "critically hit" : "hit"} ${target.name} for ${hit.damage} damage!`);
+  damageEnemy(target, hit.damage, "00003", hit.critical);
 }
 
 function rangedAttack() {
@@ -89,7 +91,7 @@ function rangedAttack() {
   const dx = target.x + target.w / 2 - x, dy = target.y + target.h / 2 - y;
   player.facing = Math.abs(dx) > Math.abs(dy)
     ? (dx < 0 ? "left" : "right") : (dy < 0 ? "up" : "down");
-  fireballs.push({ x, y, target, speed: attack.projectileSpeed, damage: attack.damage,
+  fireballs.push({ x, y, target, speed: attack.projectileSpeed, ...rollPlayerHit(attack.damage),
     remainingRange: attack.range, spellId: attack.id, weaponClass: getEquippedItem("weapon").weaponClass });
   spellCooldowns[attack.id] = attack.cooldown;
 }
@@ -168,6 +170,7 @@ function canCastSpell(spell, target) {
 }
 
 function cancelCasting(reason = "") {
+  player.castGuaranteedCritical = false;
   if (!player.casting) return;
   player.casting = false;
   player.castTime = 0;
@@ -412,7 +415,7 @@ function launchFireball(target) {
     y: player.y + player.h / 2,
     target,
     speed: spell.projectileSpeed,
-    damage: spell.damage,
+    ...rollPlayerHit(spell.damage, player.castGuaranteedCritical),
     radius: spell.radius,
     remainingRange: spell.range,
   });
@@ -448,6 +451,7 @@ function castFireball() {
   player.castReleased = false;
   player.castTime = 0;
   player.castTarget = runtime.selectedEnemy;
+  player.castGuaranteedCritical = activeIgnites.some((effect) => effect.target === player.castTarget && effect.remaining > 0);
   player.moving = false;
   player.frame = 0;
 }
@@ -480,6 +484,7 @@ function updateCasting(dt) {
     spendMana(SPELLS["00001"]);
     spellCooldowns["00001"] = SPELLS["00001"].cooldown;
     launchFireball(player.castTarget);
+    player.castGuaranteedCritical = false;
     player.castReleased = true;
     player.castTarget = null;
   }
@@ -535,8 +540,8 @@ function updateCombat(dt) {
 
     if (distance <= travel + target.w / 2) {
       showMessage(
-        `${SPELLS[fireball.spellId ?? "00001"].name} hit ${target.name} for ${fireball.damage} damage!`);
-      damageEnemy(target, fireball.damage, fireball.spellId ?? "00001");
+        `${SPELLS[fireball.spellId ?? "00001"].name} ${fireball.critical ? "critically hit" : "hit"} ${target.name} for ${fireball.damage} damage!`);
+      damageEnemy(target, fireball.damage, fireball.spellId ?? "00001", fireball.critical);
 
       fireballs.splice(i, 1);
 

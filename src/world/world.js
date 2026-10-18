@@ -4,6 +4,7 @@
 // Scenery and its collision footprint are defined together.
 import { CAVE_DATA } from "./cave-world.js";
 import { CAVE_ARENA_DATA } from "./cave-arena.js";
+import { VILLAGE_FLOOR, VILLAGE_FLOOR_HOLES } from "./village-border.js";
 
 const VILLAGE_DATA = {
   id: "village",
@@ -13,10 +14,9 @@ const VILLAGE_DATA = {
   height: 48,
   background: new URL("../../assets/images/ground_map.png", import.meta.url).href,
   collision: {
-    solidPassages: [{ id: "cave-approach", points: [[1395,153],[1424,116],[1455,119],[1433,163],[1411,180]] }],
     boundaryTiles: 1,
     entityMargin: 3,
-    // Coordinates traced against ground_map.png, independent of world scale.
+    // Reference coordinates match ground_map_border.png and the ground image.
     referenceWidth: 1536,
     referenceHeight: 1024,
     water: [
@@ -43,61 +43,18 @@ const VILLAGE_DATA = {
         [1080,293],[1055,275],[1045,248],[1062,223],[1069,204],
         [1048,193],[1021,197],[1003,185]] },
     ],
-    // Full entity footprint must fit on a crossing to override water collision.
+    // Bridge/dock guides for the debug overlay. The traced floor defines their
+    // movement edges; water polygons remain available for spell visibility.
     crossings: [
-      { id: "west-north-bridge", points: [[236,210],[325,236],[315,269],[225,242]] },
-      { id: "west-south-bridge", points: [[263,408],[374,432],[366,470],[252,448]] },
+      { id: "west-north-bridge", points: [[240,215],[310,230],[307,254],[232,237]] },
+      { id: "west-south-bridge", points: [[284,417],[354,438],[343,452],[281,437]] },
       { id: "east-bridge", points: [[1391,494],[1499,454],[1524,500],[1416,542]] },
       { id: "dock", points: [[606,733],[640,751],[565,859],[524,840]] },
     ],
-    solid: [
-      { id: "northwest-cliffs", points: [[0,0],[239,0],[277,40],[280,84],
-        [260,126],[220,157],[161,164],[118,144],[77,116],[0,89]] },
-      { id: "waterfall-east-cliffs", points: [[293,0],[491,0],[483,44],
-        [430,66],[393,108],[352,130],[331,108],[334,64],[318,29]] },
-      { id: "north-ridge", points: [[366,137],[410,126],[466,139],
-        [501,158],[544,151],[589,140],[621,153],[612,183],[567,198],
-        [513,201],[458,188],[408,175],[365,177]] },
-      { id: "west-bank-cliffs", points: [[0,267],[66,286],[119,280],
-        [175,247],[207,250],[226,277],[194,310],[142,326],
-        [100,337],[45,324],[0,317]] },
-      { id: "west-middle-cliffs", points: [[0,404],[69,410],[117,432],
-        [169,419],[222,395],[258,408],[265,440],[220,464],
-        [163,480],[104,477],[53,454],[0,454]] },
-      { id: "river-east-rocks", points: [[377,314],[400,293],[422,310],
-        [453,335],[466,356],[432,370],[401,362],[391,340]] },
-      { id: "central-ridge", points: [[718,202],[759,202],[793,189],
-        [839,181],[855,208],[826,228],[798,237],[755,249],[718,237]] },
-      { id: "northeast-ridge", points: [[1109,147],[1148,125],[1202,124],
-        [1244,151],[1294,140],[1332,103],[1355,65],[1414,47],
-        [1455,17],[1500,0],[1536,0],[1536,55],[1497,70],[1467,109],
-        [1424,130],[1392,161],[1352,191],[1315,216],[1260,221],
-        [1218,202],[1187,182],[1143,187],[1104,176]] },
-      { id: "east-upper-bank", points: [[1113,249],[1141,250],
-        [1177,275],[1194,300],[1206,317],[1178,321],[1157,300],
-        [1126,285],[1105,269]] },
-      { id: "east-lower-bank", points: [[1265,350],[1310,363],
-        [1352,384],[1396,419],[1429,430],[1422,456],[1388,452],
-        [1354,426],[1320,406],[1283,391],[1252,377]] },
-      { id: "southwest-cliffs", points: [[254,674],[296,654],[337,643],
-        [374,661],[411,692],[436,734],[419,765],[377,753],
-        [337,733],[288,719],[254,707]] },
-      { id: "south-central-cliffs", points: [[797,776],[838,773],
-        [877,795],[904,823],[933,840],[926,875],[898,876],
-        [868,851],[840,828],[811,816]] },
-      { id: "southeast-cliffs", points: [[1004,878],[1040,886],
-        [1061,919],[1106,915],[1137,937],[1159,924],[1190,910],
-        [1214,927],[1232,948],[1274,939],[1308,926],[1333,906],
-        [1359,919],[1391,898],[1420,896],[1452,911],[1469,941],
-        [1424,965],[1383,980],[1325,989],[1269,982],[1205,981],
-        [1148,970],[1090,964],[1040,947],[1003,929],[985,906]] },
-      { id: "west-island", points: [[0,570],[43,558],[90,569],
-        [120,594],[116,628],[96,661],[58,689],[20,678],[0,659]] },
-      { id: "southwest-island", points: [[65,751],[103,735],[143,754],
-        [152,789],[126,826],[81,844],[51,819],[48,787]] },
-      { id: "south-island", points: [[675,893],[704,872],[744,881],
-        [774,905],[802,934],[785,957],[747,951],[711,940],[677,926]] },
-    ],
+    walkable: VILLAGE_FLOOR,
+    floorHoles: VILLAGE_FLOOR_HOLES,
+    waterBlocksMovement: false,
+    solid: [],
     // Trunks of prominent trees already painted into the background image.
     // The canopy remains passable, just like the separate tree sprites.
     backgroundTrunks: [
@@ -144,7 +101,7 @@ const VILLAGE_DATA = {
     { id: "00001", tileX: 30, tileY: 9 },
     { id: "00001", tileX: 32, tileY: 13 },
     { id: "00001", tileX: 28, tileY: 16 },
-    { id: "00002", tileX: 34, tileY: 12 },
+    { id: "00002", tileX: 34, tileY: 13 },
     { id: "00003", tileX: 38, tileY: 15 },
   ],
 };

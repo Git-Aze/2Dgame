@@ -91,6 +91,10 @@ function createItemTooltip(item) {
     lines.push("");
 
     for (const [stat, value] of Object.entries(item.stats)) {
+      if (stat === "critChance") {
+        lines.push(`Critical chance: ${value >= 0 ? "+" : ""}${Math.round(value * 10000) / 100}%`);
+        continue;
+      }
       const statName = stat.charAt(0).toUpperCase() + stat.slice(1);
 
       lines.push(`${statName}: +${value}`);

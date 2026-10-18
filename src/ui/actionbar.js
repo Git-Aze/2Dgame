@@ -128,6 +128,7 @@ function renderActionBar() {
 function createActionTooltip(spell, key) {
   const lines = [`${spell.name} (${key})`, `ID: ${spell.id}`, spell.description];
   if (spell.damage !== undefined) lines.push(`Damage: ${spell.damage} per hit`);
+  if (spell.critChance !== undefined) lines.push(`Critical chance: ${Math.round(spell.critChance * 10000) / 100}%. Critical hits deal double damage.`);
   if (spell.damagePerTick !== undefined) {
     const ticks = Math.floor(spell.duration / spell.tickInterval);
     lines.push(`Damage: ${spell.damagePerTick} every ${spell.tickInterval}s for ${spell.duration}s (${ticks * spell.damagePerTick} total)`);

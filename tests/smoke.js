@@ -33,8 +33,16 @@ import { runCombatFeedbackChecks } from "./combat-feedback-checks.js";
 import { runPauseChecks } from "./pause-checks.js";
 import { runAreaChecks } from "./area-checks.js";
 import { runCaveArenaChecks } from "./cave-arena-checks.js";
+import { runCollisionDebugChecks } from "./collision-debug-checks.js";
+import { runWallSlideChecks } from "./wall-slide-checks.js";
+import { runCriticalHitChecks } from "./critical-hit-checks.js";
+import { runVillageBorderChecks } from "./village-border-checks.js";
 
 let checks = 0;
+// Keep existing exact-damage checks deterministic; critical-hit checks control
+// their own rolls and restore this value afterward.
+const originalRandom = Math.random;
+Math.random = () => 0.5;
 const errors = [];
 window.addEventListener("error", (event) => errors.push(event.message));
 function assert(condition, label) {
@@ -100,11 +108,15 @@ try {
 
   // Isolate combat geometry, then restore the real map before shop checks.
   const savedSolid = mapCollision.solid.splice(0);
+  const savedFloor = mapCollision.walkable.splice(0);
+  const savedFloorHoles = mapCollision.floorHoles.splice(0);
   const savedWater = mapCollision.water.splice(0);
   const savedTrees = trees.splice(0);
   const savedBuildings = buildings.splice(0);
   restoreTerrain = () => {
     mapCollision.solid.push(...savedSolid);
+    mapCollision.walkable.push(...savedFloor);
+    mapCollision.floorHoles.push(...savedFloorHoles);
     mapCollision.water.push(...savedWater);
     trees.push(...savedTrees);
     buildings.push(...savedBuildings);
@@ -295,6 +307,10 @@ try {
   runCombatFeedbackChecks(assert);
   runAreaChecks(assert);
   runCaveArenaChecks(assert);
+  runCollisionDebugChecks(assert);
+  runWallSlideChecks(assert);
+  runCriticalHitChecks(assert);
+  runVillageBorderChecks(assert);
   render();
   assert(errors.length === 0, `Browser errors: ${errors.join("; ")}`);
   const result = `PASS: ${checks} gameplay checks`;
@@ -305,4 +321,6 @@ try {
   const result = `FAIL after ${checks} checks: ${error.stack}`;
   document.body.dataset.smokeResult = result;
   parent.postMessage({ type: "smoke-results", passed: false, result }, location.origin);
+} finally {
+  Math.random = originalRandom;
 }
