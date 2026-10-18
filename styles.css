@@ -461,8 +461,11 @@ body {
    ======================================== */
 
 #character-sheet {
+  display: flex;
+  flex-direction: column;
+  max-height: calc(100vh - 32px);
   max-height: calc(100dvh - 32px);
-  overflow-y: auto;
+  overflow: hidden;
   position: absolute;
 
   top: 50%;
@@ -494,6 +497,7 @@ body {
 /* Header */
 
 #character-sheet-header {
+  flex-shrink: 0;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -535,6 +539,12 @@ body {
 
 
 /* Main layout */
+
+#character-sheet-body {
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
 
 #character-sheet-content {
   display: grid;
@@ -626,6 +636,7 @@ body {
 /* Footer */
 
 #character-sheet-footer {
+  flex-shrink: 0;
   padding: 8px;
 
   color: #8e887d;

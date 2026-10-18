@@ -5,6 +5,7 @@ import { toggleCharacterSheet } from "../ui/character-ui.js";
 import { startGame } from "./lifecycle.js";
 import { closeShop } from "../shops/shops.js";
 import { toggleSpellBook } from "../ui/spellbook.js";
+import { closeTopPanel, closeMenuLoadOptions } from "../ui/panels.js";
 import { setMenuOpen } from "./pause-menu.js";
 import { isPlaying, keys, runtime } from "./state.js";
 import { targetEnemyAtScreenPosition } from "../combat/targeting.js";
@@ -24,14 +25,16 @@ function setupInput() {
     if (key === "escape" && runtime.gameState === "playing") {
       event.preventDefault();
       if (!event.repeat) {
-        if (runtime.activeShop) closeShop();
-        setMenuOpen(!runtime.menuOpen);
+        if (runtime.menuOpen) {
+          if (!closeMenuLoadOptions()) setMenuOpen(false);
+        } else if (runtime.activeShop) closeShop();
+        else if (!closeTopPanel()) setMenuOpen(true);
       }
       return;
     }
     if (runtime.menuOpen) return;
     if (runtime.activeShop) {
-      if (key === "e" || key === "escape") {
+      if (key === "e") {
         event.preventDefault();
         if (!event.repeat) closeShop();
       }

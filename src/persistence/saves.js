@@ -9,19 +9,40 @@ import { emit } from "../core/events.js";
 
 const SAVE_KEY = "TopDownSoloRPG.save";
 const BACKUP_KEY = "TopDownSoloRPG.save.backup";
-const SAVE_VERSION = 1;
+const SAVE_VERSION = 2;
+const LEGACY_ITEM_IDS = Object.freeze({
+  "00001": "00001", "00002": "02000", "00003": "03000", "00004": "04000",
+  "00005": "05000", "00006": "06000", "00007": "07000",
+});
 const fields = ["level", "xp", "gold", "attributePoints", "strength", "vitality", "intelligence", "dexterity", "hp", "mana"];
 const object = (value) => value !== null && typeof value === "object" && !Array.isArray(value);
 const integer = (value, min, max) => Number.isSafeInteger(value) && value >= min && value <= max;
 const itemExists = (id) => typeof id === "string" && /^\d{5}$/.test(id) && Boolean(getItem(id));
 
-// Parse and validate everything before touching the live adventure. Version 1
-// deliberately rejects other versions; add explicit migrations when version 2 exists.
+function migrateSave(save) {
+  if (!object(save) || (save.version !== 1 && save.version !== SAVE_VERSION)) throw new Error("Unsupported save version. This game supports versions 1 and 2.");
+  if (save.version === 1) {
+    if (!object(save.inventory) || !Array.isArray(save.inventory.items) || !object(save.inventory.equipment)) throw new Error("Invalid legacy inventory.");
+    const migrateItem = (id) => {
+      if (typeof id !== "string" || !Object.hasOwn(LEGACY_ITEM_IDS, id)) throw new Error("Unknown legacy item ID.");
+      return LEGACY_ITEM_IDS[id];
+    };
+    save.inventory.items = save.inventory.items.map(migrateItem);
+    for (const slot of Object.keys(save.inventory.equipment)) {
+      if (save.inventory.equipment[slot] !== null) save.inventory.equipment[slot] = migrateItem(save.inventory.equipment[slot]);
+    }
+    // Ability IDs and quest objective counters belong to separate namespaces.
+    save.version = SAVE_VERSION;
+  }
+  return save;
+}
+
+// Migrate parsed data and validate everything before touching the live adventure.
 function parseSave(text) {
   if (typeof text !== "string" || text.length > 100000) throw new Error("Save file is missing or too large.");
   let save;
   try { save = JSON.parse(text); } catch { throw new Error("Save file is not valid JSON."); }
-  if (!object(save) || save.version !== SAVE_VERSION) throw new Error("Unsupported save version. This game supports version 1.");
+  save = migrateSave(save);
   if (save.game !== "TopDownSoloRPG" || typeof save.savedAt !== "string" || !Number.isFinite(Date.parse(save.savedAt))) throw new Error("Invalid save header.");
   const p = save.player;
   if (!object(p) || !integer(p.level, 1, 75)) throw new Error("Invalid player level.");

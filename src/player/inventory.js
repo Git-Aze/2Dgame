@@ -117,12 +117,12 @@ function unequipItem(slot) {
 
 function giveStartingItems() {
   addItem("00001"); // Apprentice Staff
-  addItem("00002"); // Iron Sword
-  addItem("00003"); // Leather Cap
-  addItem("00004"); // Leather Armor
-  addItem("00005"); // Wooden Shield
-  addItem("00006"); // Leather Pants
-  addItem("00007"); // Traveler's Boots
+  addItem("02000"); // Iron Sword
+  addItem("03000"); // Leather Cap
+  addItem("04000"); // Leather Armor
+  addItem("05000"); // Wooden Shield
+  addItem("06000"); // Leather Pants
+  addItem("07000"); // Traveler's Boots
 }
 
 export { hasInventorySpace, addItem, equipItem, unequipItem, giveStartingItems };

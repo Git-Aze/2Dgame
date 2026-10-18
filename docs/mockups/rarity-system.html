@@ -1,0 +1,57 @@
+﻿<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>TopDownSoloRPG — Equipment rarity concept</title>
+<style>
+*{box-sizing:border-box}body{margin:0;background:#101512;color:#ede7d7;font-family:Arial,sans-serif;line-height:1.5}
+main{max-width:1380px;padding:44px 40px;margin:auto}.eyebrow{font-size:11px;letter-spacing:3px;color:#c3ab78;text-transform:uppercase}
+h1{font:40px Georgia,serif;margin:8px 0 10px}p{color:#acae9f;margin:6px 0 24px}.badge{float:right;border:1px solid #574d38;padding:6px 12px;font-size:11px;border-radius:20px;color:#c3ab78}
+.tiers{display:grid;grid-template-columns:repeat(5,1fr);gap:14px;margin:28px 0}
+.tier{font:inherit;text-align:left;cursor:pointer;position:relative;min-width:0;border:1px solid #394038;border-top:3px solid var(--rarity);border-radius:8px;background:linear-gradient(150deg,#202923,#171e19);color:inherit;padding:22px 18px}
+.tier:hover,.tier[aria-pressed=true]{outline:1px solid var(--rarity);outline-offset:3px}.tier:focus-visible{outline:3px solid #e4d4a6}
+.rank{font-size:10px;letter-spacing:2px;color:#929d91}.name{color:var(--rarity);font:23px Georgia,serif;margin:4px 0 15px}
+.icon{display:grid;place-items:center;width:64px;height:64px;border:2px solid var(--rarity);background:#0b100d;border-radius:6px;margin-bottom:18px;box-shadow:inset 0 0 15px #51604b25}
+svg{width:45px;height:45px;filter:drop-shadow(1px 3px 2px #000)}.item-name{font-size:14px;font-weight:bold;color:var(--rarity);min-height:44px}.damage{font-size:28px;font-weight:bold;margin:10px 0}.damage span{font-size:12px;font-weight:normal;color:#a5aea1}
+.stats{font-size:13px;min-height:48px;color:#c5ceb8}.perk{font-size:12px;color:#d3c28f;min-height:66px;border-top:1px solid #374036;padding-top:12px;margin-top:10px}.hex{font:11px monospace;color:#939e92;margin-top:14px}
+.bottom{display:grid;grid-template-columns:1fr 1fr;gap:22px;margin-top:32px}.panel{background:#19211c;border:1px solid #4b4937;border-radius:8px;padding:24px}.panel h2{font:22px Georgia,serif;margin:0 0 18px;color:#dac99c}
+.slots{display:flex;gap:14px;flex-wrap:wrap}.slot{width:66px;height:66px;border:2px solid var(--rarity);border-radius:5px;background:#0d130f;display:grid;place-items:center;position:relative}.slot small{position:absolute;bottom:1px;right:4px;color:var(--rarity);font-size:10px}
+.caption{font-size:12px;color:#929d91;margin:20px 0 0}.tooltip{border:1px solid var(--rarity);background:#0d130f;padding:18px 20px;border-radius:5px;font-size:13px}.tooltip h3{color:var(--rarity);font:21px Georgia,serif;margin:0 0 3px}.tooltip .meta{color:#9aa692}.tooltip .green{color:#b4d9a0}.tooltip .effect{color:#d6c38d;margin-top:10px}.footer{font-size:11px;color:#8f9a8d;margin-top:24px;border-top:1px solid #30392f;padding-top:16px}
+@media(max-width:850px){main{padding:24px}.tiers{grid-template-columns:repeat(2,1fr)}.bottom{grid-template-columns:1fr}}@media(max-width:420px){.tiers{grid-template-columns:1fr}.badge{float:none;display:inline-block}}
+</style>
+</head>
+<body><main>
+<span class="badge">DESIGN CONCEPT · NOT GAME BALANCE</span>
+<div class="eyebrow">TopDownSoloRPG / Equipment</div>
+<h1>Five tiers. Five reasons to explore.</h1>
+<p>The same weapon family at the same level. Choose a tier to preview its item tooltip.</p>
+<div class="tiers" id="tiers"></div>
+<div class="bottom">
+<section class="panel"><h2>Inventory &amp; equipment</h2><div class="slots" id="slots"></div><p class="caption">Color the border and item name. Keep icons readable.<br>Show the tier name in every tooltip so color is never the only cue.</p></section>
+<section class="panel"><h2>Item tooltip preview</h2><div class="tooltip" id="tooltip" aria-live="polite"></div></section>
+</div>
+<div class="footer">Illustrative stats and future effects only. Keep item level separate from rarity. Armor uses the same tier budget, applied to defense and suitable attributes.</div>
+</main>
+<script>
+const sword = '<svg viewBox="0 0 64 64" aria-hidden="true"><path d="M48 5 58 6 57 16 27 46 18 37Z" fill="#d5ded9" stroke="#596f67" stroke-width="2"/><path d="m51 11-28 29" stroke="#f6fff7" stroke-width="3"/><path d="m11 34 20 20 5-5-20-20Z" fill="#bb9250" stroke="#594429" stroke-width="2"/><path d="m19 44-10 10 4 4 10-10" fill="#765033" stroke="#ba8d50" stroke-width="2"/><path d="m7 53 7 7-5 2-4-4Z" fill="#bb9250"/></svg>';
+const tiers = [
+{name:'Common',color:'#ffffff',item:'Iron Sword',damage:8,stats:'Base weapon damage',perk:'Reliable starter equipment.',source:'Merchants and ordinary enemies'},
+{name:'Uncommon',color:'#1eff00',item:"Guard's Iron Sword",damage:9,stats:'+1 Strength',perk:'One useful attribute bonus.',source:'Enemies, chests and early quests'},
+{name:'Rare',color:'#0070dd',item:"Knight's Iron Sword",damage:10,stats:'+2 Strength<br>+1 Vitality',perk:'Two complementary attributes.',source:'Elites and major quests'},
+{name:'Epic',color:'#a335ee',item:'Oathkeeper',damage:12,stats:'+3 Strength<br>+2 Vitality',perk:'Equip: Sword Strike deals 10% more damage.',source:'Bosses and difficult encounters'},
+{name:'Legendary',color:'#ff8000',item:'Dawnbreaker',damage:14,stats:'+4 Strength<br>+3 Vitality',perk:'After Charge, your next Sword Strike releases a shockwave.',source:'A dedicated quest chain or named boss'}
+];
+function select(index){
+ const tier=tiers[index];
+ document.querySelectorAll('.tier').forEach((button,i)=>button.setAttribute('aria-pressed',String(i===index)));
+ const tooltip=document.getElementById('tooltip');tooltip.style.setProperty('--rarity',tier.color);
+ tooltip.innerHTML='<h3>'+tier.item+'</h3><div class="meta">'+tier.name+' · Sword · Example level 5</div><div>'+tier.damage+' weapon damage</div><div class="green">'+tier.stats+'</div><div class="effect">'+tier.perk+'</div><div class="meta" style="margin-top:12px">Found in: '+tier.source+'</div>';
+}
+tiers.forEach((tier,index)=>{
+ const button=document.createElement('button');button.type='button';button.className='tier';button.style.setProperty('--rarity',tier.color);button.setAttribute('aria-pressed','false');
+ button.innerHTML='<div class="rank">TIER 0'+(index+1)+'</div><div class="name">'+tier.name+'</div><div class="icon">'+sword+'</div><div class="item-name">'+tier.item+'</div><div class="damage">'+tier.damage+' <span>weapon damage</span></div><div class="stats">'+tier.stats+'</div><div class="perk">'+tier.perk+'</div><div class="hex">'+tier.color.toUpperCase()+'</div>';
+ button.onclick=()=>select(index);document.getElementById('tiers').append(button);
+ const slot=document.createElement('div');slot.className='slot';slot.style.setProperty('--rarity',tier.color);slot.innerHTML=sword+'<small>T'+(index+1)+'</small>';slot.title=tier.name;document.getElementById('slots').append(slot);
+});select(3);
+</script></body></html>

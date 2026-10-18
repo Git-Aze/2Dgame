@@ -45,7 +45,7 @@ const SPELLS = {
     range: 48,
     cooldown: 0.6,
     requiredWeaponCategory: "Melee",
-    requiredWeaponId: "00002",
+    requiredWeaponId: "02000",
     rules: "Instant melee hit. Damage includes the sword's damage bonus. Requires the Iron Sword, a target in melee range and a clear path. Uses no mana.",
   },
   "00004": {
@@ -60,7 +60,7 @@ const SPELLS = {
     chargeSpeed: 650,
     stunDuration: 2,
     requiredWeaponCategory: "Melee",
-    requiredWeaponId: "00002",
+    requiredWeaponId: "02000",
     rules: "Requires at least 150 pixels of separation and the Iron Sword. Deals no damage. Terrain stops the charge; other attacks are unavailable while charging. Any enemy death resets its cooldown. Changing weapons or losing the target ends the charge without a cooldown refund.",
   },
 };

@@ -21,12 +21,13 @@ Your editor's local web server also works. Opening `index.html` directly with a 
 - Explore the map, cross bridges, and navigate around water, cliffs, and tree trunks.
 - Equip weapons and armor from your inventory and inspect your character's attributes.
 - Target green slimes, red slimes, and wolves, then cast Fireball or Ignite.
+- Enemies navigate around trees, buildings, cliffs, and water while chasing, wandering, or returning home, using bridges when needed. Solid obstacles also block their melee attacks.
 - Equip the Iron Sword and use Sword Strike (default key **3**) against nearby enemies. It costs no mana and has a 0.6-second cooldown.
 - With the sword equipped, use Charge (**4**) on an enemy at least 150 pixels away. Rush into melee range and stun it for 2 seconds. Charge costs no mana, stops at obstacles, and has a 20-second cooldown that resets whenever an enemy dies.
 - Arrange spells on the action bar using the spell book and drag-and-drop.
 - Earn XP from enemies and quests, level up, and spend attribute points.
 - Restart a fresh adventure after your character dies.
-- Visit the General Store at the map center. Click the house nearby or press **E** at its entrance to buy equipment with gold. Gameplay pauses while shopping; press **E** or Close to leave, or **Escape** to switch to the pause menu.
+- Visit the General Store at the map center. Click the house nearby or press **E** at its entrance to buy equipment with gold. Gameplay pauses while shopping; press **E**, **Escape**, or Close to leave.
 
 ## Your first adventure
 
@@ -49,8 +50,8 @@ Fireball has a 320-pixel range and a 0.5-second cooldown; Ignite has a 240-pixel
 | Open or close spell book | K |
 | Select an enemy | Left-click the enemy |
 | Open the shop nearby | E or click the building |
-| Close the shop | E or Close; Escape switches to the pause menu |
-| Pause or continue | Escape, or Continue in the pause menu |
+| Close the shop | E, Escape, or Close |
+| Close the topmost panel, then pause or continue | Escape; Continue also resumes from the pause menu |
 | Cast an assigned spell | 1–9 and 0, or click its action-bar slot |
 | Equip an item | Click it in the character sheet's inventory |
 | Unequip an item | Click its equipment slot |
@@ -60,9 +61,9 @@ Fireball has a 320-pixel range and a 0.5-second cooldown; Ignite has a 240-pixel
 
 ## Saving and loading
 
-During play, press **Escape** to open the pause menu. **Continue** or Escape resumes play; **Save** stores your adventure in this browser and **Export** downloads a portable JSON backup. **Load** offers the browser save or a JSON file import. Successful loading resumes play; saving, exporting, and invalid imports leave the menu paused. **Restart** begins a fresh adventure and preserves the stored save. **Settings** is a disabled placeholder. Saving is manual; progress since your last save is not automatically stored.
+During play, **Escape** closes the topmost open panel first (spell book, character sheet, or shop); press it with no panel open to open the pause menu. Within the menu, Escape closes expanded Load choices before resuming play. **Continue** or Escape resumes play; **Save** stores your adventure in this browser and **Export** downloads a portable JSON backup. **Load** offers the browser save or a JSON file import. Successful loading resumes play; saving, exporting, and invalid imports leave the menu paused. **Restart** begins a fresh adventure and preserves the stored save. **Settings** is a disabled placeholder. Saving is manual; progress since your last save is not automatically stored.
 
-On the start or death screen, **Continue** loads your saved adventure. **Import save** loads an exported JSON file; press Save afterward if you want to keep the imported adventure in browser storage. Invalid or unsupported files show an error without changing your adventure. Version 1 is the first supported format; other versions are rejected until explicit migrations are added.
+On the start or death screen, **Continue** loads your saved adventure. **Import save** loads an exported JSON file; press Save afterward if you want to keep the imported adventure in browser storage. Invalid or unsupported files show an error without changing your adventure. New saves use version 2; version 1 browser saves, backups, and exported files automatically migrate their item IDs on loading. Other versions are rejected. Saving or exporting afterward writes version 2.
 
 Saves include level, XP, base attributes, unspent points, gold, health/mana, inventory, equipment, quest progress/completed rewards, and action-bar assignments. Loading recalculates derived stats and places you at the starting spawn with fresh enemies. Position, enemy state, cooldowns, projectiles, and active casts are not saved.
 
@@ -83,6 +84,21 @@ Spells and attacks use permanent five-digit string IDs, in a separate namespace 
 
 Assign the next unused ID when adding an ability; never renumber existing IDs or reuse retired ones.
 
+Item IDs follow the category ranges documented in `src/data/items.js`, independently of ability and enemy IDs:
+
+| Category | ID range | Current item |
+| --- | --- | --- |
+| Casting weapons | `00001`–`00999` | `00001` Apprentice Staff |
+| Ranged weapons | `01000`–`01999` | None yet |
+| Melee weapons | `02000`–`02999` | `02000` Iron Sword |
+| Head | `03000`–`03999` | `03000` Leather Cap |
+| Chest | `04000`–`04999` | `04000` Leather Armor |
+| Off hand | `05000`–`05999` | `05000` Wooden Shield |
+| Legs | `06000`–`06999` | `06000` Leather Pants |
+| Boots | `07000`–`07999` | `07000` Traveler's Boots |
+
+Legacy item IDs `00002`–`00007` are retired and reserved for save migration; do not reuse them for new items.
+
 | File | Purpose |
 | --- | --- |
 | `index.html`, `styles.css` | Page layout, menus, and interface styling |
@@ -100,6 +116,7 @@ Assign the next unused ID when adding an ability; never renumber existing IDs or
 | `src/world/buildings.js`, `src/rendering/building-renderer.js` | Building definitions, interaction, and drawing |
 | `src/shops/shops.js`, `src/ui/shop-ui.js` | Purchase rules and shop interface |
 | `src/world/collision.js`, `src/world/movement.js` | Geometry checks and entity movement |
+| `src/world/navigation.js` | Footprint-aware A* enemy routes and timed route updates |
 | `src/data/enemy-types.js`, `src/combat/enemies.js` | Enemy definitions, AI, damage, death, and respawning |
 | `src/rendering/slime-sprites.js` | Green and red slime sprite-sheet frames and animation |
 | `src/data/items.js`, `src/player/inventory.js`, `src/player/equipment.js` | Item definitions, inventory actions, and equipment bonuses |
@@ -119,6 +136,8 @@ Modules declare dependencies with `import`/`export`; they do not expose gameplay
 With the local server running, open **http://localhost:8000/tests/smoke.html**. The browser runs gameplay checks in a separate game frame and displays a PASS/FAIL result. Checks cover startup, input, equipment and stats, quests, spells and melee attacks, shop purchases, tooltips, sprites, and death/restart behavior.
 
 Collision checks in `tests/collision-checks.js` also cover player and enemy footprints against map terrain, tree trunks, buildings, world boundaries, bridges and the dock, plus fast movement, sliding, and enemy AI movement. Controlled fixtures are restored after the checks.
+
+`tests/navigation-checks.js` checks detours around the real shop and controlled obstacles, bridges, unreachable and changing destinations, all three enemy movement states, stuns, chase limits, and respawn cleanup.
 
 ## Development status
 

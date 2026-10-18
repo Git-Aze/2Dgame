@@ -19,7 +19,7 @@ export async function runSaveChecks(assert) {
   questProgress.slimeTrouble.objectives[0] = 2;
   const save = writeSave(storage);
   const text = JSON.stringify(save);
-  assert(save.version === 1 && save.player.level === 4 && save.player.xp === 45 && save.inventory.equipment.weapon === "00001", "Versioned save captures exact progression and equipment");
+  assert(save.version === 2 && save.player.level === 4 && save.player.xp === 45 && save.inventory.equipment.weapon === "00001", "Versioned save captures exact progression and equipment");
   assert(!text.includes("xpToNextLevel") && !text.includes("cameraX") && !text.includes("casting"), "Save excludes derived and transient data");
   player.gold = 124;
   writeSave(storage);
@@ -31,14 +31,15 @@ export async function runSaveChecks(assert) {
   const unchanged = () => JSON.stringify({ player, inventory, questProgress, actionBarSpells });
   const before = unchanged();
   for (const mutate of [
-    (s) => { s.version = 0; }, (s) => { s.version = 2; },
+    (s) => { s.version = 0; }, (s) => { s.version = 3; },
     (s) => { s.player.gold = -1; }, (s) => { s.player.level = 0; },
     (s) => { s.player.xp = 999999; }, (s) => { s.player.hp = 0; },
     (s) => { s.player.attributePoints = 999; },
     (s) => { s.player.hp = 1000; }, (s) => { s.player.mana = 1000; },
     (s) => { s.inventory.items.push("99999"); },
+    (s) => { s.inventory.items.push("00002"); },
     (s) => { s.inventory.items = Array(21).fill("00001"); },
-    (s) => { s.inventory.equipment.head = "00002"; },
+    (s) => { s.inventory.equipment.head = "02000"; },
     (s) => { delete s.inventory.equipment.boots; },
     (s) => { s.actionBar[0] = "__proto__"; },
     (s) => { s.actionBar.pop(); },
@@ -67,6 +68,29 @@ export async function runSaveChecks(assert) {
   assert(!player.casting && !keys.w && fireballs.length === 0 && Object.keys(spellCooldowns).length === 0 && !runtime.selectedEnemy && !runtime.activeCharge, "Loading clears transient combat and input state");
   assert(inventory.equipment.weapon === "00001" && actionBarSpells[7] === "00004" && questProgress.slimeTrouble.objectives[0] === 2, "Loading restores inventory, action bar, and partial quest progress");
   assert(JSON.stringify(createSave().player) === JSON.stringify(save.player), "Save/load/save round trip preserves progression");
+  const legacy = JSON.parse(text);
+  legacy.version = 1;
+  legacy.inventory.items = ["00001", "00003", "00003"];
+  legacy.inventory.equipment = { weapon: "00002", head: "00003", chest: "00004", offhand: "00005", legs: "00006", boots: "00007" };
+  const migrated = parseSave(JSON.stringify(legacy));
+  assert(migrated.version === 2 && migrated.inventory.items.join(",") === "00001,03000,03000", "Legacy saves migrate backpack IDs while preserving duplicates and order");
+  assert(migrated.inventory.equipment.weapon === "02000" && migrated.inventory.equipment.head === "03000" && migrated.inventory.equipment.chest === "04000" && migrated.inventory.equipment.offhand === "05000" && migrated.inventory.equipment.legs === "06000" && migrated.inventory.equipment.boots === "07000", "Legacy equipment migrates every category ID");
+  assert(JSON.stringify(migrated.actionBar) === JSON.stringify(legacy.actionBar) && JSON.stringify(migrated.quests) === JSON.stringify(legacy.quests), "Migration leaves ability IDs and quest progress unchanged");
+  assert(JSON.stringify(parseSave(JSON.stringify(migrated))) === JSON.stringify(migrated), "Migrated save can be read again without remapping IDs");
+  applySave(JSON.stringify(legacy));
+  assert(inventory.equipment.weapon === "02000" && player.gold === 123 && player.xp === 45 && questProgress.firstSteps.status === "completed", "Loading a version 1 file restores migrated equipment and preserves rewards");
+  const invalidLegacy = structuredClone(legacy);
+  invalidLegacy.inventory.items.push("02000");
+  const afterMigration = unchanged();
+  assert(rejects(() => applySave(JSON.stringify(invalidLegacy))) && unchanged() === afterMigration, "Unknown or mixed-version legacy IDs are rejected before changing the adventure");
+  applySave(text);
+  data.set(SAVE_KEY, "broken JSON");
+  data.set(BACKUP_KEY, JSON.stringify(legacy));
+  assert(readSave(storage).backup && readSave(storage).save.inventory.equipment.weapon === "02000", "Legacy backup is migrated during recovery");
+  data.set(SAVE_KEY, JSON.stringify(legacy));
+  assert(!readSave(storage).backup && readSave(storage).save.version === 2, "Legacy browser save migrates on reading");
+  writeSave(storage);
+  assert(JSON.parse(storage.getItem(SAVE_KEY)).version === 2 && JSON.parse(storage.getItem(BACKUP_KEY)).inventory.equipment.weapon === "02000", "Saving writes current IDs and a migrated backup");
   unequipItem("weapon");
   equipItem("00001");
   assert(player.xp === 45 && player.gold === 123 && questProgress.firstSteps.status === "completed", "Completed quests never grant rewards again after loading");

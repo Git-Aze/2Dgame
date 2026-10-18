@@ -4,6 +4,18 @@ import { update } from "../src/core/update.js";
 export function runPauseChecks(assert) {
   const key = (value, repeat = false) => window.dispatchEvent(new KeyboardEvent("keydown", { key: value, repeat, bubbles: true, cancelable: true }));
   const dialog = document.getElementById("pause-menu");
+  const sheet = document.getElementById("character-sheet");
+  const book = document.getElementById("spell-book");
+  key("c"); key("k");
+  key("Escape", true);
+  assert(!sheet.classList.contains("hidden") && !book.classList.contains("hidden"), "Repeated Escape leaves open panels unchanged");
+  document.getElementById("close-spell-book").focus();
+  key("Escape");
+  assert(book.classList.contains("hidden") && !sheet.classList.contains("hidden") && !runtime.menuOpen && !book.contains(document.activeElement), "Escape closes topmost spell book without opening pause or retaining hidden focus");
+  key("Escape");
+  assert(sheet.classList.contains("hidden") && isPlaying() && !runtime.menuOpen, "Next Escape closes character sheet without pausing");
+  key("k"); key("Escape");
+  assert(book.classList.contains("hidden") && !runtime.menuOpen, "Spell book alone closes with Escape");
   keys.w = true;
   spellCooldowns["00004"] = 10;
   player.casting = true;
@@ -23,6 +35,8 @@ export function runPauseChecks(assert) {
   assert(runtime.menuOpen, "Held Escape does not toggle menu repeatedly");
   document.getElementById("menu-load-button").click();
   assert(!document.getElementById("menu-load-options").hidden && runtime.menuOpen, "Load expands browser/file choices while paused");
+  key("Escape");
+  assert(document.getElementById("menu-load-options").hidden && runtime.menuOpen && document.activeElement.id === "menu-load-button" && document.getElementById("menu-load-button").getAttribute("aria-expanded") === "false", "Escape closes nested Load choices before pause menu and restores focus");
   assert(document.getElementById("menu-settings-button").disabled, "Settings is a disabled placeholder");
   document.getElementById("menu-continue-button").click();
   assert(isPlaying() && dialog.hidden && !document.getElementById("game-container").inert && player.casting && player.castTime === 0.1 && runtime.lastTime === 0,

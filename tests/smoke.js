@@ -24,6 +24,7 @@ import { canvas, resizeCanvas } from "../src/rendering/canvas.js";
 import { render } from "../src/rendering/renderer.js";
 import { update } from "../src/core/update.js";
 import { runCollisionChecks } from "./collision-checks.js";
+import { runNavigationChecks } from "./navigation-checks.js";
 import { runSaveChecks } from "./save-checks.js";
 import { runPauseChecks } from "./pause-checks.js";
 
@@ -43,6 +44,8 @@ try {
   assert(runtime.gameState === "start" && !isPlaying(), "Start state");
   assert(!window.player && !window.SPELLS && !window.startGame, "No implicit gameplay globals");
   assert(enemies.length === 5 && inventory.items.length === 7, "Initial entities/items");
+  assert(inventory.items.join(",") === "00001,02000,03000,04000,05000,06000,07000", "Starting items follow category ID ranges");
+  assert(["00002", "00003", "00004", "00005", "00006", "00007"].every((id) => getItem(id) === null), "Retired item IDs are no longer valid live items");
   const spawnX = player.x;
   keys.d = true;
   update(1);
@@ -52,6 +55,7 @@ try {
   assert(questProgress.firstSteps.status === "active" && questProgress.slimeTrouble.status === "locked", "Initial quest chain");
   assert(!collides(player.x, player.y), "Clear spawn");
   runCollisionChecks(assert);
+  runNavigationChecks(assert);
   key("c");
   assert(!document.getElementById("character-sheet").classList.contains("hidden"), "Character keyboard control");
   assert(equipItem("00001"), "Equip staff");
@@ -61,7 +65,7 @@ try {
   spendAttributePoint("strength");
   spendAttributePoint("dexterity");
   assert(player.maxHp === 105 && near(getPlayerStats().moveSpeed, 147.9), "Attribute effects");
-  equipItem("00003");
+  equipItem("03000");
   const stats = getPlayerStats();
   player.hp = 50;
   player.mana = 10;
@@ -131,7 +135,7 @@ try {
   const xpAfterKill = player.xp;
   damageEnemy(target, 1000, "00001");
   assert(player.xp === xpAfterKill, "Exactly-once kill XP");
-  combatSetup(30); equipItem("00002");
+  combatSetup(30); equipItem("02000");
   player.mana = 0; swordAttack();
   assert(target.hp === 40 && player.mana === 0, "Sword damage and zero mana cost");
   swordAttack(); assert(target.hp === 40, "Sword cooldown");
@@ -173,10 +177,12 @@ try {
   player.gold = 0;
   assert(!buyShopItem("00001"), "Insufficient gold");
   player.gold = 50;
-  while (inventory.items.length < INVENTORY_SIZE) inventory.items.push("00003");
+  while (inventory.items.length < INVENTORY_SIZE) inventory.items.push("03000");
   assert(!buyShopItem("00001") && player.gold === 50, "Full inventory does not spend gold");
   key("escape");
-  assert(!runtime.activeShop && runtime.menuOpen && !isPlaying(), "Escape closes shop into pause menu");
+  assert(!runtime.activeShop && !runtime.menuOpen && isPlaying(), "Escape closes shop without opening pause menu");
+  key("escape");
+  assert(runtime.menuOpen && !isPlaying(), "Next Escape opens pause menu after shop closes");
   document.getElementById("menu-continue-button").click();
   closeShop(); assert(isPlaying(), "Close shop resumes game");
   assert(greenSlimeImage.naturalWidth > 0 && redSlimeImage.naturalWidth > 0, "Both slime sprite sheets loaded");
@@ -206,15 +212,15 @@ try {
     assert(Boolean(label), `Inventory button exists for ${id}`);
     label.closest("button").click();
   };
-  for (const id of ["00001", "00003", "00004", "00005", "00006", "00007"]) {
+  for (const id of ["00001", "03000", "04000", "05000", "06000", "07000"]) {
     const item = getItem(id);
     clickInventoryItem(id);
     assert(inventory.equipment[item.type] === id && text(`equipment-${item.type}`) === item.name && ownedItems() === startingItems,
       `Equip ${item.type} updates ownership and UI`);
   }
   assert(inventory.items.length === 1 && getPlayerStats().armor === 14 && near(getPlayerStats().moveSpeed, 153.7), "All equipment bonuses combine");
-  clickInventoryItem("00002");
-  assert(inventory.equipment.weapon === "00002" && inventory.items.length === 1 && inventory.items[0] === "00001" && ownedItems() === startingItems,
+  clickInventoryItem("02000");
+  assert(inventory.equipment.weapon === "02000" && inventory.items.length === 1 && inventory.items[0] === "00001" && ownedItems() === startingItems,
     "Weapon swap returns staff without losing or duplicating items");
   assert(player.maxHp === 115 && getPlayerStats().intelligence === 10 && text("equipment-weapon") === "Iron Sword", "Swap replaces bonuses and equipment label");
   player.hp = 115;
@@ -229,23 +235,23 @@ try {
   assert(!unequipItem("weapon") && !unequipItem("unknown") && ownedItems() === startingItems, "Empty and invalid slots leave ownership unchanged");
 
   equipItem("00001");
-  while (inventory.items.length < INVENTORY_SIZE) inventory.items.push("00003");
+  while (inventory.items.length < INVENTORY_SIZE) inventory.items.push("03000");
   emit("player:changed");
   const fullItems = ownedItems();
   const fullSnapshot = JSON.stringify(inventory);
   document.querySelector('[data-equipment-slot="weapon"]').click();
   assert(JSON.stringify(inventory) === fullSnapshot && text("equipment-weapon") === "Apprentice Staff", "Full backpack blocks unequip without changing inventory or UI");
-  clickInventoryItem("00002");
-  assert(inventory.items.length === INVENTORY_SIZE && inventory.equipment.weapon === "00002" && ownedItems() === fullItems,
+  clickInventoryItem("02000");
+  assert(inventory.items.length === INVENTORY_SIZE && inventory.equipment.weapon === "02000" && ownedItems() === fullItems,
     "Full backpack allows weapon swap without item loss");
-  clickInventoryItem("00003");
-  assert(inventory.items.length === INVENTORY_SIZE - 1 && inventory.equipment.head === "00003" && ownedItems() === fullItems,
+  clickInventoryItem("03000");
+  assert(inventory.items.length === INVENTORY_SIZE - 1 && inventory.equipment.head === "03000" && ownedItems() === fullItems,
     "Full backpack allows equipping an empty slot");
   document.querySelector('[data-equipment-slot="weapon"]').click();
   assert(inventory.items.length === INVENTORY_SIZE && inventory.equipment.weapon === null && ownedItems() === fullItems,
     "Unequip succeeds when exactly one backpack slot is free");
-  clickInventoryItem("00003");
-  assert(inventory.items.length === INVENTORY_SIZE && inventory.equipment.head === "00003" && ownedItems() === fullItems,
+  clickInventoryItem("03000");
+  assert(inventory.items.length === INVENTORY_SIZE && inventory.equipment.head === "03000" && ownedItems() === fullItems,
     "Swapping identical item copies preserves quantities");
   damagePlayer(10000);
   startGame();

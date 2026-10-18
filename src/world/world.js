@@ -131,7 +131,7 @@ const WORLD_DATA = {
     footprint: { x: -66, y: -48, width: 136, height: 48 },
     entrance: { x: -30, y: 12 },
     interactionRange: 90,
-    shop: { stock: ["00001", "00002", "00003", "00004", "00005", "00006", "00007"] },
+    shop: { stock: ["00001", "02000", "03000", "04000", "05000", "06000", "07000"] },
   }],
   enemySpawns: [
     { id: "00001", tileX: 30, tileY: 9 },

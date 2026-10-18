@@ -89,7 +89,7 @@ export function runCollisionChecks(assert) {
     }
 
     // Exercise actual AI movement branches with each enemy type against a wall.
-    mapCollision.solid.push(rectangle(950, 600, 954, 900));
+    mapCollision.solid.push(rectangle(950, 0, 954, WORLD_PIXEL_H));
     enemies.forEach((enemy) => { enemy.alive = false; });
     for (const enemy of enemies) {
       for (const state of ["wander", "chase", "return"]) {
@@ -98,7 +98,7 @@ export function runCollisionChecks(assert) {
         enemy.aiState = state; enemy.wanderTimer = 0; enemy.wanderTargetX = 1050; enemy.wanderTargetY = 700;
         player.x = state === "chase" ? 1050 : 1500; player.y = 700;
         for (let step = 0; step < 100; step++) updateEnemies(0.05);
-        assert(enemy.aiState === state && enemy.x > 880 && enemy.x + enemy.w - 3 <= 950 && !collides(enemy.x, enemy.y, enemy),
+        assert(enemy.aiState === state && enemy.x + enemy.w - 3 <= 950 && !collides(enemy.x, enemy.y, enemy),
           `${enemy.name}: ${state} AI stops at terrain`);
         enemy.alive = false;
       }

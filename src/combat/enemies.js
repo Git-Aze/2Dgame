@@ -1,6 +1,8 @@
 import { ENEMY_TYPES } from "../data/enemy-types.js";
 import { showMessage } from "../ui/messages.js";
-import { moveEntity } from "../world/movement.js";
+import { collides } from "../world/movement.js";
+import { navigateEnemy } from "../world/navigation.js";
+import { spellPathBlocked } from "../world/collision.js";
 import { damagePlayer, gainXP } from "../player/player.js";
 import { recordQuestEvent } from "../quests/quest-system.js";
 import { enemies, isPlaying, player, runtime, spellCooldowns } from "../core/state.js";
@@ -26,6 +28,7 @@ function defeatEnemy(enemy, cause) {
   enemy.alive = false;
   enemy.respawnTimer = enemy.respawnTime;
   enemy.stunRemaining = 0;
+  enemy.navigation = null;
   spellCooldowns["00004"] = 0;
   if (runtime.selectedEnemy === enemy) runtime.selectedEnemy = null;
   if (player.castTarget === enemy) player.castTarget = null;
@@ -105,6 +108,7 @@ function spawnEnemy(enemyId, tileX, tileY) {
 
     // Current AI state.
     aiState: "wander",
+    navigation: null,
 
     // Current destination.
     wanderTargetX: null,
@@ -207,19 +211,13 @@ function updateEnemies(dt) {
       }
 
       // Move toward player.
-      if (distanceToPlayer > enemy.attackRange && distanceToPlayer > 0) {
-        const moveDistance = Math.min(
-          enemy.speed * dt,
-          distanceToPlayer - enemy.attackRange,
-        );
-
-        moveEntity(enemy, (dx / distanceToPlayer) * moveDistance,
-          (dy / distanceToPlayer) * moveDistance);
-      }
+      navigateEnemy(enemy, playerCenterX - enemy.w / 2, playerCenterY - enemy.h / 2,
+        enemy.speed, dt, enemy.attackRange);
 
       // Attack player when close enough.
       if (
-        distanceToPlayer <= enemy.attackRange &&
+        Math.hypot(playerCenterX - enemy.x - enemy.w / 2, playerCenterY - enemy.y - enemy.h / 2) <= enemy.attackRange + 0.01 &&
+        !spellPathBlocked(enemy.x + enemy.w / 2, enemy.y + enemy.h / 2, playerCenterX, playerCenterY) &&
         enemy.attackTimer <= 0 &&
         player.hp > 0
       ) {
@@ -249,6 +247,7 @@ function updateEnemies(dt) {
 // ==========================================
 
 function respawnEnemy(enemy) {
+  enemy.navigation = null;
   // Reset enemy AI.
   enemy.aiState = "wander";
 
@@ -307,14 +306,19 @@ function randomRange(min, max) {
 
 // Pick a random position around the spawn point.
 function chooseWanderTarget(enemy) {
-  const angle = Math.random() * Math.PI * 2;
-
-  // sqrt gives a more even distribution across the area.
-  const distance = Math.sqrt(Math.random()) * enemy.wanderRadius;
-
-  enemy.wanderTargetX = enemy.spawnX + Math.cos(angle) * distance;
-
-  enemy.wanderTargetY = enemy.spawnY + Math.sin(angle) * distance;
+  enemy.navigation = null;
+  for (let attempt = 0; attempt < 8; attempt++) {
+    const angle = Math.random() * Math.PI * 2;
+    const distance = Math.sqrt(Math.random()) * enemy.wanderRadius;
+    const x = enemy.spawnX + Math.cos(angle) * distance;
+    const y = enemy.spawnY + Math.sin(angle) * distance;
+    if (collides(x, y, enemy)) continue;
+    enemy.wanderTargetX = x;
+    enemy.wanderTargetY = y;
+    return;
+  }
+  enemy.wanderTargetX = enemy.x;
+  enemy.wanderTargetY = enemy.y;
 }
 
 // Make an enemy wander near its spawn point.
@@ -346,21 +350,18 @@ function updateEnemyWander(enemy, dt) {
   }
 
   // Move toward the destination.
-  const moveDistance = Math.min(enemy.wanderSpeed * dt, distance);
-
-  moveEntity(enemy, (dx / distance) * moveDistance,
-    (dy / distance) * moveDistance);
+  if (navigateEnemy(enemy, enemy.wanderTargetX, enemy.wanderTargetY, enemy.wanderSpeed, dt) === "blocked") {
+    enemy.wanderTargetX = null;
+    enemy.wanderTargetY = null;
+    enemy.navigation = null;
+    enemy.wanderTimer = randomRange(enemy.wanderPauseMin, enemy.wanderPauseMax);
+  }
 }
 
 // Return to the spawn area after chasing.
 function updateEnemyReturn(enemy, dt) {
-  const dx = enemy.spawnX - enemy.x;
-  const dy = enemy.spawnY - enemy.y;
-
-  const distance = Math.hypot(dx, dy);
-
   // Reached the spawn location.
-  if (distance < 5) {
+  if (navigateEnemy(enemy, enemy.spawnX, enemy.spawnY, enemy.speed, dt) === "arrived") {
     enemy.x = enemy.spawnX;
     enemy.y = enemy.spawnY;
 
@@ -369,15 +370,8 @@ function updateEnemyReturn(enemy, dt) {
     enemy.wanderTargetY = null;
 
     enemy.wanderTimer = randomRange(enemy.wanderPauseMin, enemy.wanderPauseMax);
-
-    return;
+    enemy.navigation = null;
   }
-
-  // Move back toward spawn.
-  const moveDistance = Math.min(enemy.speed * dt, distance);
-
-  moveEntity(enemy, (dx / distance) * moveDistance,
-    (dy / distance) * moveDistance);
 }
 
 export { damageEnemy, spawnStartingEnemies, updateEnemies, respawnEnemy, updateEnemyRespawns };

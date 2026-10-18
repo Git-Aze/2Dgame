@@ -34,7 +34,7 @@ Completion target: exploration and combat work without obvious world or state in
 - [x] 2.08 Ensure the character sheet displays shared gameplay stats and updates live resources without rebuilding inventory. Show spell damage, mana cost and casting details on action-bar hover tooltips. Use instant shared tooltips for spells, stats and items, with keyboard-focus support.
 - [x] 2.09 Enforce spell range and line of sight against cliffs and tree trunks; water remains passable for spells.
 - [x] 2.10 Define Fireball interruption and release costs, spell cooldowns, and non-stacking Ignite refreshes that preserve tick timing.
-- [x] 2.11 Add Sword Strike requiring the Iron Sword (`00002`), with melee range, weapon damage, cooldown and a visible swing.
+- [x] 2.11 Add Sword Strike requiring the Iron Sword (`02000`), with melee range, weapon damage, cooldown and a visible swing.
 - [x] 2.12 Add Charge: sword required, minimum 150px distance, terrain-aware dash, 2-second stun, 20-second cooldown reset by enemy deaths.
 - [x] 2.13 Give spells and attacks permanent incremental five-digit IDs; update action-bar assignments, cooldowns and combat references.
 
@@ -65,6 +65,7 @@ Completion target: a new player can explore, fight, level up, and see character 
 - [x] 3.14 Verify dead players cannot move or cast and can restart correctly with Space or the restart button.
 - [x] 3.15 Verify player and enemy collision against obstacles and world boundaries. Browser checks cover real map regions, trunks, buildings, bridges/dock, all four boundaries, fast movement from four directions, sliding, blocked tiles, enemy wander/chase/return, and safe spawns/respawns.
 - [x] 3.16 Verify HUD placement at device pixel ratios 1 and 2.
+- [x] 3.17 Assign category-based item IDs from items.js; update starting gear, shop stock, weapon requirements, and checks. Migrate version 1 saves to version 2 while preserving equipment, quantities, ability IDs, and quest rewards.
 
 Completion target: new spells and enemies can be added without duplicating core gameplay logic.
 
@@ -79,7 +80,7 @@ Completion target: new spells and enemies can be added without duplicating core 
 - [ ] 4.07 Avoid rewriting health/mana text and styles when the displayed values are unchanged.
 - [ ] 4.08 Optimize loaded image assets while preserving visual quality.
 - [ ] 4.09 Re-profile after changes and compare against the baseline.
-- [ ] 4.10 Add enemy pathfinding if collision-aware movement reveals persistent navigation problems.
+- [x] 4.10 Add footprint-aware A* enemy pathfinding around terrain, trees, and buildings; reuse routes with timed updates, cross bridges safely, and retry unreachable destinations without walking through obstacles.
 
 Completion target: predictable frame times on intended devices, supported by measurements.
 
@@ -90,9 +91,9 @@ Completion target: predictable frame times on intended devices, supported by mea
 - [x] 5.02 Add versioned manual browser saves for progression, resources, inventory, equipment, quests, and action-bar assignments; Continue, JSON export/import, and safe-spawn loading with fresh enemies.
 - [x] 5.03 Validate saves before applying them; safely handle missing/corrupt data, storage errors, and unsupported versions. Retain the previous valid save as a recovery backup; test round trips, UI controls, and reward preservation. Add explicit migrations when a newer format is introduced.
 - [ ] 5.04 Make the inventory grid adapt to narrow viewports.
-- [ ] 5.05 Limit character-sheet height to the viewport and allow scrolling.
+- [x] 5.05 Limit character-sheet height to the viewport; scroll its contents while keeping the header, close button, and footer visible. Add viewport and scrolling guidance for future panels to AGENTS.md.
 - [ ] 5.06 Show visible controls for opening the character sheet (C) and spell book (K).
-- [ ] 5.07 Add Escape-to-close behavior for panels.
+- [x] 5.07 Make Escape close the topmost panel or nested menu before opening the pause menu; cover the character sheet, spell book, shop, and Load choices. Document consistent Escape and focus handling in AGENTS.md.
 - [ ] 5.08 Add descriptive accessible labels to icon-only controls.
 - [ ] 5.09 Provide a keyboard alternative to dragging spells onto the action bar.
 - [ ] 5.10 Verify the complete introductory gameplay loop across intended screen sizes.
@@ -145,7 +146,7 @@ Completion target: defeated enemies can drop loot that the player can identify a
 
 ## 11. Enemy behavior and navigation
 
-- [ ] 11.01 Complete obstacle-aware pathfinding tracked in 4.10 before adding more complex movement behaviors.
+- [x] 11.01 Complete obstacle-aware pathfinding tracked in 4.10 for chasing, wandering, and returning; verify all enemy sizes, changing routes, bridges, unreachable goals, stuns, chase limits, and respawn cleanup.
 - [ ] 11.02 Add a ranged enemy with projectile attacks and line-of-sight checks.
 - [ ] 11.03 Define patrol routes and patrol behavior using world data.
 - [ ] 11.04 Add retreat behavior with clear conditions for retreating and returning to combat.
