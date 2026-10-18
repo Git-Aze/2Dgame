@@ -5,7 +5,7 @@ import { resetBuildings } from "./buildings.js";
 import { collides } from "./movement.js";
 import { spawnStartingEnemies } from "../combat/enemies.js";
 import { cancelCasting } from "../combat/spells.js";
-import { enemies, player, keys, runtime, fireballs, activeIgnites, swordSwings, isPlaying } from "../core/state.js";
+import { enemies, player, keys, runtime, fireballs, enemyProjectiles, activeIgnites, swordSwings, isPlaying } from "../core/state.js";
 import { emit } from "../core/events.js";
 import { showMessage } from "../ui/messages.js";
 
@@ -46,6 +46,7 @@ function enterArea(id, arrival) {
   runtime.selectedEnemy = null;
   runtime.activeCharge = null;
   fireballs.length = 0;
+  enemyProjectiles.length = 0;
   activeIgnites.length = 0;
   swordSwings.length = 0;
   emit("combat:reset");

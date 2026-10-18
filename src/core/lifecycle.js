@@ -8,7 +8,7 @@ import { setMenuOpen } from "./pause-menu.js";
 import { resetSpellState } from "../combat/spells.js";
 import { resetAreaSessions } from "../world/areas.js";
 import { WORLD_DATA, worldPosition } from "../world/world.js";
-import { actionBarSpells, enemies, corpses, initialActionBar, initialPlayerState, inventory, keys, player, runtime } from "./state.js";
+import { actionBarSpells, enemies, corpses, enemyProjectiles, initialActionBar, initialPlayerState, inventory, keys, player, runtime } from "./state.js";
 
 function setGameState(state) {
   runtime.gameState = state;
@@ -17,6 +17,7 @@ function setGameState(state) {
   for (const key in keys) keys[key] = false;
   runtime.lastTime = 0;
   if (state !== "playing") {
+    enemyProjectiles.length = 0;
     player.moving = false;
     player.casting = false;
     runtime.activeCharge = null;

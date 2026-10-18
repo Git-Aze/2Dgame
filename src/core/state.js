@@ -60,6 +60,7 @@ const enemies = [];
 const corpses = [];
 const combatFeedback = { numbers: [], notices: [], flashes: [], time: 0 };
 const fireballs = [];
+const enemyProjectiles = [];
 const activeIgnites = [];
 const swordSwings = [];
 const spellCooldowns = Object.create(null);
@@ -89,4 +90,4 @@ function isPlaying() {
   return runtime.gameState === "playing" && player.hp > 0 && !runtime.activeShop && !runtime.menuOpen;
 }
 
-export { player, keys, inventory, INVENTORY_SIZE, enemies, corpses, combatFeedback, fireballs, activeIgnites, swordSwings, spellCooldowns, questProgress, ACTION_BAR_SIZE, actionBarSpells, initialPlayerState, initialActionBar, runtime, isPlaying };
+export { player, keys, inventory, INVENTORY_SIZE, enemies, corpses, combatFeedback, fireballs, enemyProjectiles, activeIgnites, swordSwings, spellCooldowns, questProgress, ACTION_BAR_SIZE, actionBarSpells, initialPlayerState, initialActionBar, runtime, isPlaying };

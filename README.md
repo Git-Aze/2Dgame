@@ -26,6 +26,7 @@ Press **Ctrl+M** to toggle collision borders for the current area, including whi
 - Travel preserves your character and pauses enemies in the area you leave. Unlooted corpses stay in their own area. Saves restore the active area at its safe entrance with fresh enemies; older saves load in the village. Restart begins a fresh village adventure.
 - Equip weapons and armor from your inventory and inspect your character's attributes.
 - Target green slimes, red slimes, and wolves, then cast Fireball or Ignite.
+- Red slimes shoot red slimeballs from up to **180 pixels** away, once per second. Shots travel straight toward your position when fired, so move aside to dodge. Walls, trees, and buildings block them. Slimes move to find line of sight; their shots use normal monster damage scaling and player armor.
 - Direct attacks (Fireball, Sword Strike, and Ranged Attack) have a **5% base critical chance** and deal **double damage** on a crit. Casting Fireball while its target is burning from Ignite guarantees a critical hit, even if the burn expires before release or impact. Ignite ticks do not crit. Critical damage displays **CRIT!**; action-bar tooltips show your current chance. Future items can add critical chance bonuses.
 - Enemies navigate around trees, buildings, cliffs, and water while chasing, wandering, or returning home, using bridges when needed. Solid obstacles also block their melee attacks.
 - Equip any sword and use Sword Strike (default key **3**) against nearby enemies. It costs no mana and has a 0.6-second cooldown.

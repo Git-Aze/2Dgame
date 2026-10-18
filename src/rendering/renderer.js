@@ -6,6 +6,7 @@ import { drawCorpse } from "./corpse-renderer.js";
 import { drawHitFlash, drawCombatFeedback } from "./combat-feedback.js";
 import { drawPortalPrompt } from "./portal-renderer.js";
 import { drawCollisionDebug } from "./collision-debug.js";
+import { drawEnemyProjectiles } from "./enemy-projectiles.js";
 import { drawImageCharacter, drawSprite, playerSprites } from "./player-sprites.js";
 import { CAST_FRAME_DURATION, drawFireball, drawIgniteEffects, drawSwordSwings } from "../combat/spells.js";
 import { enemies, corpses, fireballs, player, runtime } from "../core/state.js";
@@ -87,6 +88,7 @@ function render() {
   }
   drawIgniteEffects();
   drawSwordSwings();
+  drawEnemyProjectiles();
   drawCombatFeedback();
   drawPortalPrompt();
   drawCollisionDebug();

@@ -48,8 +48,9 @@ const ENEMY_TYPES = [
     wanderPauseMax: 3,
 
     damage: 15,
-    attackRange: 30,
+    attackRange: 180,
     attackCooldown: 1,
+    rangedAttack: { speed: 200, radius: 6, maxRange: 260 },
 
     xpReward: 40,
 

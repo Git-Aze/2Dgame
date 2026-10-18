@@ -150,7 +150,7 @@ Completion target: defeated enemies can drop loot that the player can identify a
 ## 11. Enemy behavior and navigation
 
 - [x] 11.01 Complete obstacle-aware pathfinding tracked in 4.10 for chasing, wandering, and returning; verify all enemy sizes, changing routes, bridges, unreachable goals, stuns, chase limits, and respawn cleanup.
-- [ ] 11.02 Add a ranged enemy with projectile attacks and line-of-sight checks.
+- [x] 11.02 Make Red Slime a ranged enemy: aimed red slimeballs, 180px attack range, 1s cooldown, 200px/s projectile speed, 260px travel limit, and line-of-sight repositioning. Verify dodging, solid collision, level/armor scaling, pauses, stuns, leash/respawn behavior, and projectile cleanup.
 - [ ] 11.03 Define patrol routes and patrol behavior using world data.
 - [ ] 11.04 Add retreat behavior with clear conditions for retreating and returning to combat.
 - [ ] 11.05 Add special attacks with visible warnings and time for the player to react.

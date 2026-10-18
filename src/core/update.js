@@ -7,6 +7,7 @@ import { cancelCasting, updateCasting, updateCharge, updateCombat, updateSpellCo
 import { isPlaying, keys, player, runtime } from "./state.js";
 import { getPlayerStats } from "../player/stats.js";
 import { updateCombatFeedback } from "../combat/feedback.js";
+import { updateEnemyProjectiles } from "../combat/enemy-projectiles.js";
 
 function update(dt) {
   if (!isPlaying()) return;
@@ -65,6 +66,8 @@ function update(dt) {
   // A lethal enemy attack must stop combat and regeneration this frame.
   if (!isPlaying()) return;
   updateEnemyRespawns(dt);
+  updateEnemyProjectiles(dt);
+  if (!isPlaying()) return;
   updateCombat(dt);
   updateSlimeAnimation(dt);
   updateManaRegeneration(dt, stats);

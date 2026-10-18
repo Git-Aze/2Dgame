@@ -1,0 +1,92 @@
+import { player, enemies, enemyProjectiles, runtime } from "../src/core/state.js";
+import { resetAdventure, setGameState } from "../src/core/lifecycle.js";
+import { updateEnemies, respawnEnemy } from "../src/combat/enemies.js";
+import { updateEnemyProjectiles, launchSlimeball } from "../src/combat/enemy-projectiles.js";
+import { mapCollision } from "../src/world/collision.js";
+import { trees } from "../src/world/world-state.js";
+import { buildings } from "../src/world/buildings.js";
+import { setMenuOpen } from "../src/core/pause-menu.js";
+import { createSave, applySave } from "../src/persistence/saves.js";
+import { enterArea } from "../src/world/areas.js";
+import { render } from "../src/rendering/renderer.js";
+
+export function runRangedEnemyChecks(assert) {
+  resetAdventure();
+  let red;
+  const fixture = () => {
+    red = enemies.find(enemy=>enemy.id === "00002");
+    for (const regions of Object.values(mapCollision)) regions.length = 0;
+    trees.length = 0; buildings.length = 0; enemyProjectiles.length = 0;
+    enemies.forEach(enemy=>{enemy.alive=false;});
+    Object.assign(red,{alive:true,x:800,y:600,spawnX:800,spawnY:600,aiState:"chase",navigation:null,attackTimer:0,stunRemaining:0,level:1});
+    Object.assign(player,{x:960,y:600,hp:100,armor:0});
+  };
+  try {
+    fixture();
+    updateEnemies(0);
+    assert(enemyProjectiles.length === 1 && player.hp === 100 && red.x === 800, "Red slime holds ranged position and launches instead of dealing immediate melee damage");
+    render();
+    updateEnemyProjectiles(0.2);
+    assert(player.hp === 100 && enemyProjectiles[0].x > 812, "Slimeball travels visibly before hitting");
+    updateEnemyProjectiles(1);
+    assert(player.hp === 85 && enemyProjectiles.length === 0, "Slimeball hits once for level-one damage");
+    updateEnemyProjectiles(1);
+    assert(player.hp === 85, "Consumed projectile never damages twice");
+    updateEnemies(0.5);
+    assert(enemyProjectiles.length === 0, "Ranged cooldown prevents immediate second shot");
+    updateEnemies(0.5);
+    assert(enemyProjectiles.length === 1, "Ranged cooldown permits next shot after one second");
+    fixture(); launchSlimeball(red,15); player.y += 90;
+    updateEnemyProjectiles(2);
+    assert(player.hp === 100 && enemyProjectiles.length === 0, "Player can dodge aimed shot and missed shots expire at maximum range");
+    fixture();
+    const wall={left:880,top:570,right:900,bottom:680,points:[[880,570],[900,570],[900,680],[880,680]]};
+    mapCollision.solid.push(wall);
+    updateEnemies(0.1);
+    assert(enemyProjectiles.length === 0 && Math.hypot(red.x-800,red.y-600)>0, "Blocked red slime repositions rather than firing through wall or standing still at ranged distance");
+    Object.assign(red,{x:800,y:600}); launchSlimeball(red,15);
+    updateEnemyProjectiles(2);
+    assert(player.hp === 100 && enemyProjectiles.length === 0, "In-flight slimeball is stopped by solid scenery at large delta time");
+    fixture();
+    // The projectile's edge must not squeeze past scenery that its center misses.
+    mapCollision.solid.push({left:870,top:616,right:900,bottom:630,points:[[870,616],[900,616],[900,630],[870,630]]});
+    launchSlimeball(red,15); updateEnemyProjectiles(2);
+    assert(player.hp === 100, "Slimeball radius collides with grazing scenery");
+    fixture(); red.stunRemaining=2;
+    updateEnemies(1);
+    assert(enemyProjectiles.length === 0 && red.x === 800, "Stunned red slime neither moves nor shoots");
+    fixture(); updateEnemies(0);
+    const shotX=enemyProjectiles[0].x;
+    setMenuOpen(true); updateEnemyProjectiles(1);
+    assert(enemyProjectiles[0].x === shotX && player.hp === 100, "Pause freezes hostile projectiles");
+    setMenuOpen(false); updateEnemyProjectiles(1);
+    assert(player.hp === 85, "Projectile resumes after unpausing");
+    fixture(); red.level=3; player.armor=5;
+    updateEnemies(0); updateEnemyProjectiles(1);
+    assert(player.hp === 87, "Ranged damage scales with enemy level and respects player armor");
+    fixture(); player.x=1250; updateEnemies(0.1);
+    assert(red.aiState === "return" && enemyProjectiles.length === 0, "Ranged enemy preserves leash behavior");
+    respawnEnemy(red);
+    assert(red.attackTimer === 0 && red.rangedAttack && red.stunRemaining === 0, "Respawn resets ranged cooldown and stun while retaining attack definition");
+    fixture(); launchSlimeball(red,15); red.alive=false;
+    updateEnemyProjectiles(1);
+    assert(player.hp === 85, "Released slimeball remains independent of shooter death");
+    fixture(); updateEnemies(0);
+    const save=JSON.stringify(createSave());
+    assert(!Object.hasOwn(JSON.parse(save),"enemyProjectiles"), "Hostile projectiles are transient and excluded from saves");
+    applySave(save);
+    assert(enemyProjectiles.length === 0, "Loading clears hostile projectiles");
+    launchSlimeball(enemies.find(enemy=>enemy.rangedAttack),15);
+    enterArea("cave");
+    assert(enemyProjectiles.length === 0, "Area travel clears hostile projectiles");
+    resetAdventure(); fixture(); player.hp=10;
+    launchSlimeball(red,15); launchSlimeball(red,15);
+    updateEnemyProjectiles(1);
+    assert(runtime.gameState === "dead" && enemyProjectiles.length === 0, "Lethal shot clears all hostile projectiles safely");
+    setGameState("playing");
+  } finally {
+    setMenuOpen(false);
+    setGameState("playing");
+    resetAdventure();
+  }
+}

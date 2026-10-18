@@ -8,7 +8,7 @@ import { emit, on } from "../core/events.js";
 import { getItem } from "../data/items.js";
 import { showMessage } from "../ui/messages.js";
 import { moveEntity } from "../world/movement.js";
-import { activeIgnites, fireballs, isPlaying, player, runtime, spellCooldowns, swordSwings } from "../core/state.js";
+import { activeIgnites, fireballs, enemyProjectiles, isPlaying, player, runtime, spellCooldowns, swordSwings } from "../core/state.js";
 import { getSpellStats } from "../player/stats.js";
 import { blocked } from "../world/world-state.js";
 
@@ -186,6 +186,7 @@ function cancelCasting(reason = "") {
 function resetSpellState() {
   runtime.activeCharge = null;
   fireballs.length = 0;
+  enemyProjectiles.length = 0;
   activeIgnites.length = 0;
   swordSwings.length = 0;
   for (const id of Object.keys(spellCooldowns)) delete spellCooldowns[id];

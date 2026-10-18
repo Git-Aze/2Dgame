@@ -10,6 +10,7 @@ import { recordQuestEvent } from "../quests/quest-system.js";
 import { enemies, isPlaying, player, runtime, spellCooldowns } from "../core/state.js";
 import { TILE } from "../world/world-state.js";
 import { WORLD_DATA } from "../world/world.js";
+import { launchSlimeball } from "./enemy-projectiles.js";
 
 // Enemy AI, spawning, damage and death handling.
 
@@ -91,6 +92,7 @@ function spawnEnemy(enemyId, tileX, tileY, level) {
     damage: type.damage,
     attackRange: type.attackRange,
     attackCooldown: type.attackCooldown,
+    rangedAttack: type.rangedAttack ?? null,
     attackTimer: 0,
 
     xpReward: type.xpReward,
@@ -215,9 +217,10 @@ function updateEnemies(dt) {
         continue;
       }
 
-      // Move toward player.
+      // Ranged enemies hold position only when they have a clear shot.
+      const blockedShot = enemy.rangedAttack && spellPathBlocked(enemyCenterX, enemyCenterY, playerCenterX, playerCenterY);
       navigateEnemy(enemy, playerCenterX - enemy.w / 2, playerCenterY - enemy.h / 2,
-        enemy.speed, dt, enemy.attackRange);
+        enemy.speed, dt, blockedShot ? 0 : enemy.attackRange);
 
       // Attack player when close enough.
       if (
@@ -226,7 +229,8 @@ function updateEnemies(dt) {
         enemy.attackTimer <= 0 &&
         player.hp > 0
       ) {
-        damagePlayer(getEnemyDamage(enemy));
+        if (enemy.rangedAttack) launchSlimeball(enemy, getEnemyDamage(enemy));
+        else damagePlayer(getEnemyDamage(enemy));
 
         enemy.attackTimer = enemy.attackCooldown;
 
