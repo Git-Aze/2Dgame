@@ -9,10 +9,14 @@ import { closeTopPanel, closeMenuLoadOptions } from "../ui/panels.js";
 import { setMenuOpen } from "./pause-menu.js";
 import { isPlaying, keys, runtime } from "./state.js";
 import { targetEnemyAtScreenPosition } from "../combat/targeting.js";
+import { corpseAtScreenPosition } from "../ui/loot-ui.js";
+import { corpseUnderPlayer, lootCorpse } from "../loot/loot.js";
 
 function setupInput() {
   canvas.addEventListener("click", (event) => {
     if (!isPlaying()) return;
+    const corpse = corpseAtScreenPosition(event.clientX, event.clientY);
+    if (corpse) { lootCorpse(corpse); return; }
     const building = buildingAtScreenPosition(event.clientX, event.clientY);
     if (building) interactWithBuilding(building);
     else targetEnemyAtScreenPosition(event.clientX, event.clientY);
@@ -54,6 +58,8 @@ function setupInput() {
       toggleSpellBook();
     }
     if (key === "e" && !event.repeat) {
+      const corpse = corpseUnderPlayer();
+      if (corpse) { event.preventDefault(); lootCorpse(corpse); return; }
       const building = buildings.find((candidate) => candidate.shop && buildingIsNearby(candidate));
       if (building) interactWithBuilding(building);
     }

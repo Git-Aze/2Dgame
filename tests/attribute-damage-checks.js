@@ -1,0 +1,105 @@
+import { createSave, applySave } from "../src/persistence/saves.js";
+import { player, inventory, enemies, runtime, fireballs, spellCooldowns } from "../src/core/state.js";
+import { getItem } from "../src/data/items.js";
+import { SPELLS } from "../src/data/action-definitions.js";
+import { gainXP, spendAttributePoint } from "../src/player/player.js";
+import { equipItem } from "../src/player/inventory.js";
+import { getPlayerStats, getSpellStats } from "../src/player/stats.js";
+import { castIgnite, updateIgnites, rangedAttack, swordAttack, chargeAttack, resetSpellState, updateCombat } from "../src/combat/spells.js";
+import { buildings } from "../src/world/buildings.js";
+import { trees } from "../src/world/world-state.js";
+import { mapCollision } from "../src/world/collision.js";
+import { openShop, closeShop, buyShopItem } from "../src/shops/shops.js";
+import { render } from "../src/rendering/renderer.js";
+
+export function runAttributeDamageChecks(assert) {
+  const snapshot = JSON.stringify(createSave());
+  const terrain = [mapCollision.solid, mapCollision.water, trees, buildings];
+  const savedTerrain = terrain.map((list) => [...list]);
+  const near = (a, b) => Math.abs(a - b) < 0.00001;
+  try {
+    gainXP(100);
+    for (const attribute of ["strength", "intelligence", "dexterity"]) spendAttributePoint(attribute);
+    equipItem("02000");
+    assert(getSpellStats(SPELLS["00003"]).damage === 24.4 && player.maxHp === 120, "Strength adds 1.1 melee damage per point above 10 while keeping its HP bonus");
+    const meleeStats = getPlayerStats();
+    assert(getSpellStats(SPELLS["00003"], { ...meleeStats, dexterity: 100, intelligence: 100 }).damage === 24.4, "Melee damage ignores Intelligence and Dexterity");
+    equipItem("00001");
+    assert(getSpellStats(SPELLS["00001"]).damage === 41.3 && getSpellStats(SPELLS["00002"]).damagePerTick === 5.3, "Intelligence scales Fireball and Ignite; weapon damage applies only to direct hits");
+    const castingStats = getPlayerStats();
+    assert(getSpellStats(SPELLS["00001"], { ...castingStats, strength: 100, dexterity: 100 }).damage === 41.3, "Casting damage ignores Strength and Dexterity");
+    const shop = buildings[0];
+    player.x = shop.x + shop.entrance.x - player.w / 2;
+    player.y = shop.y + shop.entrance.y - player.h / 2;
+    player.gold = 100;
+    openShop(shop);
+    assert(buyShopItem("01000") && buyShopItem("01001") && player.gold === 57, "Common bow and throwing dagger are purchasable");
+    closeShop();
+    terrain.forEach((list) => { list.length = 0; });
+    const setupTarget = (distance) => {
+      resetSpellState();
+      player.x = 800; player.y = 600;
+      const target = enemies[0];
+      Object.assign(target, { x: 800 + distance, y: 602, hp: 60, alive: true });
+      runtime.selectedEnemy = target;
+      return target;
+    };
+    setupTarget(100);
+    castIgnite();
+    updateIgnites(1);
+    assert(enemies[0].hp === 54.7, "Actual Ignite tick applies Intelligence-scaled damage");
+    for (const id of ["01000", "01001"]) {
+      const item = getItem(id);
+      assert(item.rarity === "common" && item.itemLevel === 1 && item.weaponType === "Ranged", `${id}: Common item level 1 ranged weapon`);
+      equipItem(id);
+      const stats = getPlayerStats();
+      const attack = getSpellStats(SPELLS["00005"]);
+      const expected = id === "01000" ? 17.3 : 14.2;
+      assert(attack.damage === expected && attack.range === item.range && near(stats.moveSpeed, 145 * (1 + (stats.dexterity - 10) * 0.02)), `${id}: Dexterity affects ranged damage and retains movement bonus`);
+      assert(getSpellStats(SPELLS["00005"], { ...stats, strength: 100, intelligence: 100 }).damage === expected, `${id}: ranged damage ignores other offensive attributes`);
+      assert(near(getSpellStats(SPELLS["00005"], { ...stats, dexterity: stats.dexterity + 1 }).damage - expected, 1.1), `${id}: one Dexterity adds exactly 1.1 ranged damage`);
+      const target = setupTarget(120);
+      player.mana = 0;
+      window.dispatchEvent(new KeyboardEvent("keydown", { key: "5", bubbles: true, cancelable: true }));
+      assert(fireballs.length === 1 && fireballs[0].spellId === "00005" && player.mana === 0, `${id}: action-bar key 5 fires a ranged projectile without mana`);
+      render();
+      rangedAttack();
+      assert(fireballs.length === 1 && spellCooldowns["00005"] === 0.8, `${id}: shared ranged cooldown prevents repeat shots`);
+      updateCombat(0.3);
+      assert(target.hp === Math.round((60 - expected) * 10) / 10 && inventory.equipment.weapon === id, `${id}: projectile applies scaled damage without consuming weapon`);
+      const tooltip = document.querySelectorAll("#action-bar .action-slot")[4].dataset.tooltip;
+      assert(tooltip.includes(`Damage: ${expected}`) && tooltip.includes(String(item.range)), `${id}: action bar shows effective damage and weapon range`);
+      setupTarget(item.range + 1);
+      rangedAttack();
+      assert(fireballs.length === 0, `${id}: weapon-specific range enforced`);
+      setupTarget(120);
+      trees.push({ x: 860, y: 614, trunkWidth: 10, trunkHeight: 30 });
+      rangedAttack();
+      assert(fireballs.length === 0, `${id}: solid scenery blocks firing`);
+      trees.length = 0;
+      rangedAttack();
+      trees.push({ x: 860, y: 614, trunkWidth: 10, trunkHeight: 30 });
+      updateCombat(0.3);
+      assert(enemies[0].hp === 60 && fireballs.length === 0, `${id}: swept projectile collision blocks newly obstructed shots`);
+      trees.length = 0;
+      setupTarget(30);
+      swordAttack();
+      enemies[0].x = 1000;
+      chargeAttack();
+      assert(enemies[0].hp === 60 && !runtime.activeCharge, `${id}: ranged weapons cannot use sword-only attacks`);
+      const saved = JSON.stringify(createSave());
+      applySave(saved);
+      assert(inventory.equipment.weapon === id && getSpellStats(SPELLS["00005"]).damage === expected, `${id}: save/load preserves weapon and attribute scaling`);
+    }
+    equipItem("00001");
+    setupTarget(100);
+    rangedAttack();
+    assert(fireballs.length === 0, "Staff cannot use Ranged Attack");
+    assert(getSpellStats(SPELLS["00004"]).damage === undefined, "Charge remains a non-damaging ability");
+    assert(getSpellStats(SPELLS["00001"], { ...getPlayerStats(), intelligence: 10 }).damage === 38, "Baseline Intelligence adds no attribute damage");
+  } finally {
+    closeShop();
+    terrain.forEach((list, index) => list.splice(0, list.length, ...savedTerrain[index]));
+    applySave(snapshot);
+  }
+}

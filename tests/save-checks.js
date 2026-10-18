@@ -1,5 +1,5 @@
 import { SAVE_KEY, BACKUP_KEY, createSave, parseSave, applySave, readSave, writeSave } from "../src/persistence/saves.js";
-import { player, inventory, questProgress, actionBarSpells, runtime, fireballs, spellCooldowns, enemies, keys, initialPlayerState } from "../src/core/state.js";
+import { player, inventory, questProgress, actionBarSpells, runtime, corpses, fireballs, spellCooldowns, enemies, keys, initialPlayerState } from "../src/core/state.js";
 import { equipItem, unequipItem } from "../src/player/inventory.js";
 import { gainXP, damagePlayer } from "../src/player/player.js";
 import { startGame } from "../src/core/lifecycle.js";
@@ -19,7 +19,7 @@ export async function runSaveChecks(assert) {
   questProgress.slimeTrouble.objectives[0] = 2;
   const save = writeSave(storage);
   const text = JSON.stringify(save);
-  assert(save.version === 2 && save.player.level === 4 && save.player.xp === 45 && save.inventory.equipment.weapon === "00001", "Versioned save captures exact progression and equipment");
+  assert(save.version === 3 && save.player.level === 4 && save.player.xp === 45 && save.inventory.equipment.weapon === "00001", "Versioned save captures exact progression and equipment");
   assert(!text.includes("xpToNextLevel") && !text.includes("cameraX") && !text.includes("casting"), "Save excludes derived and transient data");
   player.gold = 124;
   writeSave(storage);
@@ -28,10 +28,10 @@ export async function runSaveChecks(assert) {
   assert(readSave(storage).backup && readSave(storage).save.player.gold === 123, "Corrupt primary recovers valid backup");
   data.set(BACKUP_KEY, "{}");
   assert(readSave(storage) === null, "Two invalid saves safely disable continuation");
-  const unchanged = () => JSON.stringify({ player, inventory, questProgress, actionBarSpells });
+  const unchanged = () => JSON.stringify({ player, inventory, questProgress, actionBarSpells, corpses });
   const before = unchanged();
   for (const mutate of [
-    (s) => { s.version = 0; }, (s) => { s.version = 3; },
+    (s) => { s.version = 0; }, (s) => { s.version = 4; },
     (s) => { s.player.gold = -1; }, (s) => { s.player.level = 0; },
     (s) => { s.player.xp = 999999; }, (s) => { s.player.hp = 0; },
     (s) => { s.player.attributePoints = 999; },
@@ -73,7 +73,7 @@ export async function runSaveChecks(assert) {
   legacy.inventory.items = ["00001", "00003", "00003"];
   legacy.inventory.equipment = { weapon: "00002", head: "00003", chest: "00004", offhand: "00005", legs: "00006", boots: "00007" };
   const migrated = parseSave(JSON.stringify(legacy));
-  assert(migrated.version === 2 && migrated.inventory.items.join(",") === "00001,03000,03000", "Legacy saves migrate backpack IDs while preserving duplicates and order");
+  assert(migrated.version === 3 && migrated.inventory.items.join(",") === "00001,03000,03000", "Legacy saves migrate backpack IDs while preserving duplicates and order");
   assert(migrated.inventory.equipment.weapon === "02000" && migrated.inventory.equipment.head === "03000" && migrated.inventory.equipment.chest === "04000" && migrated.inventory.equipment.offhand === "05000" && migrated.inventory.equipment.legs === "06000" && migrated.inventory.equipment.boots === "07000", "Legacy equipment migrates every category ID");
   assert(JSON.stringify(migrated.actionBar) === JSON.stringify(legacy.actionBar) && JSON.stringify(migrated.quests) === JSON.stringify(legacy.quests), "Migration leaves ability IDs and quest progress unchanged");
   assert(JSON.stringify(parseSave(JSON.stringify(migrated))) === JSON.stringify(migrated), "Migrated save can be read again without remapping IDs");
@@ -88,9 +88,9 @@ export async function runSaveChecks(assert) {
   data.set(BACKUP_KEY, JSON.stringify(legacy));
   assert(readSave(storage).backup && readSave(storage).save.inventory.equipment.weapon === "02000", "Legacy backup is migrated during recovery");
   data.set(SAVE_KEY, JSON.stringify(legacy));
-  assert(!readSave(storage).backup && readSave(storage).save.version === 2, "Legacy browser save migrates on reading");
+  assert(!readSave(storage).backup && readSave(storage).save.version === 3, "Legacy browser save migrates on reading");
   writeSave(storage);
-  assert(JSON.parse(storage.getItem(SAVE_KEY)).version === 2 && JSON.parse(storage.getItem(BACKUP_KEY)).inventory.equipment.weapon === "02000", "Saving writes current IDs and a migrated backup");
+  assert(JSON.parse(storage.getItem(SAVE_KEY)).version === 3 && JSON.parse(storage.getItem(BACKUP_KEY)).inventory.equipment.weapon === "02000", "Saving writes current IDs and a migrated backup");
   unequipItem("weapon");
   equipItem("00001");
   assert(player.xp === 45 && player.gold === 123 && questProgress.firstSteps.status === "completed", "Completed quests never grant rewards again after loading");

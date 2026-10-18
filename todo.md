@@ -29,7 +29,7 @@ Completion target: exploration and combat work without obvious world or state in
 
 - [x] 2.04 Define central derived-stat formulas for resources, regeneration, damage, and defense.
 - [x] 2.05 Apply equipment intelligence/vitality bonuses to regeneration.
-- [x] 2.06 Include casting-weapon damage bonuses in direct spell damage; keep Ignite's damage per tick fixed.
+- [x] 2.06 Include casting-weapon damage bonuses in direct spell damage. Ignite excludes weapon damage; its ticks now scale with Intelligence as part of 2.16.
 - [x] 2.07 Give Strength maximum-health bonuses and Dexterity movement-speed bonuses; add hover explanations for all displayed stats.
 - [x] 2.08 Ensure the character sheet displays shared gameplay stats and updates live resources without rebuilding inventory. Show spell damage, mana cost and casting details on action-bar hover tooltips. Use instant shared tooltips for spells, stats and items, with keyboard-focus support.
 - [x] 2.09 Enforce spell range and line of sight against cliffs and tree trunks; water remains passable for spells.
@@ -42,6 +42,7 @@ Completion target: a new player can explore, fight, level up, and see character 
 
 - [x] 2.14 Render green slimes with green_slime.png, with idle/movement/hit animation and existing combat overlays.
 - [x] 2.15 Render red slimes with red_slime.png using shared animation timing and existing combat overlays.
+- [x] 2.16 Add 1.1 damage per offensive attribute point above 10: Strength for melee, Intelligence for casting (including Ignite ticks), and Dexterity for ranged; retain existing stat benefits and update explanations. Add Common item-level-1 bow/dagger (`01000`–`01001`) and Ranged Attack (`00005`) with projectiles, range/cooldown checks, shop access, and save/load verification.
 
 ## 3. Strengthen the codebase
 
@@ -100,14 +101,15 @@ Completion target: predictable frame times on intended devices, supported by mea
 
 ## 6. Loot
 
-- [ ] 6.01 Define enemy loot tables using existing item IDs, drop chances, quantities, and gold ranges.
-- [ ] 6.02 Roll loot once per enemy death through the shared enemy-death handler, regardless of the killing attack.
-- [ ] 6.03 Spawn loot at the defeated enemy's position, separate from its respawning instance.
-- [ ] 6.04 Add visible loot markers and hover descriptions showing item names and gold amounts.
-- [ ] 6.05 Add nearby loot pickup with clear controls and feedback.
-- [ ] 6.06 Add collected items to inventory and gold to the player; keep uncollected items available when the inventory is full.
-- [ ] 6.07 Define loot expiration and cleanup rules, including resetting loot when restarting the adventure.
-- [ ] 6.08 Verify drop probabilities, exactly-once loot rolls and pickup, full-inventory handling, enemy respawns, and restart cleanup.
+- [x] 6.01 Define shared enemy loot rules: guaranteed gold (level to 3× level), 35% chance of one equipment item, and decreasing rarity weights (70/20/7.5/2/0.5%).
+- [x] 6.02 Roll loot once per enemy death through the shared enemy-death event, regardless of the killing attack.
+- [x] 6.03 Leave a corpse at the defeated enemy's position, independently of its respawning instance.
+- [x] 6.04 Add downed sprites, rarity-colored markers, monster levels, and instant loot hover descriptions.
+- [x] 6.05 Loot by nearby click or E while overlapping a corpse; prioritize corpse interaction over shops and enforce range/solid scenery.
+- [x] 6.06 Collect gold even with a full inventory; retain uncollected items without rerolling or duplicating rewards.
+- [x] 6.07 Corpses do not expire until fully looted; clear on fresh restart and preserve in version 3 saves. Migrate versions 1/2 safely.
+- [x] 6.08 Verify probabilities, exactly-once pickup, full inventory, independent respawns, pause/death restrictions, save validation, and restart cleanup.
+- [x] 6.09 Add monster levels (currently 1); scale base attack damage by +10% per level after 1 and scale gold rewards linearly with level.
 
 Completion target: defeated enemies can drop loot that the player can identify and collect without losing items or duplicating rewards.
 
@@ -137,12 +139,12 @@ Completion target: defeated enemies can drop loot that the player can identify a
 
 ## 10. Equipment progression
 
-- [ ] 10.01 Define equipment tiers, rarity, and a consistent stat budget.
-- [ ] 10.02 Add stronger weapons and armor with permanent item IDs.
+- [x] 10.01 Define five rarity tiers with shared WoW-style colors and fixed stat progression; give all current equipment item level 1 as metadata without level scaling. Add one sword per tier (`02000`–`02004`) and support all swords in Sword Strike/Charge.
+- [ ] 10.02 Add stronger weapons and armor with permanent item IDs. Five sword tiers are implemented; armor upgrades remain.
 - [ ] 10.03 Define and enforce level or attribute requirements for equipment.
-- [ ] 10.04 Show rarity, requirements, and comparisons with equipped items in tooltips.
-- [ ] 10.05 Connect equipment upgrades to enemy loot, merchants, and quest rewards.
-- [ ] 10.06 Verify derived stats, attack requirements, and resource limits when swapping upgraded gear.
+- [ ] 10.04 Show rarity, requirements, and comparisons with equipped items in tooltips. Rarity names/colors and item level are implemented; requirements and comparisons remain.
+- [ ] 10.05 Connect equipment upgrades to enemy loot, merchants, and quest rewards. Equipment now drops from corpses and is sold by the General Store; quest upgrades remain.
+- [x] 10.06 Verify derived stats, attack requirements, and resource limits when swapping current upgraded swords; cover all five tiers, purchases, styling, Sword Strike/Charge, health clamping, and save/load.
 
 ## 11. Enemy behavior and navigation
 

@@ -22,14 +22,28 @@ Your editor's local web server also works. Opening `index.html` directly with a 
 - Equip weapons and armor from your inventory and inspect your character's attributes.
 - Target green slimes, red slimes, and wolves, then cast Fireball or Ignite.
 - Enemies navigate around trees, buildings, cliffs, and water while chasing, wandering, or returning home, using bridges when needed. Solid obstacles also block their melee attacks.
-- Equip the Iron Sword and use Sword Strike (default key **3**) against nearby enemies. It costs no mana and has a 0.6-second cooldown.
-- With the sword equipped, use Charge (**4**) on an enemy at least 150 pixels away. Rush into melee range and stun it for 2 seconds. Charge costs no mana, stops at obstacles, and has a 20-second cooldown that resets whenever an enemy dies.
+- Equip any sword and use Sword Strike (default key **3**) against nearby enemies. It costs no mana and has a 0.6-second cooldown.
+- Buy the Common **Short Bow** (`01000`, 25 gold) or **Throwing Dagger** (`01001`, 18 gold) at the General Store. Equip it and use **Ranged Attack** (default key **5** in new adventures). Bow range is 280 pixels; dagger range is 180 pixels. Both have a 0.8-second cooldown and use no mana or ammunition. Throwing does not consume the dagger. Existing saves can assign Ranged Attack from the spell book.
+- With a sword of any rarity equipped, use Charge (**4**) on an enemy at least 150 pixels away. Rush into melee range and stun it for 2 seconds. Charge costs no mana, stops at obstacles, and has a 20-second cooldown that resets whenever an enemy dies.
 - Arrange spells on the action bar using the spell book and drag-and-drop.
 - Earn XP from enemies and quests, level up, and spend attribute points.
+- Loot defeated enemies by clicking a nearby corpse (within 64 pixels), or stand on it and press **E**. Hover for loot details. Corpses persist until fully looted, independently of enemy respawns, and are included in saves. A full inventory still allows collecting gold; the item remains until space is available.
 - Restart a fresh adventure after your character dies.
 - Visit the General Store at the map center. Click the house nearby or press **E** at its entrance to buy equipment with gold. Gameplay pauses while shopping; press **E**, **Escape**, or Close to leave.
 
 ## Your first adventure
+
+Equipment has five rarity tiers: **Common** (white), **Uncommon** (green), **Rare** (blue), **Epic** (purple), and **Legendary** (orange). Inventory/equipment borders, item names, and tooltips show rarity; tooltips also name the tier for clarity. Every current item has **item level 1**. Item level is descriptive metadata and does not scale stats or restrict equipping yet.
+
+The General Store sells one sword of each tier. All five support Sword Strike and Charge; higher tiers offer stronger fixed stats. Prices and stats are initial balance values. Rarity does not apply an additional multiplier or grant passive effects.
+
+| Sword ID | Name | Rarity | Weapon damage | Strength | Vitality | Price |
+| --- | --- | --- | --- | --- | --- | --- |
+| `02000` | Iron Sword | Common | 8 | +3 | — | 30 gold |
+| `02001` | Guard's Iron Sword | Uncommon | 9 | +4 | — | 60 gold |
+| `02002` | Knight's Iron Sword | Rare | 10 | +5 | +1 | 120 gold |
+| `02003` | Oathkeeper | Epic | 12 | +6 | +2 | 240 gold |
+| `02004` | Dawnbreaker | Legendary | 14 | +7 | +3 | 480 gold |
 
 1. Click **New game** or press **Space**.
 2. Press **C** to open your character sheet, then click the **Apprentice Staff** in your inventory. Equipping it completes **Ready for Adventure** and grants **20 XP**.
@@ -38,9 +52,25 @@ Your editor's local web server also works. Opening `index.html` directly with a 
 
 Quest progress appears in the quest panel, and combat messages appear in the message log. Enemies respawn after being defeated.
 
+Every kill rolls **gold**, plus a **35% chance of one item** from the current equipment pool. Loot is rolled once at death and never rerolled by clicking, respawning, or loading. Item rarity is selected first, then one item is chosen from that tier:
+
+| Rarity | Chance when an item drops |
+| --- | --- |
+| Common | 70% |
+| Uncommon | 20% |
+| Rare | 7.5% |
+| Epic | 2% |
+| Legendary | 0.5% |
+
+Monsters currently start at **level 1**, shown above their health bars and when targeted. Each level above 1 adds **10% of base attack damage**. Gold rolls uniformly from **monster level to three times monster level**: 1–3 gold at level 1, 5–15 at level 5. Health and XP retain their existing values; item rarity odds do not scale with level yet. Fresh adventures clear old corpses.
+
 Fireball has a 320-pixel range and a 0.5-second cooldown; Ignite has a 240-pixel range and a 2-second cooldown. Cliffs and tree trunks block spells, while water does not. Moving, taking damage, changing weapons, or losing a valid target interrupts Fireball before release without spending mana. Escape pauses an active cast along with the game. Recasting Ignite refreshes its duration without stacking damage or postponing the next tick. Hover over action-bar spells for details.
 
 ## Controls
+
+Offensive attributes add **1.1 damage per point above the starting value of 10**, including equipment bonuses: **Strength → melee**, **Intelligence → casting**, and **Dexterity → ranged**. Direct-hit damage equals base ability damage + matching weapon damage + attribute bonus, rounded to one decimal. Ignite applies the Intelligence bonus per tick, without adding weapon damage; its damage is fixed when cast or refreshed. Charge remains non-damaging.
+
+For example, the Iron Sword gives a starting character 13 Strength: Sword Strike deals `12 + 8 + (13 − 10) × 1.1 = 23.3` damage. Strength still increases maximum HP, Intelligence still improves mana regeneration, and Dexterity still increases movement speed.
 
 | Action | Control |
 | --- | --- |
@@ -50,6 +80,7 @@ Fireball has a 320-pixel range and a 0.5-second cooldown; Ignite has a 240-pixel
 | Open or close spell book | K |
 | Select an enemy | Left-click the enemy |
 | Open the shop nearby | E or click the building |
+| Loot a corpse | Click nearby, or stand on it and press E |
 | Close the shop | E, Escape, or Close |
 | Close the topmost panel, then pause or continue | Escape; Continue also resumes from the pause menu |
 | Cast an assigned spell | 1–9 and 0, or click its action-bar slot |
@@ -63,9 +94,9 @@ Fireball has a 320-pixel range and a 0.5-second cooldown; Ignite has a 240-pixel
 
 During play, **Escape** closes the topmost open panel first (spell book, character sheet, or shop); press it with no panel open to open the pause menu. Within the menu, Escape closes expanded Load choices before resuming play. **Continue** or Escape resumes play; **Save** stores your adventure in this browser and **Export** downloads a portable JSON backup. **Load** offers the browser save or a JSON file import. Successful loading resumes play; saving, exporting, and invalid imports leave the menu paused. **Restart** begins a fresh adventure and preserves the stored save. **Settings** is a disabled placeholder. Saving is manual; progress since your last save is not automatically stored.
 
-On the start or death screen, **Continue** loads your saved adventure. **Import save** loads an exported JSON file; press Save afterward if you want to keep the imported adventure in browser storage. Invalid or unsupported files show an error without changing your adventure. New saves use version 2; version 1 browser saves, backups, and exported files automatically migrate their item IDs on loading. Other versions are rejected. Saving or exporting afterward writes version 2.
+On the start or death screen, **Continue** loads your saved adventure. **Import save** loads an exported JSON file; press Save afterward if you want to keep the imported adventure in browser storage. Invalid or unsupported files show an error without changing your adventure. New saves use version 3 and preserve unlooted corpses. Versions 1 and 2 migrate automatically (with no corpses); version 1 also migrates legacy item IDs. Other versions are rejected. Saving or exporting afterward writes version 3.
 
-Saves include level, XP, base attributes, unspent points, gold, health/mana, inventory, equipment, quest progress/completed rewards, and action-bar assignments. Loading recalculates derived stats and places you at the starting spawn with fresh enemies. Position, enemy state, cooldowns, projectiles, and active casts are not saved.
+Saves include level, XP, base attributes, unspent points, gold, health/mana, inventory, equipment, quest progress/completed rewards, action-bar assignments, and each unlooted corpse's position, monster level, and remaining gold/item. Loading recalculates derived stats and places you at the starting spawn with fresh enemies while restoring corpses. Player position, live enemy state, cooldowns, projectiles, and active casts are not saved.
 
 Death still offers a fresh restart, or Continue from your last save. New Game/restart does not erase the stored save; pressing Save in the new adventure replaces it. The previous valid browser save is retained as a backup and used if the current one becomes unreadable.
 
@@ -81,6 +112,7 @@ Spells and attacks use permanent five-digit string IDs, in a separate namespace 
 | `00002` | Ignite |
 | `00003` | Sword Strike |
 | `00004` | Charge |
+| `00005` | Ranged Attack |
 
 Assign the next unused ID when adding an ability; never renumber existing IDs or reuse retired ones.
 
@@ -89,8 +121,8 @@ Item IDs follow the category ranges documented in `src/data/items.js`, independe
 | Category | ID range | Current item |
 | --- | --- | --- |
 | Casting weapons | `00001`–`00999` | `00001` Apprentice Staff |
-| Ranged weapons | `01000`–`01999` | None yet |
-| Melee weapons | `02000`–`02999` | `02000` Iron Sword |
+| Ranged weapons | `01000`–`01999` | `01000` Short Bow, `01001` Throwing Dagger |
+| Melee weapons | `02000`–`02999` | Swords `02000`–`02004` |
 | Head | `03000`–`03999` | `03000` Leather Cap |
 | Chest | `04000`–`04999` | `04000` Leather Armor |
 | Off hand | `05000`–`05999` | `05000` Wooden Shield |
@@ -118,8 +150,12 @@ Legacy item IDs `00002`–`00007` are retired and reserved for save migration; d
 | `src/world/collision.js`, `src/world/movement.js` | Geometry checks and entity movement |
 | `src/world/navigation.js` | Footprint-aware A* enemy routes and timed route updates |
 | `src/data/enemy-types.js`, `src/combat/enemies.js` | Enemy definitions, AI, damage, death, and respawning |
+| `src/combat/enemy-stats.js` | Monster levels and damage scaling |
+| `src/data/loot-tables.js`, `src/loot/loot.js` | Rarity weights, gold rules, corpses, and pickup |
+| `src/rendering/corpse-renderer.js`, `src/ui/loot-ui.js` | Downed sprites, loot markers, hover details, and click coordinates |
 | `src/rendering/slime-sprites.js` | Green and red slime sprite-sheet frames and animation |
 | `src/data/items.js`, `src/player/inventory.js`, `src/player/equipment.js` | Item definitions, inventory actions, and equipment bonuses |
+| `src/data/rarities.js`, `src/ui/item-appearance.js` | Shared rarity tiers, colors, and item presentation |
 | `src/ui/inventory-ui.js` | Inventory/equipment interface and item tooltips |
 | `src/data/action-definitions.js`, `src/combat/spells.js` | Ability definitions, casting, projectiles, charge, and damage over time |
 | `src/ui/spellbook.js`, `src/ui/actionbar.js` | Spell selection and action-bar controls |
@@ -139,8 +175,10 @@ Collision checks in `tests/collision-checks.js` also cover player and enemy foot
 
 `tests/navigation-checks.js` checks detours around the real shop and controlled obstacles, bridges, unreachable and changing destinations, all three enemy movement states, stuns, chase limits, and respawn cleanup.
 
+`tests/loot-checks.js` checks monster-level scaling, drop probabilities, exactly-once rewards, persistent corpses, click/E pickup, full inventories, pause/death restrictions, and corpse save validation.
+
 ## Development status
 
 Hover over stats in the character sheet for explanations. Strength increases maximum health, Dexterity increases movement speed, Vitality improves health regeneration, and Intelligence improves mana regeneration. Equipment bonuses count toward these effects.
 
-This is an evolving prototype. Save manually to keep progress between sessions. Autosaving, persistent world changes, and attribute-based spell damage are not implemented yet. See [todo.md](todo.md) for planned improvements.
+This is an evolving prototype. Save manually to keep progress between sessions. Autosaving and persistent world changes are not implemented yet. See [todo.md](todo.md) for planned improvements.

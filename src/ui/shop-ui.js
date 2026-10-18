@@ -5,6 +5,7 @@ import { getItem } from "../data/items.js";
 import { buyShopItem, closeShop } from "../shops/shops.js";
 import { INVENTORY_SIZE, inventory, player, runtime } from "../core/state.js";
 import { setTooltip } from "./tooltips.js";
+import { setItemAppearance } from "./item-appearance.js";
 
 function renderShop() {
   if (!runtime.activeShop) return;
@@ -18,6 +19,8 @@ function renderShop() {
     const row = document.createElement("div");
     row.className = "shop-item";
     const label = document.createElement("span");
+    label.className = "shop-item-name";
+    setItemAppearance(label, item);
     label.textContent = `${item.icon} ${item.name}`;
     label.tabIndex = 0;
     setTooltip(label, createItemTooltip(item));

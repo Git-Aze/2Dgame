@@ -22,11 +22,15 @@ import { runtime } from "./core/state.js";
 import { refreshPlayerStats } from "./player/stats.js";
 import { update } from "./core/update.js";
 import { WORLD_DATA } from "./world/world.js";
+import { setupLoot } from "./loot/loot.js";
+import { setupLootUI } from "./ui/loot-ui.js";
 
 // Entry point: initialize modules once, then advance simulation and rendering.
 function initializeGame() {
   setupCanvas();
   setupCombat();
+  setupLoot();
+  setupLootUI();
   setupCharacterUI();
   setupQuestUI();
   setupShopUI();

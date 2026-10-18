@@ -2,9 +2,10 @@ import { drawBuilding } from "./building-renderer.js";
 import { buildings } from "../world/buildings.js";
 import { ctx } from "./canvas.js";
 import { drawEnemy } from "./enemy-renderer.js";
+import { drawCorpse } from "./corpse-renderer.js";
 import { drawImageCharacter, drawSprite, playerSprites } from "./player-sprites.js";
 import { CAST_FRAME_DURATION, drawFireball, drawIgniteEffects, drawSwordSwings } from "../combat/spells.js";
-import { enemies, fireballs, player, runtime } from "../core/state.js";
+import { enemies, corpses, fireballs, player, runtime } from "../core/state.js";
 import { WORLD_PIXEL_H, WORLD_PIXEL_W, groundMapImage, treeImage, trees } from "../world/world-state.js";
 
 function drawWorld() {
@@ -18,6 +19,9 @@ function drawWorld() {
   }
 
   const layers = [];
+  for (const corpse of corpses) {
+    layers.push({ depth: corpse.y + corpse.h, draw() { drawCorpse(corpse); }});
+  }
   for (const building of buildings) {
     layers.push({ depth: building.y, draw() { drawBuilding(building); }});
   }

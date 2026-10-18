@@ -1,6 +1,6 @@
 import { SPELLS } from "../data/action-definitions.js";
 import { showMessage } from "./messages.js";
-import { castFireball, castIgnite, chargeAttack, getActionWeaponRequirement, swordAttack } from "../combat/spells.js";
+import { castFireball, castIgnite, chargeAttack, getActionWeaponRequirement, swordAttack, rangedAttack } from "../combat/spells.js";
 import { ACTION_BAR_SIZE, actionBarSpells, isPlaying } from "../core/state.js";
 import { getSpellStats } from "../player/stats.js";
 import { setTooltip } from "./tooltips.js";
@@ -41,6 +41,9 @@ function castActionBarSlot(slotIndex) {
   if (!spellId) return;
 
   switch (spellId) {
+    case "00005":
+      rangedAttack();
+      break;
     case "00004":
       chargeAttack();
       break;

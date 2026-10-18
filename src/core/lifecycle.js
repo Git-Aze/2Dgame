@@ -6,7 +6,7 @@ import { acceptQuest, resetQuests } from "../quests/quest-system.js";
 import { closeShop } from "../shops/shops.js";
 import { setMenuOpen } from "./pause-menu.js";
 import { resetSpellState } from "../combat/spells.js";
-import { actionBarSpells, enemies, initialActionBar, initialPlayerState, inventory, keys, player, runtime } from "./state.js";
+import { actionBarSpells, enemies, corpses, initialActionBar, initialPlayerState, inventory, keys, player, runtime } from "./state.js";
 
 function setGameState(state) {
   runtime.gameState = state;
@@ -33,6 +33,8 @@ function resetAdventure() {
   runtime.selectedEnemy = null;
   resetSpellState();
   enemies.length = 0;
+  corpses.length = 0;
+  runtime.nextCorpseId = 1;
   runtime.nextEnemyInstanceId = 1;
   spawnStartingEnemies();
   inventory.items.length = 0;

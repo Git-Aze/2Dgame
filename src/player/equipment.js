@@ -37,4 +37,10 @@ function getEquipmentBonuses() {
   return bonuses;
 }
 
-export { getEquippedItem, getEquipmentBonuses };
+function meetsWeaponRequirement(action, weapon = getEquippedItem("weapon")) {
+  return (!action.requiredWeaponCategory || weapon?.weaponType === action.requiredWeaponCategory) &&
+    (!action.requiredWeaponClass || weapon?.weaponClass === action.requiredWeaponClass) &&
+    (!action.requiredWeaponId || weapon?.id === action.requiredWeaponId);
+}
+
+export { getEquippedItem, getEquipmentBonuses, meetsWeaponRequirement };

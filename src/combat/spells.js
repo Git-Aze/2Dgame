@@ -2,7 +2,7 @@ import { SPELLS } from "../data/action-definitions.js";
 import { ctx } from "../rendering/canvas.js";
 import { spellPathBlocked } from "../world/collision.js";
 import { damageEnemy } from "./enemies.js";
-import { getEquippedItem } from "../player/equipment.js";
+import { getEquippedItem, meetsWeaponRequirement } from "../player/equipment.js";
 import { emit, on } from "../core/events.js";
 import { getItem } from "../data/items.js";
 import { showMessage } from "../ui/messages.js";
@@ -29,7 +29,7 @@ function chargeAttack() {
 function updateCharge(dt) {
   if (!runtime.activeCharge) return;
   const target = runtime.activeCharge.target;
-  if (!isPlaying() || !target.alive || getEquippedItem("weapon")?.id !== SPELLS["00004"].requiredWeaponId) {
+  if (!isPlaying() || !target.alive || !meetsWeaponRequirement(SPELLS["00004"])) {
     runtime.activeCharge = null;
     return;
   }
@@ -61,6 +61,7 @@ function updateCharge(dt) {
 
 function getActionWeaponRequirement(action) {
   return action.requiredWeaponId ? getItem(action.requiredWeaponId).name
+    : action.requiredWeaponClass ? `a ${action.requiredWeaponClass.toLowerCase()}`
     : `${action.requiredWeaponCategory} weapon`;
 }
 
@@ -76,6 +77,19 @@ function swordAttack() {
   swordSwings.push({ x, y, angle: Math.atan2(dy, dx), elapsed: 0, duration: 0.18 });
   showMessage(`Sword Strike hit ${target.name} for ${attack.damage} damage!`);
   damageEnemy(target, attack.damage, "00003");
+}
+
+function rangedAttack() {
+  const attack = getSpellStats(SPELLS["00005"]);
+  if (!canCastSpell(attack, runtime.selectedEnemy)) return;
+  const target = runtime.selectedEnemy;
+  const x = player.x + player.w / 2, y = player.y + player.h / 2;
+  const dx = target.x + target.w / 2 - x, dy = target.y + target.h / 2 - y;
+  player.facing = Math.abs(dx) > Math.abs(dy)
+    ? (dx < 0 ? "left" : "right") : (dy < 0 ? "up" : "down");
+  fireballs.push({ x, y, target, speed: attack.projectileSpeed, damage: attack.damage,
+    remainingRange: attack.range, spellId: attack.id, weaponClass: getEquippedItem("weapon").weaponClass });
+  spellCooldowns[attack.id] = attack.cooldown;
 }
 
 function drawSwordSwings() {
@@ -107,10 +121,8 @@ function updateSpellCooldowns(dt) {
 }
 
 function validateSpellTarget(spell, target) {
-  const weapon = getEquippedItem("weapon");
   let reason = "";
-  if ((spell.requiredWeaponId && weapon?.id !== spell.requiredWeaponId) ||
-      (spell.requiredWeaponCategory && weapon?.weaponType !== spell.requiredWeaponCategory)) {
+  if (!meetsWeaponRequirement(spell)) {
     reason = `${spell.name} requires ${getActionWeaponRequirement(spell)}.`;
   } else if (!target?.alive) {
     reason = "Select a living enemy before casting.";
@@ -311,6 +323,22 @@ const CAST_FRAME_COUNT = SPELLS["00001"].castFrameCount;
 function drawFireball(fireball) {
   const x = fireball.x;
   const y = fireball.y;
+  if (fireball.spellId === "00005") {
+    const target = fireball.target;
+    ctx.save();
+    ctx.translate(x, y);
+    ctx.rotate(Math.atan2(target.y + target.h / 2 - y, target.x + target.w / 2 - x));
+    ctx.strokeStyle = "#b99a64";
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.moveTo(-12, 0); ctx.lineTo(4, 0); ctx.stroke();
+    ctx.fillStyle = "#d9e5e5";
+    ctx.beginPath();
+    ctx.moveTo(9, 0); ctx.lineTo(-1, -4); ctx.lineTo(fireball.weaponClass === "Bow" ? 2 : -4, 0); ctx.lineTo(-1, 4);
+    ctx.closePath(); ctx.fill();
+    ctx.restore();
+    return;
+  }
 
   // Orange glow.
   ctx.save();
@@ -475,14 +503,14 @@ function updateCombat(dt) {
     const nextY = distance ? fireball.y + dy / distance * step : fireball.y;
     if (spellPathBlocked(fireball.x, fireball.y, nextX, nextY)) {
       fireballs.splice(i, 1);
-      showMessage("Fireball was blocked by scenery.");
+      showMessage(`${SPELLS[fireball.spellId ?? "00001"].name} was blocked by scenery.`);
       continue;
     }
 
     if (distance <= travel + target.w / 2) {
       showMessage(
-        `Fireball hit ${target.name} for ${fireball.damage} damage!`);
-      damageEnemy(target, fireball.damage, "00001");
+        `${SPELLS[fireball.spellId ?? "00001"].name} hit ${target.name} for ${fireball.damage} damage!`);
+      damageEnemy(target, fireball.damage, fireball.spellId ?? "00001");
 
       fireballs.splice(i, 1);
 
@@ -504,4 +532,4 @@ function setupCombat() {
   });
 }
 
-export { chargeAttack, updateCharge, getActionWeaponRequirement, swordAttack, drawSwordSwings, updateSpellCooldowns, cancelCasting, resetSpellState, castIgnite, updateIgnites, drawIgniteEffects, CAST_FRAME_DURATION, drawFireball, castFireball, updateCasting, updateCombat, setupCombat };
+export { chargeAttack, updateCharge, getActionWeaponRequirement, swordAttack, rangedAttack, drawSwordSwings, updateSpellCooldowns, cancelCasting, resetSpellState, castIgnite, updateIgnites, drawIgniteEffects, CAST_FRAME_DURATION, drawFireball, castFireball, updateCasting, updateCombat, setupCombat };

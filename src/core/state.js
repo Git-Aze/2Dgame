@@ -56,6 +56,7 @@ const inventory = {
 };
 const INVENTORY_SIZE = 20;
 const enemies = [];
+const corpses = [];
 const fireballs = [];
 const activeIgnites = [];
 const swordSwings = [];
@@ -71,17 +72,18 @@ actionBarSpells[0] = "00001";
 actionBarSpells[1] = "00002";
 actionBarSpells[2] = "00003";
 actionBarSpells[3] = "00004";
+actionBarSpells[4] = "00005";
 
 
 const initialPlayerState = structuredClone(player);
 const initialActionBar = [...actionBarSpells];
 const runtime = {
   cameraX: 0, cameraY: 0, viewWidth: 0, viewHeight: 0,
-  gameState: "start", lastTime: 0, nextEnemyInstanceId: 1,
+  gameState: "start", lastTime: 0, nextEnemyInstanceId: 1, nextCorpseId: 1,
   selectedEnemy: null, activeShop: null, activeCharge: null, menuOpen: false,
 };
 function isPlaying() {
   return runtime.gameState === "playing" && player.hp > 0 && !runtime.activeShop && !runtime.menuOpen;
 }
 
-export { player, keys, inventory, INVENTORY_SIZE, enemies, fireballs, activeIgnites, swordSwings, spellCooldowns, questProgress, ACTION_BAR_SIZE, actionBarSpells, initialPlayerState, initialActionBar, runtime, isPlaying };
+export { player, keys, inventory, INVENTORY_SIZE, enemies, corpses, fireballs, activeIgnites, swordSwings, spellCooldowns, questProgress, ACTION_BAR_SIZE, actionBarSpells, initialPlayerState, initialActionBar, runtime, isPlaying };

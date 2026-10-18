@@ -1,6 +1,8 @@
 import { getEquippedItem } from "../player/equipment.js";
 import { equipItem, unequipItem } from "../player/inventory.js";
 import { getItem } from "../data/items.js";
+import { getRarity } from "../data/rarities.js";
+import { setItemAppearance } from "./item-appearance.js";
 import { INVENTORY_SIZE, inventory } from "../core/state.js";
 import { setTooltip } from "./tooltips.js";
 
@@ -59,6 +61,8 @@ function renderInventory() {
     slot.appendChild(idLabel);
 
     // Tooltip
+    setItemAppearance(slot, item);
+    slot.setAttribute("aria-label", `${getRarity(item.rarity).name} ${item.name}, item level ${item.itemLevel}. Equip item.`);
     setTooltip(slot, createItemTooltip(item));
 
     // Click item to equip it.
@@ -75,6 +79,10 @@ function createItemTooltip(item) {
   const lines = [];
 
   lines.push(item.name);
+  const rarity = getRarity(item.rarity);
+  lines.push(`${rarity.name} (Tier ${rarity.tier})`);
+  lines.push(`Item level: ${item.itemLevel}`);
+  if (item.range) lines.push(`Weapon range: ${item.range} pixels`);
   lines.push(`ID: ${item.id}`);
   lines.push("");
   lines.push(item.description);
@@ -110,6 +118,7 @@ function renderEquipment() {
     // ----------------------------------------------
 
     if (!item) {
+      setItemAppearance(nameElement.closest(".equipment-slot"), null);
       nameElement.textContent = "Empty";
       iconElement.textContent = "+";
       setTooltip(nameElement.closest(".equipment-slot"), "Empty equipment slot");
@@ -128,6 +137,7 @@ function renderEquipment() {
     const button = nameElement.closest(".equipment-slot");
 
     if (button) {
+      setItemAppearance(button, item);
       setTooltip(button, createItemTooltip(item) + "\n\nClick to unequip");
     }
   }

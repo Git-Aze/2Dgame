@@ -1,9 +1,10 @@
-import { getEquipmentBonuses, getEquippedItem } from "./equipment.js";
+import { getEquipmentBonuses, getEquippedItem, meetsWeaponRequirement } from "./equipment.js";
 import { player } from "../core/state.js";
 
 // Balance rules shared by gameplay and stat explanations.
 const STAT_RULES = Object.freeze({
   attributeBaseline: 10,
+  damagePerAttribute: 1.1,
   healthPerStrength: 5,
   speedPerDexterity: 0.02,
   baseHealthRegen: 0.2,
@@ -43,13 +44,19 @@ function refreshPlayerStats() {
 
 function getSpellStats(spell, stats = getPlayerStats()) {
   const weapon = getEquippedItem("weapon");
+  const attribute = { Melee: "strength", Casting: "intelligence", Ranged: "dexterity" }[spell.requiredWeaponCategory];
+  const attributeDamage = attribute ? Math.max(0, stats[attribute] - STAT_RULES.attributeBaseline) * STAT_RULES.damagePerAttribute : 0;
+  const weaponDamage = weapon && meetsWeaponRequirement(spell, weapon) ? stats.weaponDamage : 0;
+  const roundDamage = (value) => Math.round(value * 10) / 10;
   return {
     ...spell,
-    // Direct attacks use matching weapons; DOT keeps its base tick damage.
+    // Equipment attributes are included once. DOT scales with its attribute,
+    // while direct hits also include matching weapon damage. Round to tenths.
     ...(spell.damage !== undefined ? {
-      damage: spell.damage + (weapon?.weaponType === spell.requiredWeaponCategory &&
-        (!spell.requiredWeaponId || weapon.id === spell.requiredWeaponId) ? stats.weaponDamage : 0),
+      damage: roundDamage(spell.damage + weaponDamage + attributeDamage),
     } : {}),
+    ...(spell.damagePerTick !== undefined ? { damagePerTick: roundDamage(spell.damagePerTick + attributeDamage) } : {}),
+    ...(spell.useWeaponRange && weapon?.weaponType === "Ranged" ? { range: weapon.range } : {}),
   };
 }
 

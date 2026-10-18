@@ -25,6 +25,8 @@ const ITEMS = {
 
   "00001": {
     id: "00001",
+    rarity: "common",
+    itemLevel: 1,
     buyPrice: 20,
     name: "Apprentice Staff",
     type: "weapon",
@@ -45,6 +47,35 @@ const ITEMS = {
   // IDS: 01000 - 01999
   // ==================================================
 
+  "01000": {
+    id: "01000",
+    rarity: "common",
+    itemLevel: 1,
+    buyPrice: 25,
+    name: "Short Bow",
+    type: "weapon",
+    weaponType: "Ranged",
+    weaponClass: "Bow",
+    range: 280,
+    description: "A simple bow for striking enemies from a distance. Uses Ranged Attack; no ammunition required.",
+    icon: "\uD83C\uDFF9",
+    stats: { damage: 6, dexterity: 2 }
+  },
+
+  "01001": {
+    id: "01001",
+    rarity: "common",
+    itemLevel: 1,
+    buyPrice: 18,
+    name: "Throwing Dagger",
+    type: "weapon",
+    weaponType: "Ranged",
+    weaponClass: "ThrowingDagger",
+    range: 180,
+    description: "A balanced dagger made for throwing. Uses Ranged Attack; throwing does not consume the equipped weapon.",
+    icon: "\uD83D\uDDE1\uFE0F",
+    stats: { damage: 4, dexterity: 1 }
+  },
 
 
   // ==================================================
@@ -54,10 +85,13 @@ const ITEMS = {
 
   "02000": {
     id: "02000",
+    rarity: "common",
+    itemLevel: 1,
     buyPrice: 30,
     name: "Iron Sword",
     type: "weapon",
     weaponType: "Melee",
+    weaponClass: "Sword",
 
     description: "A dependable iron sword.",
 
@@ -70,6 +104,62 @@ const ITEMS = {
   },
 
 
+  "02001": {
+    id: "02001",
+    rarity: "uncommon",
+    itemLevel: 1,
+    buyPrice: 60,
+    name: "Guard's Iron Sword",
+    type: "weapon",
+    weaponType: "Melee",
+    weaponClass: "Sword",
+    description: "A well-balanced blade issued to village guards.",
+    icon: "\u2694\ufe0f",
+    stats: { damage: 9, strength: 4 }
+  },
+
+  "02002": {
+    id: "02002",
+    rarity: "rare",
+    itemLevel: 1,
+    buyPrice: 120,
+    name: "Knight's Iron Sword",
+    type: "weapon",
+    weaponType: "Melee",
+    weaponClass: "Sword",
+    description: "A finely forged sword made for a seasoned defender.",
+    icon: "\u2694\ufe0f",
+    stats: { damage: 10, strength: 5, vitality: 1 }
+  },
+
+  "02003": {
+    id: "02003",
+    rarity: "epic",
+    itemLevel: 1,
+    buyPrice: 240,
+    name: "Oathkeeper",
+    type: "weapon",
+    weaponType: "Melee",
+    weaponClass: "Sword",
+    description: "An exceptional blade carried by a sworn protector.",
+    icon: "\u2694\ufe0f",
+    stats: { damage: 12, strength: 6, vitality: 2 }
+  },
+
+  "02004": {
+    id: "02004",
+    rarity: "legendary",
+    itemLevel: 1,
+    buyPrice: 480,
+    name: "Dawnbreaker",
+    type: "weapon",
+    weaponType: "Melee",
+    weaponClass: "Sword",
+    description: "A legendary sword whose edge gleams with the first light of dawn.",
+    icon: "\u2694\ufe0f",
+    stats: { damage: 14, strength: 7, vitality: 3 }
+  },
+
   // ==================================================
   // HEAD
   // IDS: 03000 - 03999
@@ -77,6 +167,8 @@ const ITEMS = {
 
   "03000": {
     id: "03000",
+    rarity: "common",
+    itemLevel: 1,
     buyPrice: 12,
     name: "Leather Cap",
     type: "head",
@@ -99,6 +191,8 @@ const ITEMS = {
 
   "04000": {
     id: "04000",
+    rarity: "common",
+    itemLevel: 1,
     buyPrice: 25,
     name: "Leather Armor",
     type: "chest",
@@ -121,6 +215,8 @@ const ITEMS = {
 
   "05000": {
     id: "05000",
+    rarity: "common",
+    itemLevel: 1,
     buyPrice: 20,
     name: "Wooden Shield",
     type: "offhand",
@@ -142,6 +238,8 @@ const ITEMS = {
 
   "06000": {
     id: "06000",
+    rarity: "common",
+    itemLevel: 1,
     buyPrice: 15,
     name: "Leather Pants",
     type: "legs",
@@ -164,6 +262,8 @@ const ITEMS = {
 
   "07000": {
     id: "07000",
+    rarity: "common",
+    itemLevel: 1,
     buyPrice: 12,
     name: "Traveler's Boots",
     type: "boots",
@@ -189,4 +289,8 @@ function getItem(itemId) {
   return ITEMS[itemId] ?? null;
 }
 
-export { getItem };
+function getAllItems() {
+  return Object.values(ITEMS);
+}
+
+export { getItem, getAllItems };

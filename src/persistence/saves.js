@@ -1,4 +1,4 @@
-import { player, inventory, questProgress, actionBarSpells, runtime, initialPlayerState, INVENTORY_SIZE, ACTION_BAR_SIZE } from "../core/state.js";
+import { player, inventory, questProgress, actionBarSpells, corpses, runtime, initialPlayerState, INVENTORY_SIZE, ACTION_BAR_SIZE } from "../core/state.js";
 import { getItem } from "../data/items.js";
 import { SPELLS } from "../data/action-definitions.js";
 import { QUEST_DEFINITIONS } from "../quests/quests.js";
@@ -6,10 +6,15 @@ import { resetAdventure, setGameState } from "../core/lifecycle.js";
 import { STAT_RULES, refreshPlayerStats } from "../player/stats.js";
 import { collides } from "../world/movement.js";
 import { emit } from "../core/events.js";
+import { ENEMY_TYPES } from "../data/enemy-types.js";
+import { WORLD_PIXEL_W, WORLD_PIXEL_H } from "../world/world-state.js";
+import { ENEMY_LEVEL_RULES } from "../combat/enemy-stats.js";
+import { LOOT_RULES } from "../data/loot-tables.js";
 
 const SAVE_KEY = "TopDownSoloRPG.save";
 const BACKUP_KEY = "TopDownSoloRPG.save.backup";
-const SAVE_VERSION = 2;
+const SAVE_VERSION = 3;
+const MAX_SAVE_SIZE = 1000000;
 const LEGACY_ITEM_IDS = Object.freeze({
   "00001": "00001", "00002": "02000", "00003": "03000", "00004": "04000",
   "00005": "05000", "00006": "06000", "00007": "07000",
@@ -20,7 +25,7 @@ const integer = (value, min, max) => Number.isSafeInteger(value) && value >= min
 const itemExists = (id) => typeof id === "string" && /^\d{5}$/.test(id) && Boolean(getItem(id));
 
 function migrateSave(save) {
-  if (!object(save) || (save.version !== 1 && save.version !== SAVE_VERSION)) throw new Error("Unsupported save version. This game supports versions 1 and 2.");
+  if (!object(save) || ![1, 2, SAVE_VERSION].includes(save.version)) throw new Error("Unsupported save version. This game supports versions 1, 2 and 3.");
   if (save.version === 1) {
     if (!object(save.inventory) || !Array.isArray(save.inventory.items) || !object(save.inventory.equipment)) throw new Error("Invalid legacy inventory.");
     const migrateItem = (id) => {
@@ -32,6 +37,10 @@ function migrateSave(save) {
       if (save.inventory.equipment[slot] !== null) save.inventory.equipment[slot] = migrateItem(save.inventory.equipment[slot]);
     }
     // Ability IDs and quest objective counters belong to separate namespaces.
+    save.version = 2;
+  }
+  if (save.version === 2) {
+    save.corpses = [];
     save.version = SAVE_VERSION;
   }
   return save;
@@ -39,7 +48,7 @@ function migrateSave(save) {
 
 // Migrate parsed data and validate everything before touching the live adventure.
 function parseSave(text) {
-  if (typeof text !== "string" || text.length > 100000) throw new Error("Save file is missing or too large.");
+  if (typeof text !== "string" || text.length > MAX_SAVE_SIZE) throw new Error("Save file is missing or too large.");
   let save;
   try { save = JSON.parse(text); } catch { throw new Error("Save file is not valid JSON."); }
   save = migrateSave(save);
@@ -74,11 +83,26 @@ function parseSave(text) {
     const unlocked = (quest.prerequisites ?? []).every((id) => save.quests[id]?.status === "completed");
     if ((progress.status === "locked") === unlocked) throw new Error("Inconsistent quest prerequisites.");
   }
+  if (!Array.isArray(save.corpses) || save.corpses.length > 1000) throw new Error("Invalid corpse data.");
+  const corpseIds = new Set();
+  const savedCorpses = save.corpses.map((corpse) => {
+    if (!object(corpse) || !integer(corpse.id, 1, 1000000000) || corpseIds.has(corpse.id)) throw new Error("Invalid corpse ID.");
+    corpseIds.add(corpse.id);
+    const type = ENEMY_TYPES.find((entry) => entry.id === corpse.enemyTypeId);
+    if (!type || !integer(corpse.level, 1, ENEMY_LEVEL_RULES.maxLevel) ||
+        !Number.isFinite(corpse.x) || !Number.isFinite(corpse.y) || corpse.x < 0 || corpse.y < 0 ||
+        corpse.x + type.width > WORLD_PIXEL_W || corpse.y + type.height > WORLD_PIXEL_H ||
+        !integer(corpse.gold, 0, corpse.level * LOOT_RULES.goldMaxPerLevel) ||
+        (corpse.itemId !== null && !itemExists(corpse.itemId)) || (!corpse.gold && !corpse.itemId)) throw new Error("Invalid corpse loot or position.");
+    return { id: corpse.id, enemyTypeId: type.id, level: corpse.level,
+      x: corpse.x, y: corpse.y, gold: corpse.gold, itemId: corpse.itemId };
+  });
   // Whitelist fields rather than spreading imported objects into shared state.
   return {
     version: SAVE_VERSION, game: save.game, savedAt: save.savedAt,
     player: Object.fromEntries(fields.map((key) => [key, p[key]])),
     inventory: { items: [...save.inventory.items], equipment: Object.fromEntries(Object.keys(inventory.equipment).map((slot) => [slot, equipment[slot]])) },
+    corpses: savedCorpses,
     actionBar: [...save.actionBar],
     quests: Object.fromEntries(Object.keys(QUEST_DEFINITIONS).map((id) => [id, { status: save.quests[id].status, objectives: [...save.quests[id].objectives] }])),
   };
@@ -90,6 +114,7 @@ function createSave() {
     version: SAVE_VERSION, game: "TopDownSoloRPG", savedAt: new Date().toISOString(),
     player: Object.fromEntries(fields.map((key) => [key, player[key]])),
     inventory, actionBar: actionBarSpells, quests: questProgress,
+    corpses: corpses.map(({ id, enemyTypeId, level, x, y, gold, itemId }) => ({ id, enemyTypeId, level, x, y, gold, itemId })),
   }));
 }
 
@@ -106,6 +131,12 @@ function applySave(text) {
   actionBarSpells.splice(0, actionBarSpells.length, ...save.actionBar);
   for (const id of Object.keys(questProgress)) delete questProgress[id];
   Object.assign(questProgress, save.quests);
+  for (const corpse of save.corpses) {
+    const type = ENEMY_TYPES.find((entry) => entry.id === corpse.enemyTypeId);
+    corpses.push({ ...corpse, name: type.name, sprite: type.sprite, w: type.width, h: type.height,
+      spriteTime: 0, spriteMoving: false, stunRemaining: 0, hurtTime: 0 });
+  }
+  runtime.nextCorpseId = Math.max(0, ...corpses.map((corpse) => corpse.id)) + 1;
   refreshPlayerStats();
   runtime.cameraX = 0;
   runtime.cameraY = 0;
@@ -113,6 +144,7 @@ function applySave(text) {
   emit("player:changed");
   emit("resources:changed");
   emit("quests:changed");
+  emit("loot:changed");
   return save;
 }
 
@@ -137,4 +169,4 @@ function writeSave(storage = window.localStorage) {
   return save;
 }
 
-export { SAVE_KEY, BACKUP_KEY, parseSave, createSave, applySave, readSave, writeSave };
+export { SAVE_KEY, BACKUP_KEY, MAX_SAVE_SIZE, parseSave, createSave, applySave, readSave, writeSave };

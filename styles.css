@@ -1194,3 +1194,15 @@ body {
 #save-overlay-status {
   font-size: 14px;
 }
+.inventory-slot[data-rarity],
+.inventory-slot[data-rarity]:hover,
+.equipment-slot[data-rarity],
+.equipment-slot[data-rarity]:hover {
+  border-color: var(--rarity-color);
+}
+
+.equipment-slot[data-rarity] .equipment-name,
+.inventory-slot[data-rarity] .inventory-item-id,
+.shop-item-name[data-rarity] {
+  color: var(--rarity-color);
+}

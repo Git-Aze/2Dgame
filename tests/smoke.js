@@ -26,6 +26,9 @@ import { update } from "../src/core/update.js";
 import { runCollisionChecks } from "./collision-checks.js";
 import { runNavigationChecks } from "./navigation-checks.js";
 import { runSaveChecks } from "./save-checks.js";
+import { runRarityChecks } from "./rarity-checks.js";
+import { runAttributeDamageChecks } from "./attribute-damage-checks.js";
+import { runLootChecks } from "./loot-checks.js";
 import { runPauseChecks } from "./pause-checks.js";
 
 let checks = 0;
@@ -60,7 +63,7 @@ try {
   assert(!document.getElementById("character-sheet").classList.contains("hidden"), "Character keyboard control");
   assert(equipItem("00001"), "Equip staff");
   assert(player.xp === 20 && questProgress.firstSteps.status === "completed" && questProgress.slimeTrouble.status === "active", "Equipment quest reward/unlock");
-  assert(getSpellStats(SPELLS["00001"]).damage === 38, "Casting weapon damage");
+  assert(getSpellStats(SPELLS["00001"]).damage === 40.2, "Casting weapon damage");
   player.attributePoints = 2;
   spendAttributePoint("strength");
   spendAttributePoint("dexterity");
@@ -79,7 +82,7 @@ try {
   assert(!document.getElementById("game-tooltip").hidden, "Instant stat tooltip");
   key("c");
   key("k");
-  assert(!document.getElementById("spell-book").classList.contains("hidden") && document.querySelectorAll(".spell-book-entry").length === 4, "Spell book input/rendering");
+  assert(!document.getElementById("spell-book").classList.contains("hidden") && document.querySelectorAll(".spell-book-entry").length === 5, "Spell book input/rendering");
   key("k");
   assignSpellToSlot("00004", 4);
   const slots = document.querySelectorAll("#action-bar .action-slot");
@@ -128,7 +131,7 @@ try {
   castFireball(); updateCasting(0.36);
   assert(fireballs.length === 1 && player.mana === 40 && spellCooldowns["00001"] === 0.5, "Fireball release");
   updateCasting(0.2); updateCombat(0.4);
-  assert(target.hp === 22, "Projectile damage");
+  assert(target.hp === 19.8, "Projectile damage");
   combatSetup(); target.hp = 2;
   castIgnite(); updateIgnites(0.75); updateSpellCooldowns(2); castIgnite(); updateIgnites(0.25);
   assert(!target.alive && activeIgnites.length === 0, "Ignite refresh preserves next tick");
@@ -137,8 +140,8 @@ try {
   assert(player.xp === xpAfterKill, "Exactly-once kill XP");
   combatSetup(30); equipItem("02000");
   player.mana = 0; swordAttack();
-  assert(target.hp === 40 && player.mana === 0, "Sword damage and zero mana cost");
-  swordAttack(); assert(target.hp === 40, "Sword cooldown");
+  assert(target.hp === 35.6 && player.mana === 0, "Sword damage and zero mana cost");
+  swordAttack(); assert(target.hp === 35.6, "Sword cooldown");
   combatSetup(149); chargeAttack(); assert(!runtime.activeCharge, "Charge minimum range");
   combatSetup(200); chargeAttack();
   assert(runtime.activeCharge && spellCooldowns["00004"] === 20, "Charge start");
@@ -283,6 +286,9 @@ try {
     "Restart resets level, XP overflow, threshold, points, and HUD");
   runPauseChecks(assert);
   await runSaveChecks(assert);
+  runRarityChecks(assert);
+  runAttributeDamageChecks(assert);
+  runLootChecks(assert);
   render();
   assert(errors.length === 0, `Browser errors: ${errors.join("; ")}`);
   const result = `PASS: ${checks} gameplay checks`;

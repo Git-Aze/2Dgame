@@ -1,4 +1,6 @@
 import { ENEMY_TYPES } from "../data/enemy-types.js";
+import { emit } from "../core/events.js";
+import { getEnemyLevel, getEnemyDamage } from "./enemy-stats.js";
 import { showMessage } from "../ui/messages.js";
 import { collides } from "../world/movement.js";
 import { navigateEnemy } from "../world/navigation.js";
@@ -16,7 +18,7 @@ function damageEnemy(enemy, damage, cause) {
   if (!isPlaying() || !enemy || !enemy.alive ||
       !Number.isFinite(damage) || damage <= 0) return 0;
   const dealt = Math.min(enemy.hp, damage);
-  enemy.hp = Math.max(0, enemy.hp - damage);
+  enemy.hp = Math.round(Math.max(0, enemy.hp - damage) * 10) / 10;
   enemy.hurtTime = 0.25;
   if (enemy.hp <= 0) defeatEnemy(enemy, cause);
   return dealt;
@@ -36,6 +38,7 @@ function defeatEnemy(enemy, cause) {
     ? `${enemy.name} burned to death!` : `${enemy.name} was defeated!`);
   gainXP(enemy.xpReward ?? 0);
   recordQuestEvent({ type: "enemyDefeated", enemyTypeId: enemy.id });
+  emit("enemy:defeated", enemy);
   return true;
 }
 
@@ -51,7 +54,7 @@ function getEnemyType(enemyId) {
 // SPAWN ENEMY
 // ==========================================
 
-function spawnEnemy(enemyId, tileX, tileY) {
+function spawnEnemy(enemyId, tileX, tileY, level) {
   const type = getEnemyType(enemyId);
 
   if (!type) {
@@ -64,6 +67,7 @@ function spawnEnemy(enemyId, tileX, tileY) {
     instanceId: runtime.nextEnemyInstanceId++,
     id: type.id,
     name: type.name,
+    level: getEnemyLevel({ level: level ?? type.level }),
 
     x: tileX * TILE + (TILE - type.width) / 2,
     y: tileY * TILE + (TILE - type.height) / 2,
@@ -129,7 +133,7 @@ function spawnEnemy(enemyId, tileX, tileY) {
 
 function spawnStartingEnemies() {
   for (const spawn of WORLD_DATA.enemySpawns) {
-    spawnEnemy(spawn.id, spawn.tileX, spawn.tileY);
+    spawnEnemy(spawn.id, spawn.tileX, spawn.tileY, spawn.level);
   }
 }
 
@@ -221,7 +225,7 @@ function updateEnemies(dt) {
         enemy.attackTimer <= 0 &&
         player.hp > 0
       ) {
-        damagePlayer(enemy.damage);
+        damagePlayer(getEnemyDamage(enemy));
 
         enemy.attackTimer = enemy.attackCooldown;
 

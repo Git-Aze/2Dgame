@@ -3,6 +3,7 @@
 const ENEMY_TYPES = [
   {
     id: "00001",
+    level: 1,
     name: "Green Slime",
 
     // Health
@@ -33,6 +34,7 @@ const ENEMY_TYPES = [
 
   {
     id: "00002",
+    level: 1,
     name: "Red Slime",
 
     maxHp: 100,
@@ -58,6 +60,7 @@ const ENEMY_TYPES = [
 
   {
     id: "00003",
+    level: 1,
     name: "Wolf",
 
     maxHp: 120,

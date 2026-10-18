@@ -1,5 +1,7 @@
 
 
+import { getRarity } from "../data/rarities.js";
+
 // One immediate tooltip for all dynamically created controls and stat rows.
 const tooltip = document.createElement("div");
 tooltip.id = "game-tooltip";
@@ -10,6 +12,21 @@ document.body.appendChild(tooltip);
 let tooltipTarget = null;
 let tooltipX = 0;
 let tooltipY = 0;
+
+function renderTooltipContent(target, text) {
+  tooltip.textContent = "";
+  tooltip.style.borderColor = "";
+  if (target.dataset.rarity) {
+    const color = getRarity(target.dataset.rarity).color;
+    const firstBreak = text.indexOf("\n");
+    const name = document.createElement("span");
+    name.style.color = color;
+    name.textContent = firstBreak < 0 ? text : text.slice(0, firstBreak);
+    tooltip.append(name);
+    if (firstBreak >= 0) tooltip.append(document.createTextNode(text.slice(firstBreak)));
+    tooltip.style.borderColor = color;
+  } else tooltip.textContent = text;
+}
 
 function positionTooltip() {
   const gap = 12;
@@ -41,7 +58,7 @@ function setTooltip(element, text) {
   if (tooltipTarget === element) {
     if (!text) hideTooltip();
     else {
-      tooltip.textContent = text;
+      renderTooltipContent(element, text);
       positionTooltip();
     }
   }
@@ -53,7 +70,7 @@ function showTooltip(target, x, y) {
   tooltipTarget = target;
   tooltipX = x;
   tooltipY = y;
-  tooltip.textContent = target.dataset.tooltip;
+  renderTooltipContent(target, target.dataset.tooltip);
   const describedBy = target.getAttribute("aria-describedby");
   target.setAttribute("aria-describedby", describedBy ? `${describedBy} ${tooltip.id}` : tooltip.id);
   tooltip.hidden = false;
@@ -95,4 +112,4 @@ new MutationObserver(() => {
 }).observe(document.body, { subtree: true, childList: true, attributes: true,
   attributeFilter: ["class", "hidden", "inert"] });
 
-export { setTooltip };
+export { setTooltip, showTooltip };

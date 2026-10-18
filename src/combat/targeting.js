@@ -22,7 +22,7 @@ function targetEnemyAtScreenPosition(screenX, screenY) {
       runtime.selectedEnemy = enemy;
 
       showMessage(
-        `${enemy.name} targeted (${enemy.hp}/${enemy.maxHp} HP).`);
+        `${enemy.name} (Level ${enemy.level}) targeted (${enemy.hp}/${enemy.maxHp} HP).`);
 
       return;
     }

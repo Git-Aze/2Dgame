@@ -1,5 +1,5 @@
 import { on } from "../core/events.js";
-import { SAVE_KEY, BACKUP_KEY, applySave, createSave, readSave, writeSave } from "../persistence/saves.js";
+import { SAVE_KEY, BACKUP_KEY, MAX_SAVE_SIZE, applySave, createSave, readSave, writeSave } from "../persistence/saves.js";
 
 function setupSaveUI() {
   const status = document.getElementById("save-status");
@@ -51,7 +51,7 @@ function setupSaveUI() {
     const file = input.files[0];
     if (!file) return;
     try {
-      if (file.size > 100000) throw new Error("Save file is too large.");
+      if (file.size > MAX_SAVE_SIZE) throw new Error("Save file is too large.");
       applySave(await file.text());
       report("Save file loaded. Press Save to store it in this browser.");
     } catch (error) { report(`Could not import: ${error.message}`); }
