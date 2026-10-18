@@ -1,9 +1,33 @@
 import { SPELLS } from "../data/action-definitions.js";
 import { showMessage } from "./messages.js";
-import { castFireball, castIgnite, chargeAttack, getActionWeaponRequirement, swordAttack, rangedAttack } from "../combat/spells.js";
-import { ACTION_BAR_SIZE, actionBarSpells, isPlaying } from "../core/state.js";
+import { castFireball, castIgnite, chargeAttack, getActionWeaponRequirement, getActionUnavailableReason, swordAttack, rangedAttack } from "../combat/spells.js";
+import { ACTION_BAR_SIZE, actionBarSpells, isPlaying, spellCooldowns } from "../core/state.js";
 import { getSpellStats } from "../player/stats.js";
 import { setTooltip } from "./tooltips.js";
+
+const slotStates = [];
+const statusLabels = { paused: "Paused", cooldown: "Cooldown", casting: "Casting", charging: "Charging", weapon: "Weapon", target: "Target",
+  "too-close": "Too close", range: "Range", blocked: "Blocked", mana: "Mana" };
+
+function updateActionBarStatus() {
+  for (const entry of slotStates) {
+    const reason = entry.spell ? getActionUnavailableReason(entry.spell) : "";
+    const remaining = entry.spell ? Math.max(0, spellCooldowns[entry.spell.id] ?? 0) : 0;
+    const countdown = remaining > 0 ? (remaining >= 10 ? String(Math.ceil(remaining)) : (Math.ceil(remaining * 10) / 10).toFixed(1)) : "";
+    if (entry.lastCountdown !== countdown) {
+      entry.countdown.textContent = countdown;
+      entry.lastCountdown = countdown;
+    }
+    if (entry.lastReason !== reason) {
+      entry.lastReason = reason;
+      entry.label.textContent = statusLabels[reason] ?? "";
+      if (reason) entry.slot.dataset.unavailable = reason;
+      else delete entry.slot.dataset.unavailable;
+      entry.slot.setAttribute("aria-disabled", String(!entry.spell || Boolean(reason)));
+      entry.slot.setAttribute("aria-label", `${entry.slot.dataset.tooltip}${reason ? `\nUnavailable: ${statusLabels[reason]}` : ""}`);
+    }
+  }
+}
 
 // ==========================================
 // ACTION BAR SYSTEM
@@ -76,6 +100,10 @@ function renderActionBar() {
   slots.forEach((slot, index) => {
     const spellId = actionBarSpells[index];
     const spell = spellId ? getSpellStats(SPELLS[spellId]) : null;
+    if (slotStates[index]) {
+      slotStates[index].spell = spell;
+      slotStates[index].lastReason = null;
+    }
 
     let icon = slot.querySelector(".spell-icon");
 
@@ -94,6 +122,7 @@ function renderActionBar() {
 
     slot.draggable = Boolean(spell);
   });
+  updateActionBarStatus();
 }
 
 function createActionTooltip(spell, key) {
@@ -125,6 +154,14 @@ function setupActionBar() {
   const slots = document.querySelectorAll("#action-bar .action-slot");
 
   slots.forEach((slot, index) => {
+    const countdown = document.createElement("span");
+    countdown.className = "action-cooldown";
+    countdown.setAttribute("aria-hidden", "true");
+    const label = document.createElement("span");
+    label.className = "action-status";
+    label.setAttribute("aria-hidden", "true");
+    slot.append(countdown, label);
+    slotStates[index] = { slot, countdown, label, spell: null, lastCountdown: null, lastReason: null };
 
     // Click to cast.
     slot.addEventListener("click", (event) => {
@@ -214,4 +251,4 @@ function setupActionBar() {
 
 }
 
-export { assignSpellToSlot, castActionBarSlot, renderActionBar, setupActionBar };
+export { assignSpellToSlot, castActionBarSlot, renderActionBar, updateActionBarStatus, setupActionBar };

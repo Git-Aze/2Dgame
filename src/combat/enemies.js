@@ -20,6 +20,7 @@ function damageEnemy(enemy, damage, cause) {
   const dealt = Math.min(enemy.hp, damage);
   enemy.hp = Math.round(Math.max(0, enemy.hp - damage) * 10) / 10;
   enemy.hurtTime = 0.25;
+  emit("enemy:hurt", { target: enemy, amount: dealt, cause });
   if (enemy.hp <= 0) defeatEnemy(enemy, cause);
   return dealt;
 }

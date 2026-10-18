@@ -1206,3 +1206,27 @@ body {
 .shop-item-name[data-rarity] {
   color: var(--rarity-color);
 }
+.action-slot[data-unavailable] .spell-icon { opacity: 0.4; filter: grayscale(0.7); }
+.action-slot[data-unavailable="mana"] { box-shadow: inset 0 0 0 1px #72a7f1; }
+.action-cooldown {
+  position: absolute;
+  inset: 7px 0 8px;
+  display: grid;
+  place-items: center;
+  z-index: 2;
+  color: #fff5d5;
+  font: bold 18px Arial, sans-serif;
+  text-shadow: 1px 1px 3px #000, -1px -1px 3px #000;
+  pointer-events: none;
+}
+.action-status {
+  position: absolute;
+  bottom: 1px;
+  left: 0;
+  right: 0;
+  z-index: 3;
+  color: #ffe9b1;
+  font: 8px Arial, sans-serif;
+  text-align: center;
+  pointer-events: none;
+}

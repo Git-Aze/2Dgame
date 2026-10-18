@@ -57,6 +57,7 @@ const inventory = {
 const INVENTORY_SIZE = 20;
 const enemies = [];
 const corpses = [];
+const combatFeedback = { numbers: [], notices: [], flashes: [], time: 0 };
 const fireballs = [];
 const activeIgnites = [];
 const swordSwings = [];
@@ -86,4 +87,4 @@ function isPlaying() {
   return runtime.gameState === "playing" && player.hp > 0 && !runtime.activeShop && !runtime.menuOpen;
 }
 
-export { player, keys, inventory, INVENTORY_SIZE, enemies, corpses, fireballs, activeIgnites, swordSwings, spellCooldowns, questProgress, ACTION_BAR_SIZE, actionBarSpells, initialPlayerState, initialActionBar, runtime, isPlaying };
+export { player, keys, inventory, INVENTORY_SIZE, enemies, corpses, combatFeedback, fireballs, activeIgnites, swordSwings, spellCooldowns, questProgress, ACTION_BAR_SIZE, actionBarSpells, initialPlayerState, initialActionBar, runtime, isPlaying };

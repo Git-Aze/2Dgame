@@ -29,6 +29,7 @@ import { runSaveChecks } from "./save-checks.js";
 import { runRarityChecks } from "./rarity-checks.js";
 import { runAttributeDamageChecks } from "./attribute-damage-checks.js";
 import { runLootChecks } from "./loot-checks.js";
+import { runCombatFeedbackChecks } from "./combat-feedback-checks.js";
 import { runPauseChecks } from "./pause-checks.js";
 
 let checks = 0;
@@ -289,6 +290,7 @@ try {
   runRarityChecks(assert);
   runAttributeDamageChecks(assert);
   runLootChecks(assert);
+  runCombatFeedbackChecks(assert);
   render();
   assert(errors.length === 0, `Browser errors: ${errors.join("; ")}`);
   const result = `PASS: ${checks} gameplay checks`;

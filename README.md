@@ -90,6 +90,12 @@ For example, the Iron Sword gives a starting character 13 Strength: Sword Strike
 | Move or swap action-bar spells | Drag between action-bar slots |
 | Remove an action-bar spell | Right-click its slot |
 
+## Combat feedback
+
+Combat feedback includes outlined floating damage numbers: yellow for your direct hits, orange marked **DOT** for damage over time, and red over the player for incoming damage. Brief flashes highlight hits; on-screen notices explain blocked or interrupted attacks. Overlapping hits use separate lanes, with large bursts combined to keep the display readable.
+
+Action-bar slots show remaining cooldowns and short unavailable reasons such as Weapon, Target, Range, Blocked, Mana, or Too close. Slots keep their tooltips and drag controls. Stunned enemies show orbiting stars and a timer driven by their actual stun duration. Visual effects and countdowns pause with the game; transient feedback clears on death, restart, and loading.
+
 ## Saving and loading
 
 During play, **Escape** closes the topmost open panel first (spell book, character sheet, or shop); press it with no panel open to open the pause menu. Within the menu, Escape closes expanded Load choices before resuming play. **Continue** or Escape resumes play; **Save** stores your adventure in this browser and **Export** downloads a portable JSON backup. **Load** offers the browser save or a JSON file import. Successful loading resumes play; saving, exporting, and invalid imports leave the menu paused. **Restart** begins a fresh adventure and preserves the stored save. **Settings** is a disabled placeholder. Saving is manual; progress since your last save is not automatically stored.

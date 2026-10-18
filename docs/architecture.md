@@ -21,6 +21,9 @@ Subscriptions are installed during startup, never on each restart. Notifications
 | `player:changed` | Equipment, attributes, XP, or gold changed; refresh the character sheet, XP bar, and ability details |
 | `resources:changed` | Health/mana changed outside the regular update; refresh the resource HUD and visible sheet |
 | `player:hurt` | Combat can interrupt an unreleased cast |
+| `enemy:hurt` | Actual health lost, target, and damage source feed visual feedback |
+| `combat:notice` | Show a brief interruption or failure notice without altering combat |
+| `combat:reset` | Clear transient damage text, hit flashes, notices, and visual timing |
 | `player:died` | Lifecycle enters the dead state |
 | `game:statechanged` | Start/death screens respond to session transitions |
 | `portraits:ready` | Player sprite image finished loading; refresh portraits |
@@ -45,6 +48,10 @@ Shared state owns `corpses` and a monotonic ID counter. Corpses copy the enemy's
 Version 3 saves whitelist remaining corpse rewards and positions. Validation checks unique IDs, known definitions, level/gold bounds, and coordinates before loading, then visuals are rebuilt from enemy definitions. Versions 1/2 migrate to an empty corpse list; loading never rolls loot. Reset clears session corpses before loading restores saved ones. Save parsing and file import share a size limit.
 
 ## Verification
+
+Combat feedback uses transient `state.combatFeedback` arrays, managed by `src/combat/feedback.js` through damage/failure events and delta time. Damage numbers distinguish direct hits, DOT, and incoming damage. Effects are bounded globally and by target lanes; excess same-kind burst hits combine displayed totals. Hit flashes and notices expire independently. `src/rendering/combat-feedback.js` draws them without advancing time, and stun visuals read `enemy.stunRemaining`. Damage fields report actual health lost, excluding overkill. Feedback is excluded from saves and cleared on death and combat reset.
+
+The action bar caches effective ability definitions when assignments/equipment change. `updateActionBarStatus()` reads live cooldowns and `getActionUnavailableReason()` each frame, including while paused, and changes DOM only when countdown text or status changes. Target checks are shared with attack validation. `aria-disabled` communicates unavailability while preserving drag operations and tooltips; combat functions still enforce requirements. `tests/combat-feedback-checks.js` verifies overlapping effects, expiry, pause, statuses, cooldown recovery, stuns, and lifecycle cleanup.
 
 Offensive attribute scaling is centralized in `getSpellStats()` using `STAT_RULES.damagePerAttribute` (1.1 per effective attribute point above 10). Ability weapon categories select Strength, Intelligence, or Dexterity; gear attributes are included once. Direct hits add matching weapon damage, DOT ticks add only their attribute bonus, and results round to tenths. Projectile/effect damage is captured when launched or applied; later gear changes do not rewrite damage already in flight. The existing `fireballs` collection now also holds ranged projectiles tagged with ability ID `00005` and a weapon class for arrow/dagger rendering. Shared projectile updates handle movement, scenery, range, death credit, and cleanup. Ranged Attack reads its equipped weapon's range. New adventures assign it to slot 5; loading preserves saved action-bar assignments. `tests/attribute-damage-checks.js` covers formulas, restrictions, projectiles, purchases, tooltips, and persistence.
 

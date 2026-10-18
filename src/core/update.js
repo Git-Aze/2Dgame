@@ -6,9 +6,11 @@ import { updateSlimeAnimation } from "../rendering/slime-sprites.js";
 import { cancelCasting, updateCasting, updateCharge, updateCombat, updateSpellCooldowns } from "../combat/spells.js";
 import { isPlaying, keys, player, runtime } from "./state.js";
 import { getPlayerStats } from "../player/stats.js";
+import { updateCombatFeedback } from "../combat/feedback.js";
 
 function update(dt) {
   if (!isPlaying()) return;
+  updateCombatFeedback(dt);
   const stats = getPlayerStats();
   updateSpellCooldowns(dt);
   let dx = 0;

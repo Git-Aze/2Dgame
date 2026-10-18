@@ -49,6 +49,7 @@ function updateCharge(dt) {
   if (Math.abs(player.x - oldX - moveX) > 0.01 || Math.abs(player.y - oldY - moveY) > 0.01) {
     runtime.activeCharge = null;
     showMessage("Charge stopped by terrain.");
+    emit("combat:notice", { text: "Charge blocked" });
   } else if (distance - travel <= contactDistance + 0.01) {
     target.stunRemaining = Math.max(target.stunRemaining ?? 0, SPELLS["00004"].stunDuration);
     runtime.activeCharge = null;
@@ -56,6 +57,7 @@ function updateCharge(dt) {
   } else if (runtime.activeCharge.remainingTravel <= 0) {
     runtime.activeCharge = null;
     showMessage("Charge ended before reaching the target.");
+    emit("combat:notice", { text: "Charge ended" });
   }
 }
 
@@ -120,28 +122,46 @@ function updateSpellCooldowns(dt) {
   }
 }
 
+function getTargetProblem(spell, target) {
+  if (!meetsWeaponRequirement(spell)) return "weapon";
+  if (!target?.alive) return "target";
+  const ax = player.x + player.w / 2, ay = player.y + player.h / 2;
+  const bx = target.x + target.w / 2, by = target.y + target.h / 2;
+  const distance = Math.hypot(bx - ax, by - ay);
+  if (distance < (spell.minRange ?? 0)) return "too-close";
+  if (distance > spell.range) return "range";
+  if (spellPathBlocked(ax, ay, bx, by)) return "blocked";
+  return "";
+}
+
+function getActionUnavailableReason(spell, target = runtime.selectedEnemy) {
+  if (!isPlaying()) return "paused";
+  if (spellCooldowns[spell.id] > 0) return "cooldown";
+  if (player.casting) return "casting";
+  if (runtime.activeCharge) return "charging";
+  const problem = getTargetProblem(spell, target);
+  if (problem) return problem;
+  return player.mana < spell.manaCost ? "mana" : "";
+}
+
 function validateSpellTarget(spell, target) {
-  let reason = "";
-  if (!meetsWeaponRequirement(spell)) {
-    reason = `${spell.name} requires ${getActionWeaponRequirement(spell)}.`;
-  } else if (!target?.alive) {
-    reason = "Select a living enemy before casting.";
-  } else {
-    const ax = player.x + player.w / 2, ay = player.y + player.h / 2;
-    const bx = target.x + target.w / 2, by = target.y + target.h / 2;
-    const distance = Math.hypot(bx - ax, by - ay);
-    if (distance < (spell.minRange ?? 0)) reason = `${spell.name}: target must be at least ${spell.minRange} pixels away.`;
-    else if (distance > spell.range) reason = `${spell.name}: target is out of range.`;
-    else if (spellPathBlocked(ax, ay, bx, by)) reason = `${spell.name}: line of sight is blocked.`;
-  }
-  if (reason) showMessage(reason);
-  return !reason;
+  const problem = getTargetProblem(spell, target);
+  if (!problem) return true;
+  const reason = problem === "weapon" ? `${spell.name} requires ${getActionWeaponRequirement(spell)}.`
+    : problem === "target" ? "Select a living enemy before casting."
+    : problem === "too-close" ? `${spell.name}: target must be at least ${spell.minRange} pixels away.`
+    : problem === "range" ? `${spell.name}: target is out of range.` : `${spell.name}: line of sight is blocked.`;
+  showMessage(reason);
+  emit("combat:notice", { text: problem === "weapon" ? "Wrong weapon" : problem === "target" ? "No target"
+    : problem === "too-close" ? "Too close" : problem === "range" ? "Out of range" : "Blocked" });
+  return false;
 }
 
 function canCastSpell(spell, target) {
   if (!isPlaying() || player.casting || runtime.activeCharge) return false;
   if (spellCooldowns[spell.id] > 0) {
     showMessage(`${spell.name} is on cooldown (${spellCooldowns[spell.id].toFixed(1)}s).`);
+    emit("combat:notice", { text: "Not ready" });
     return false;
   }
   return validateSpellTarget(spell, target) && hasEnoughMana(spell);
@@ -154,7 +174,10 @@ function cancelCasting(reason = "") {
   player.castTarget = null;
   player.castReleased = false;
   player.frame = 0;
-  if (reason) showMessage(`Casting interrupted: ${reason}`);
+  if (reason) {
+    showMessage(`Casting interrupted: ${reason}`);
+    emit("combat:notice", { text: "Interrupted", kind: "interrupted" });
+  }
 }
 
 function resetSpellState() {
@@ -164,6 +187,7 @@ function resetSpellState() {
   swordSwings.length = 0;
   for (const id of Object.keys(spellCooldowns)) delete spellCooldowns[id];
   cancelCasting();
+  emit("combat:reset");
 }
 
 function hasEnoughMana(spell) {
@@ -172,6 +196,7 @@ function hasEnoughMana(spell) {
       `Not enough mana to cast ${spell.name}! ` +
       `Requires ${spell.manaCost} mana.`
     );
+    emit("combat:notice", { text: "Not enough mana" });
     return false;
   }
 
@@ -504,6 +529,7 @@ function updateCombat(dt) {
     if (spellPathBlocked(fireball.x, fireball.y, nextX, nextY)) {
       fireballs.splice(i, 1);
       showMessage(`${SPELLS[fireball.spellId ?? "00001"].name} was blocked by scenery.`);
+      emit("combat:notice", { text: "Blocked", target: { x: fireball.x, y: fireball.y, w: 0, h: 0 } });
       continue;
     }
 
@@ -532,4 +558,4 @@ function setupCombat() {
   });
 }
 
-export { chargeAttack, updateCharge, getActionWeaponRequirement, swordAttack, rangedAttack, drawSwordSwings, updateSpellCooldowns, cancelCasting, resetSpellState, castIgnite, updateIgnites, drawIgniteEffects, CAST_FRAME_DURATION, drawFireball, castFireball, updateCasting, updateCombat, setupCombat };
+export { chargeAttack, updateCharge, getActionWeaponRequirement, getActionUnavailableReason, swordAttack, rangedAttack, drawSwordSwings, updateSpellCooldowns, cancelCasting, resetSpellState, castIgnite, updateIgnites, drawIgniteEffects, CAST_FRAME_DURATION, drawFireball, castFireball, updateCasting, updateCombat, setupCombat };

@@ -3,6 +3,7 @@ import { buildings } from "../world/buildings.js";
 import { ctx } from "./canvas.js";
 import { drawEnemy } from "./enemy-renderer.js";
 import { drawCorpse } from "./corpse-renderer.js";
+import { drawHitFlash, drawCombatFeedback } from "./combat-feedback.js";
 import { drawImageCharacter, drawSprite, playerSprites } from "./player-sprites.js";
 import { CAST_FRAME_DURATION, drawFireball, drawIgniteEffects, drawSwordSwings } from "../combat/spells.js";
 import { enemies, corpses, fireballs, player, runtime } from "../core/state.js";
@@ -42,6 +43,7 @@ function drawWorld() {
     if (!drawImageCharacter(action, player.facing, frame)) {
       drawSprite(playerSprites[player.facing][player.frame], player.x - 4, player.y - 2, 2);
     }
+    drawHitFlash(player);
   }});
   for (const enemy of enemies) {
     if (enemy.alive) {
@@ -82,6 +84,7 @@ function render() {
   }
   drawIgniteEffects();
   drawSwordSwings();
+  drawCombatFeedback();
   ctx.restore();
 }
 

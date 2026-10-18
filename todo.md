@@ -115,11 +115,11 @@ Completion target: defeated enemies can drop loot that the player can identify a
 
 ## 7. Combat feedback
 
-- [ ] 7.01 Show floating damage numbers and distinguish player damage, enemy damage, and damage over time.
-- [ ] 7.02 Add brief hit flashes and clear visual feedback for interrupted or blocked attacks.
-- [ ] 7.03 Show remaining cooldowns on action-bar slots and indicate unavailable actions.
-- [ ] 7.04 Improve stun effects and display their remaining duration consistently.
-- [ ] 7.05 Verify feedback stays readable during overlapping attacks and resets correctly after death.
+- [x] 7.01 Add outlined floating damage: yellow outgoing hits, orange DOT labels, and red incoming damage; separate overlapping lanes and combine burst overflow without losing displayed totals.
+- [x] 7.02 Add brief player/enemy hit flashes and on-screen notices for interrupted, blocked, out-of-range, invalid-weapon, and failed-mana attacks.
+- [x] 7.03 Add action-bar cooldown countdowns and unavailable reasons (weapon, target, range, line of sight, mana, casting/charging, pause); preserve dragging/tooltips and update DOM only when displayed values change.
+- [x] 7.04 Add orbiting stun stars and an outlined, rounded-up timer based on actual remaining stun duration; pause with gameplay.
+- [x] 7.05 Verify simultaneous hits, bounded bursts, effect expiry, shared availability checks, pause behavior, Charge reset, save exclusion, and death/load/restart cleanup; inspect a combined combat scene visually.
 
 ## 8. Potions and consumables
 

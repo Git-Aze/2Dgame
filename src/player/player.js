@@ -58,8 +58,9 @@ function damagePlayer(baseDamage) {
   // Attacks always deal at least 1 damage.
   const finalDamage = getDamageTaken(baseDamage, stats);
 
+  const dealt = Math.min(player.hp, finalDamage);
   player.hp = Math.max(0, player.hp - finalDamage);
-  emit("player:hurt");
+  emit("player:hurt", { target: player, amount: dealt });
 
   showMessage(`You take ${finalDamage} damage. (${armor} armor)`);
 

@@ -1,6 +1,7 @@
 import { ctx } from "./canvas.js";
 import { drawSlimeSprite } from "./slime-sprites.js";
 import { runtime } from "../core/state.js";
+import { drawHitFlash, drawStunFeedback } from "./combat-feedback.js";
 
 function drawEnemy(enemy) {
   if (!enemy.alive) return;
@@ -22,20 +23,14 @@ function drawEnemy(enemy) {
     default:
       drawSlime(enemy);
   }
+  drawHitFlash(enemy);
   ctx.save();
   ctx.font = "10px Arial";
   ctx.textAlign = "center";
   ctx.fillStyle = "#fff0c4";
   ctx.fillText(`Lv ${enemy.level}`, enemy.x + enemy.w / 2, enemy.y - 17);
   ctx.restore();
-  if (enemy.stunRemaining > 0) {
-    ctx.save();
-    ctx.fillStyle = "#ffe6a3";
-    ctx.font = "bold 10px Arial";
-    ctx.textAlign = "center";
-    ctx.fillText(`STUN ${enemy.stunRemaining.toFixed(1)}s`, enemy.x + enemy.w / 2, enemy.y - 29);
-    ctx.restore();
-  }
+  drawStunFeedback(enemy);
 }
 
 

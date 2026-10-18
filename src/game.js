@@ -1,5 +1,5 @@
 import "./ui/tooltips.js";
-import { setupActionBar } from "./ui/actionbar.js";
+import { setupActionBar, updateActionBarStatus } from "./ui/actionbar.js";
 import { setupCanvas } from "./rendering/canvas.js";
 import { setupCharacterUI } from "./ui/character-ui.js";
 import { spawnStartingEnemies } from "./combat/enemies.js";
@@ -24,11 +24,13 @@ import { update } from "./core/update.js";
 import { WORLD_DATA } from "./world/world.js";
 import { setupLoot } from "./loot/loot.js";
 import { setupLootUI } from "./ui/loot-ui.js";
+import { setupCombatFeedback } from "./combat/feedback.js";
 
 // Entry point: initialize modules once, then advance simulation and rendering.
 function initializeGame() {
   setupCanvas();
   setupCombat();
+  setupCombatFeedback();
   setupLoot();
   setupLootUI();
   setupCharacterUI();
@@ -59,6 +61,7 @@ function loop(timestamp) {
   runtime.lastTime = timestamp;
 
   update(dt);
+  updateActionBarStatus();
   render();
 
   requestAnimationFrame(loop);
