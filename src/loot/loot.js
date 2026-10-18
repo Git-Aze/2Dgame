@@ -31,7 +31,7 @@ function rollLoot(level, random = Math.random) {
 
 function createCorpse(enemy) {
   const corpse = {
-    id: runtime.nextCorpseId++, enemyTypeId: enemy.id, level: getEnemyLevel(enemy),
+    id: runtime.nextCorpseId++, areaId: runtime.areaId, enemyTypeId: enemy.id, level: getEnemyLevel(enemy),
     name: enemy.name, sprite: enemy.sprite, x: enemy.x, y: enemy.y, w: enemy.w, h: enemy.h,
     spriteTime: 0, spriteMoving: false, stunRemaining: 0, hurtTime: 0,
     ...rollLoot(getEnemyLevel(enemy)),
@@ -42,11 +42,11 @@ function createCorpse(enemy) {
 }
 
 function corpseAtPosition(x, y) {
-  return corpses.findLast((corpse) => x >= corpse.x - 6 && x <= corpse.x + corpse.w + 6 && y >= corpse.y - 6 && y <= corpse.y + corpse.h + 6) ?? null;
+  return corpses.findLast((corpse) => corpse.areaId === runtime.areaId && x >= corpse.x - 6 && x <= corpse.x + corpse.w + 6 && y >= corpse.y - 6 && y <= corpse.y + corpse.h + 6) ?? null;
 }
 
 function playerOverCorpse(corpse) {
-  return player.x < corpse.x + corpse.w && player.x + player.w > corpse.x &&
+  return corpse.areaId === runtime.areaId && player.x < corpse.x + corpse.w && player.x + player.w > corpse.x &&
     player.y < corpse.y + corpse.h && player.y + player.h > corpse.y;
 }
 
@@ -55,7 +55,7 @@ function corpseUnderPlayer() {
 }
 
 function lootCorpse(corpse) {
-  if (!isPlaying() || !corpses.includes(corpse)) return false;
+  if (!isPlaying() || corpse.areaId !== runtime.areaId || !corpses.includes(corpse)) return false;
   const px = player.x + player.w / 2, py = player.y + player.h / 2;
   const cx = corpse.x + corpse.w / 2, cy = corpse.y + corpse.h / 2;
   if (Math.hypot(px - cx, py - cy) > LOOT_RULES.clickRange || spellPathBlocked(px, py, cx, cy)) {

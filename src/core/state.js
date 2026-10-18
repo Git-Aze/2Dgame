@@ -80,7 +80,7 @@ const initialPlayerState = structuredClone(player);
 const initialActionBar = [...actionBarSpells];
 const runtime = {
   cameraX: 0, cameraY: 0, viewWidth: 0, viewHeight: 0,
-  gameState: "start", lastTime: 0, nextEnemyInstanceId: 1, nextCorpseId: 1,
+  gameState: "start", areaId: "village", lastTime: 0, nextEnemyInstanceId: 1, nextCorpseId: 1,
   selectedEnemy: null, activeShop: null, activeCharge: null, menuOpen: false,
 };
 function isPlaying() {

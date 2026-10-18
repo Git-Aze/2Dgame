@@ -2,13 +2,17 @@
 
 // Shared world definition. Locations use tile coordinates plus pixel offsets.
 // Scenery and its collision footprint are defined together.
-const WORLD_DATA = {
+import { CAVE_DATA } from "./cave-world.js";
+
+const VILLAGE_DATA = {
+  id: "village",
   name: "Greenfield Village",
   tileSize: 32,
   width: 72,
   height: 48,
   background: new URL("../../assets/images/ground_map.png", import.meta.url).href,
   collision: {
+    solidPassages: [{ id: "cave-approach", points: [[1395,153],[1424,116],[1455,119],[1433,163],[1411,180]] }],
     boundaryTiles: 1,
     entityMargin: 3,
     // Coordinates traced against ground_map.png, independent of world scale.
@@ -121,6 +125,8 @@ const WORLD_DATA = {
     [25, 27], [46, 27], [51, 22], [57, 18],
     [36, 7], [43, 8], [52, 6], [61, 12],
   ],
+  portals: [{ id: "northeast-cave", label: "Enter Northeast Cave", x: 2105, y: 195, width: 75, height: 65,
+    targetArea: "cave" }],
   playerSpawn: { tileX: 33, tileY: 23, offsetX: 4, offsetY: 2 },
   buildings: [{
     id: "general-store",
@@ -149,4 +155,12 @@ function worldPosition({ tileX, tileY, offsetX = 0, offsetY = 0 }) {
   };
 }
 
-export { WORLD_DATA, worldPosition };
+const AREAS = Object.freeze({ village: VILLAGE_DATA, cave: CAVE_DATA });
+let WORLD_DATA = VILLAGE_DATA;
+
+function selectWorldDefinition(id) {
+  if (!Object.hasOwn(AREAS, id)) throw new Error("Unknown area.");
+  WORLD_DATA = AREAS[id];
+}
+
+export { WORLD_DATA, AREAS, selectWorldDefinition, worldPosition };

@@ -113,7 +113,7 @@ export function runLootChecks(assert) {
     const oldSave = JSON.parse(text);
     oldSave.version = 2;
     delete oldSave.corpses;
-    assert(parseSave(JSON.stringify(oldSave)).version === 3 && parseSave(JSON.stringify(oldSave)).corpses.length === 0, "Version 2 saves migrate safely with no corpses");
+    assert(parseSave(JSON.stringify(oldSave)).version === 4 && parseSave(JSON.stringify(oldSave)).corpses.length === 0, "Version 2 saves migrate safely with no corpses");
     const stable = JSON.stringify(createSave().corpses);
     for (const mutate of [
       (s) => { s.corpses[0].gold = -1; },

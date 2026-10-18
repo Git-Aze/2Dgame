@@ -31,6 +31,7 @@ import { runAttributeDamageChecks } from "./attribute-damage-checks.js";
 import { runLootChecks } from "./loot-checks.js";
 import { runCombatFeedbackChecks } from "./combat-feedback-checks.js";
 import { runPauseChecks } from "./pause-checks.js";
+import { runAreaChecks } from "./area-checks.js";
 
 let checks = 0;
 const errors = [];
@@ -291,6 +292,7 @@ try {
   runAttributeDamageChecks(assert);
   runLootChecks(assert);
   runCombatFeedbackChecks(assert);
+  runAreaChecks(assert);
   render();
   assert(errors.length === 0, `Browser errors: ${errors.join("; ")}`);
   const result = `PASS: ${checks} gameplay checks`;

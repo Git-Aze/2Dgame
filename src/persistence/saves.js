@@ -4,16 +4,15 @@ import { SPELLS } from "../data/action-definitions.js";
 import { QUEST_DEFINITIONS } from "../quests/quests.js";
 import { resetAdventure, setGameState } from "../core/lifecycle.js";
 import { STAT_RULES, refreshPlayerStats } from "../player/stats.js";
-import { collides } from "../world/movement.js";
 import { emit } from "../core/events.js";
 import { ENEMY_TYPES } from "../data/enemy-types.js";
-import { WORLD_PIXEL_W, WORLD_PIXEL_H } from "../world/world-state.js";
+import { AREAS } from "../world/world.js";
 import { ENEMY_LEVEL_RULES } from "../combat/enemy-stats.js";
 import { LOOT_RULES } from "../data/loot-tables.js";
 
 const SAVE_KEY = "TopDownSoloRPG.save";
 const BACKUP_KEY = "TopDownSoloRPG.save.backup";
-const SAVE_VERSION = 3;
+const SAVE_VERSION = 4;
 const MAX_SAVE_SIZE = 1000000;
 const LEGACY_ITEM_IDS = Object.freeze({
   "00001": "00001", "00002": "02000", "00003": "03000", "00004": "04000",
@@ -25,7 +24,7 @@ const integer = (value, min, max) => Number.isSafeInteger(value) && value >= min
 const itemExists = (id) => typeof id === "string" && /^\d{5}$/.test(id) && Boolean(getItem(id));
 
 function migrateSave(save) {
-  if (!object(save) || ![1, 2, SAVE_VERSION].includes(save.version)) throw new Error("Unsupported save version. This game supports versions 1, 2 and 3.");
+  if (!object(save) || ![1, 2, 3, SAVE_VERSION].includes(save.version)) throw new Error("Unsupported save version. This game supports versions 1 through 4.");
   if (save.version === 1) {
     if (!object(save.inventory) || !Array.isArray(save.inventory.items) || !object(save.inventory.equipment)) throw new Error("Invalid legacy inventory.");
     const migrateItem = (id) => {
@@ -41,6 +40,11 @@ function migrateSave(save) {
   }
   if (save.version === 2) {
     save.corpses = [];
+    save.version = 3;
+  }
+  if (save.version === 3) {
+    save.areaId = "village";
+    if (Array.isArray(save.corpses)) save.corpses.forEach((corpse) => { if (object(corpse)) corpse.areaId = "village"; });
     save.version = SAVE_VERSION;
   }
   return save;
@@ -53,6 +57,7 @@ function parseSave(text) {
   try { save = JSON.parse(text); } catch { throw new Error("Save file is not valid JSON."); }
   save = migrateSave(save);
   if (save.game !== "TopDownSoloRPG" || typeof save.savedAt !== "string" || !Number.isFinite(Date.parse(save.savedAt))) throw new Error("Invalid save header.");
+  if (!Object.hasOwn(AREAS, save.areaId)) throw new Error("Unknown saved area.");
   const p = save.player;
   if (!object(p) || !integer(p.level, 1, 75)) throw new Error("Invalid player level.");
   let threshold = 100;
@@ -88,18 +93,19 @@ function parseSave(text) {
   const savedCorpses = save.corpses.map((corpse) => {
     if (!object(corpse) || !integer(corpse.id, 1, 1000000000) || corpseIds.has(corpse.id)) throw new Error("Invalid corpse ID.");
     corpseIds.add(corpse.id);
+    const area = AREAS[corpse.areaId];
     const type = ENEMY_TYPES.find((entry) => entry.id === corpse.enemyTypeId);
-    if (!type || !integer(corpse.level, 1, ENEMY_LEVEL_RULES.maxLevel) ||
+    if (!Object.hasOwn(AREAS, corpse.areaId) || !type || !integer(corpse.level, 1, ENEMY_LEVEL_RULES.maxLevel) ||
         !Number.isFinite(corpse.x) || !Number.isFinite(corpse.y) || corpse.x < 0 || corpse.y < 0 ||
-        corpse.x + type.width > WORLD_PIXEL_W || corpse.y + type.height > WORLD_PIXEL_H ||
+        corpse.x + type.width > area.width * area.tileSize || corpse.y + type.height > area.height * area.tileSize ||
         !integer(corpse.gold, 0, corpse.level * LOOT_RULES.goldMaxPerLevel) ||
         (corpse.itemId !== null && !itemExists(corpse.itemId)) || (!corpse.gold && !corpse.itemId)) throw new Error("Invalid corpse loot or position.");
-    return { id: corpse.id, enemyTypeId: type.id, level: corpse.level,
+    return { id: corpse.id, areaId: corpse.areaId, enemyTypeId: type.id, level: corpse.level,
       x: corpse.x, y: corpse.y, gold: corpse.gold, itemId: corpse.itemId };
   });
   // Whitelist fields rather than spreading imported objects into shared state.
   return {
-    version: SAVE_VERSION, game: save.game, savedAt: save.savedAt,
+    version: SAVE_VERSION, game: save.game, savedAt: save.savedAt, areaId: save.areaId,
     player: Object.fromEntries(fields.map((key) => [key, p[key]])),
     inventory: { items: [...save.inventory.items], equipment: Object.fromEntries(Object.keys(inventory.equipment).map((slot) => [slot, equipment[slot]])) },
     corpses: savedCorpses,
@@ -111,18 +117,18 @@ function parseSave(text) {
 function createSave() {
   if (runtime.gameState !== "playing" || player.hp <= 0) throw new Error("Start or continue an adventure before saving.");
   return parseSave(JSON.stringify({
-    version: SAVE_VERSION, game: "TopDownSoloRPG", savedAt: new Date().toISOString(),
+    version: SAVE_VERSION, game: "TopDownSoloRPG", savedAt: new Date().toISOString(), areaId: runtime.areaId,
     player: Object.fromEntries(fields.map((key) => [key, player[key]])),
     inventory, actionBar: actionBarSpells, quests: questProgress,
-    corpses: corpses.map(({ id, enemyTypeId, level, x, y, gold, itemId }) => ({ id, enemyTypeId, level, x, y, gold, itemId })),
+    corpses: corpses.map(({ id, areaId, enemyTypeId, level, x, y, gold, itemId }) => ({ id, areaId, enemyTypeId, level, x, y, gold, itemId })),
   }));
 }
 
 function applySave(text) {
   const save = parseSave(text);
-  if (collides(initialPlayerState.x, initialPlayerState.y)) throw new Error("The starting position is blocked.");
+
   // Loading always rebuilds transient combat/world data at the known safe spawn.
-  resetAdventure();
+  resetAdventure(save.areaId);
   Object.assign(player, save.player);
   player.xpToNextLevel = 100;
   for (let level = 1; level < player.level; level++) player.xpToNextLevel = Math.floor(player.xpToNextLevel * 1.5);

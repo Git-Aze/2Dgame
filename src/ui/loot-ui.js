@@ -42,6 +42,7 @@ function setupLootUI() {
   on("loot:changed", clear);
   on("game:statechanged", clear);
   on("menu:changed", clear);
+  on("area:changed", clear);
 }
 
 export { corpseAtScreenPosition, setupLootUI };

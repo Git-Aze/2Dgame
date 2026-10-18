@@ -16,6 +16,10 @@ function createBuilding(definition) {
 }
 const buildings = (WORLD_DATA.buildings ?? []).map(createBuilding);
 
+function resetBuildings() {
+  buildings.splice(0, buildings.length, ...(WORLD_DATA.buildings ?? []).map(createBuilding));
+}
+
 function buildingFootprint(building) {
   return {
     left: building.x + building.footprint.x,
@@ -48,4 +52,4 @@ function buildingAtScreenPosition(screenX, screenY) {
     x <= building.x + building.width / 2 && y >= building.y - building.height && y <= building.y + 42);
 }
 
-export { buildings, buildingFootprint, buildingIsNearby, interactWithBuilding, buildingAtScreenPosition };
+export { buildings, buildingFootprint, buildingIsNearby, interactWithBuilding, buildingAtScreenPosition, resetBuildings };

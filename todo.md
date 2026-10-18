@@ -165,12 +165,12 @@ Completion target: defeated enemies can drop loot that the player can identify a
 
 ## 13. Areas and exploration
 
-- [ ] 13.01 Define multiple areas with their own scenery, collision, spawn points, and entrances.
+- [x] 13.01 Define multiple areas with their own scenery, collision, spawn points, and entrances.
 - [ ] 13.02 Add enterable building interiors and transitions back outside.
-- [ ] 13.03 Add a cave area with enemies, loot, and an entrance on the overworld.
+- [x] 13.03 Add a cave area with enemies, loot, and an entrance on the overworld.
 - [ ] 13.04 Add named discoverable locations and discovery feedback.
-- [ ] 13.05 Define how enemies, dropped loot, and player position behave when changing areas.
-- [ ] 13.06 Verify transitions cannot place the player inside obstacles or duplicate entities and rewards.
+- [x] 13.05 Define how enemies, dropped loot, and player position behave when changing areas. Enemies pause off-area; corpses retain area IDs; travel uses safe arrivals. Version 4 saves retain the active area and all corpses, loading at a safe spawn with fresh enemies.
+- [x] 13.06 Verify transitions cannot place the player inside obstacles or duplicate entities and rewards.
 
 ## 14. Quest variety
 

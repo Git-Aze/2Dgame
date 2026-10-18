@@ -25,10 +25,12 @@ import { WORLD_DATA } from "./world/world.js";
 import { setupLoot } from "./loot/loot.js";
 import { setupLootUI } from "./ui/loot-ui.js";
 import { setupCombatFeedback } from "./combat/feedback.js";
+import { setupAreaUI } from "./ui/area-ui.js";
 
 // Entry point: initialize modules once, then advance simulation and rendering.
 function initializeGame() {
   setupCanvas();
+  setupAreaUI();
   setupCombat();
   setupCombatFeedback();
   setupLoot();

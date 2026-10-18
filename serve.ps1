@@ -1,11 +1,16 @@
-param([int]$Port = 8000)
+param([ValidateRange(1, 65535)][int]$Port = 8000)
 
 # Local-only development server, with no installation or build step.
 $projectRoot = [IO.Path]::GetFullPath($PSScriptRoot)
 $rootPrefix = $projectRoot + [IO.Path]::DirectorySeparatorChar
 $mimeTypes = @{ '.html' = 'text/html'; '.js' = 'text/javascript'; '.css' = 'text/css'; '.png' = 'image/png'; '.json' = 'application/json'; '.md' = 'text/plain' }
 $listener = [Net.Sockets.TcpListener]::new([Net.IPAddress]::Loopback, $Port)
-$listener.Start()
+try {
+  $listener.Start()
+} catch {
+  $listener.Stop()
+  throw "Cannot start the local server on port $Port. Another server may already be running. Open http://localhost:$Port or try: powershell -NoProfile -ExecutionPolicy Bypass -File .\serve.ps1 -Port 8080. Details: $($_.Exception.GetBaseException().Message)"
+}
 Write-Host "TopDownSoloRPG: http://localhost:$Port (Ctrl+C to stop)"
 try {
   while ($true) {

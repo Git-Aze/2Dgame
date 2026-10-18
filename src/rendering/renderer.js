@@ -4,6 +4,7 @@ import { ctx } from "./canvas.js";
 import { drawEnemy } from "./enemy-renderer.js";
 import { drawCorpse } from "./corpse-renderer.js";
 import { drawHitFlash, drawCombatFeedback } from "./combat-feedback.js";
+import { drawPortalPrompt } from "./portal-renderer.js";
 import { drawImageCharacter, drawSprite, playerSprites } from "./player-sprites.js";
 import { CAST_FRAME_DURATION, drawFireball, drawIgniteEffects, drawSwordSwings } from "../combat/spells.js";
 import { enemies, corpses, fireballs, player, runtime } from "../core/state.js";
@@ -21,6 +22,7 @@ function drawWorld() {
 
   const layers = [];
   for (const corpse of corpses) {
+    if (corpse.areaId !== runtime.areaId) continue;
     layers.push({ depth: corpse.y + corpse.h, draw() { drawCorpse(corpse); }});
   }
   for (const building of buildings) {
@@ -85,6 +87,7 @@ function render() {
   drawIgniteEffects();
   drawSwordSwings();
   drawCombatFeedback();
+  drawPortalPrompt();
   ctx.restore();
 }
 

@@ -19,6 +19,8 @@ Your editor's local web server also works. Opening `index.html` directly with a 
 ## What you can do
 
 - Explore the map, cross bridges, and navigate around water, cliffs, and tree trunks.
+- Enter the northeast cave by approaching its mouth and pressing **E**, or clicking it nearby. Explore its chambers, fight level-1 creatures, and loot them. Use the southwest cave exit to return to the village.
+- Travel preserves your character and pauses enemies in the area you leave. Unlooted corpses stay in their own area. Saves restore the active area at its safe entrance with fresh enemies; older saves load in the village. Restart begins a fresh village adventure.
 - Equip weapons and armor from your inventory and inspect your character's attributes.
 - Target green slimes, red slimes, and wolves, then cast Fireball or Ignite.
 - Enemies navigate around trees, buildings, cliffs, and water while chasing, wandering, or returning home, using bridges when needed. Solid obstacles also block their melee attacks.

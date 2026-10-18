@@ -3,7 +3,7 @@ import { trees } from "./world-state.js";
 import { WORLD_DATA } from "./world.js";
 
 // Compile reference-image coordinates once, rather than during each movement.
-const mapCollision = (() => {
+function compileMapCollision() {
   const settings = WORLD_DATA.collision;
   const scaleX = WORLD_DATA.width * WORLD_DATA.tileSize / settings.referenceWidth;
   const scaleY = WORLD_DATA.height * WORLD_DATA.tileSize / settings.referenceHeight;
@@ -31,8 +31,16 @@ const mapCollision = (() => {
     water: settings.water.map(compile),
     solid: [...settings.solid, ...trunks].map(compile),
     crossings: settings.crossings.map(compile),
+    walkable: (settings.walkable ?? []).map(compile),
+    solidPassages: (settings.solidPassages ?? []).map(compile),
   };
-})();
+}
+const mapCollision = compileMapCollision();
+
+function resetMapCollision() {
+  const compiled = compileMapCollision();
+  for (const key of Object.keys(compiled)) mapCollision[key].splice(0, mapCollision[key].length, ...compiled[key]);
+}
 
 function pointInPolygon(x, y, points) {
   let inside = false;
@@ -90,7 +98,20 @@ function polygonIntersectsRect(region, left, top, right, bottom) {
 }
 
 function collidesWithMap(left, top, right, bottom) {
-  if (mapCollision.solid.some((region) =>
+  if (mapCollision.walkable.length) {
+    const stepsX = Math.max(1, Math.ceil((right - left) / 8));
+    const stepsY = Math.max(1, Math.ceil((bottom - top) / 8));
+    for (let y = 0; y <= stepsY; y++) {
+      for (let x = 0; x <= stepsX; x++) {
+        const px = left + (right - left) * x / stepsX, py = top + (bottom - top) * y / stepsY;
+        if (!mapCollision.walkable.some((region) => px >= region.left && px <= region.right && py >= region.top && py <= region.bottom && pointInPolygon(px, py, region.points))) return true;
+      }
+    }
+  }
+  const inPassage = mapCollision.solidPassages.some(({ points }) =>
+    pointInPolygon(left, top, points) && pointInPolygon(right, top, points) &&
+    pointInPolygon(left, bottom, points) && pointInPolygon(right, bottom, points));
+  if (!inPassage && mapCollision.solid.some((region) =>
     polygonIntersectsRect(region, left, top, right, bottom))) return true;
 
   // Crossings are convex polygons. All four corners must be inside so actors
@@ -116,6 +137,14 @@ function segmentsIntersect(ax, ay, bx, by, cx, cy, dx, dy) {
 
 // Water is passable for spells. Solid scenery uses the same footprints as movement.
 function spellPathBlocked(ax, ay, bx, by) {
+  if (mapCollision.walkable.length) {
+    const steps = Math.max(1, Math.ceil(Math.hypot(bx - ax, by - ay) / 4));
+    for (let i = 0; i <= steps; i++) {
+      const x = ax + (bx - ax) * i / steps, y = ay + (by - ay) * i / steps;
+      const contains = (region) => x >= region.left && x <= region.right && y >= region.top && y <= region.bottom && pointInPolygon(x, y, region.points);
+      if (!mapCollision.walkable.some(contains) && !mapCollision.water.some(contains)) return true;
+    }
+  }
   for (const building of buildings) {
     const bounds = buildingFootprint(building);
     if (segmentIntersectsRect(ax, ay, bx, by, bounds.left, bounds.top, bounds.right, bounds.bottom)) return true;
@@ -132,4 +161,4 @@ function spellPathBlocked(ax, ay, bx, by) {
     tree.x + tree.trunkWidth / 2, tree.y + tree.trunkHeight / 2));
 }
 
-export { mapCollision, collidesWithMap, spellPathBlocked };
+export { mapCollision, collidesWithMap, spellPathBlocked, resetMapCollision };

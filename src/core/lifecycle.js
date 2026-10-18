@@ -6,6 +6,8 @@ import { acceptQuest, resetQuests } from "../quests/quest-system.js";
 import { closeShop } from "../shops/shops.js";
 import { setMenuOpen } from "./pause-menu.js";
 import { resetSpellState } from "../combat/spells.js";
+import { resetAreaSessions } from "../world/areas.js";
+import { WORLD_DATA, worldPosition } from "../world/world.js";
 import { actionBarSpells, enemies, corpses, initialActionBar, initialPlayerState, inventory, keys, player, runtime } from "./state.js";
 
 function setGameState(state) {
@@ -27,9 +29,11 @@ function setGameState(state) {
   emit("game:statechanged", state);
 }
 
-function resetAdventure() {
+function resetAdventure(areaId = "village") {
+  resetAreaSessions(areaId);
   closeShop();
   Object.assign(player, structuredClone(initialPlayerState));
+  Object.assign(player, worldPosition(WORLD_DATA.playerSpawn));
   runtime.selectedEnemy = null;
   resetSpellState();
   enemies.length = 0;
@@ -45,6 +49,7 @@ function resetAdventure() {
   giveStartingItems();
   emit("player:changed");
   resetQuests();
+  emit("area:changed", areaId);
 }
 
 function startGame() {
