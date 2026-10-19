@@ -1,5 +1,5 @@
 import { RARITIES, getRarity } from "../src/data/rarities.js";
-import { getItem } from "../src/data/items.js";
+import { getItem, getAllItems } from "../src/data/items.js";
 import { SPELLS } from "../src/data/action-definitions.js";
 import { player, inventory, enemies, runtime } from "../src/core/state.js";
 import { equipItem, unequipItem } from "../src/player/inventory.js";
@@ -19,6 +19,29 @@ export function runRarityChecks(assert) {
   const swords = ["02000", "02001", "02002", "02003", "02004"];
   try {
     assert(Object.keys(RARITIES).join(",") === "common,uncommon,rare,epic,legendary", "Five ordered rarity tiers defined centrally");
+    const allItems = getAllItems();
+    const category = item => item.weaponClass ?? item.weaponType ?? item.type;
+    for (const kind of ["Casting", "Bow", "ThrowingDagger", "Sword", "head", "chest", "offhand", "legs", "boots"]) {
+      let previous = null;
+      for (const rarity of Object.keys(RARITIES)) {
+        const matches = allItems.filter(item => category(item) === kind && item.rarity === rarity);
+        assert(matches.length === 1, `${kind}: exactly one ${rarity} item`);
+        const item = matches[0];
+        assert(item.itemLevel === 1 && /^\d{5}$/.test(item.id) && getItem(item.id) === item,
+          `${item.id}: permanent ID and item-level metadata`);
+        if (previous) assert(item.buyPrice > previous.buyPrice && Object.entries(previous.stats).every(([stat, value]) => item.stats[stat] >= value),
+          `${kind}: stronger stats and increasing price across rarity tiers`);
+        previous = item;
+      }
+    }
+    for (const item of allItems) {
+      inventory.items = [item.id];
+      assert(equipItem(item.id), `${item.id}: catalog item equips in its slot`);
+      const slot = item.type === "weapon" ? "weapon" : item.type;
+      applySave(JSON.stringify(createSave()));
+      assert(inventory.equipment[slot] === item.id, `${item.id}: upgraded equipment survives save/load`);
+    }
+    applySave(snapshot);
     for (const id of ["00001", ...swords, "03000", "04000", "05000", "06000", "07000"]) {
       assert(getItem(id).itemLevel === 1 && Object.hasOwn(RARITIES, getItem(id).rarity), `${id}: valid rarity and item level 1`);
     }
@@ -27,6 +50,8 @@ export function runRarityChecks(assert) {
     player.y = shop.y + shop.entrance.y - player.h / 2;
     player.gold = 2000;
     openShop(shop);
+    assert(allItems.every(item => shop.shop.stock.includes(item.id)) && document.querySelectorAll(".shop-item-name").length === allItems.length,
+      "General Store stocks and displays every equipment variant");
     for (const id of swords.slice(1)) {
       const item = getItem(id);
       const label = [...document.querySelectorAll(".shop-item-name")].find((element) => element.textContent.includes(item.name));

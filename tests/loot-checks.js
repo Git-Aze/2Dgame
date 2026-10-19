@@ -1,6 +1,6 @@
 import { corpses, player, enemies, inventory, runtime, INVENTORY_SIZE } from "../src/core/state.js";
 import { rollLoot, lootCorpse, corpseUnderPlayer } from "../src/loot/loot.js";
-import { getItem } from "../src/data/items.js";
+import { getItem, getAllItems } from "../src/data/items.js";
 import { getEnemyDamage } from "../src/combat/enemy-stats.js";
 import { damageEnemy, respawnEnemy, updateEnemyRespawns, updateEnemies } from "../src/combat/enemies.js";
 import { createSave, parseSave, applySave } from "../src/persistence/saves.js";
@@ -46,6 +46,14 @@ export function runLootChecks(assert) {
       counts[getItem(loot.itemId).rarity]++;
     }
     assert(Object.values(counts).join(",") === "7000,2000,750,200,50", "Higher rarity has progressively lower odds independent of pool size");
+    const rarityRolls = { common: 0.35, uncommon: 0.8, rare: 0.93, epic: 0.985, legendary: 0.999 };
+    for (const [rarity, rarityRoll] of Object.entries(rarityRolls)) {
+      const pool = getAllItems().filter(item => item.rarity === rarity);
+      for (const [index, item] of pool.entries()) {
+        assert(rollLoot(1, sequence(0, 0, rarityRoll, (index + 0.5) / pool.length)).itemId === item.id,
+          `${item.id}: equipment variant is reachable in its rarity loot pool`);
+      }
+    }
     terrain.forEach((list) => { list.length = 0; });
     enemies.forEach((enemy) => { enemy.alive = false; });
     const enemy = enemies[0];
@@ -55,7 +63,9 @@ export function runLootChecks(assert) {
     updateEnemies(0.05);
     assert(player.hp === hp - 12, "Actual enemy attack applies monster-level damage scaling");
     player.hp = player.maxHp;
-    const corpse = kill(sequence(0, 0.1, 0.999, 0));
+    const legendaryItems = getAllItems().filter(item => item.rarity === "legendary");
+    const swordRoll = (legendaryItems.findIndex(item => item.id === "02004") + 0.5) / legendaryItems.length;
+    const corpse = kill(sequence(0, 0.1, 0.999, swordRoll));
     const count = corpses.length, xp = player.xp;
     damageEnemy(enemy, 1000, "00002");
     assert(corpses.length === count && player.xp === xp && corpse.gold === 1 && corpse.itemId === "02004", "Shared death handler rolls exactly once for all damage causes");

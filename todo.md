@@ -148,7 +148,7 @@ Completion target: defeated enemies can drop loot that the player can identify a
 ## 10. Equipment progression
 
 - [x] 10.01 Define five rarity tiers with shared WoW-style colors and fixed stat progression; give all current equipment item level 1 as metadata without level scaling. Add one sword per tier (`02000`–`02004`) and support all swords in Sword Strike/Charge.
-- [ ] 10.02 Add stronger weapons and armor with permanent item IDs. Five sword tiers are implemented; armor upgrades remain.
+- [x] 10.02 Add stronger weapons and armor with permanent item IDs: one staff, bow, throwing dagger, sword, head, chest, offhand, legs, and boots item per rarity. Keep item level 1, improve fixed stats by tier, and include all equipment in merchant stock and rarity-weighted loot.
 - [ ] 10.03 Define and enforce level or attribute requirements for equipment.
 - [ ] 10.04 Show rarity, requirements, and comparisons with equipped items in tooltips. Rarity names/colors and item level are implemented; requirements and comparisons remain.
 - [ ] 10.05 Connect equipment upgrades to enemy loot, merchants, and quest rewards. Equipment now drops from corpses and is sold by the General Store; quest upgrades remain.

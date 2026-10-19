@@ -45,7 +45,7 @@ Press **Ctrl+M** to toggle collision borders for the current area, including whi
 
 Equipment has five rarity tiers: **Common** (white), **Uncommon** (green), **Rare** (blue), **Epic** (purple), and **Legendary** (orange). Inventory/equipment borders, item names, and tooltips show rarity; tooltips also name the tier for clarity. Every current item has **item level 1**. Item level is descriptive metadata and does not scale stats or restrict equipping yet.
 
-The General Store sells one sword of each tier. All five support Sword Strike and Charge; higher tiers offer stronger fixed stats. Prices and stats are initial balance values. Rarity does not apply an additional multiplier or grant passive effects.
+The General Store sells one staff, bow, throwing dagger, sword, helmet, chest piece, shield, pair of leggings, and pair of boots per rarity: 45 equipment items total. All equipment can also drop from enemies through the rarity-weighted loot pool. Higher tiers offer stronger fixed stats and cost more gold. All five swords support Sword Strike and Charge. Prices and stats are initial balance values; rarity does not apply an additional multiplier or grant passive effects.
 
 | Sword ID | Name | Rarity | Weapon damage | Strength | Vitality | Price |
 | --- | --- | --- | --- | --- | --- | --- |

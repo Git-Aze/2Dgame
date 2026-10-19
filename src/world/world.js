@@ -1,3 +1,4 @@
+import { getAllItems } from "../data/items.js";
 
 
 // Shared world definition. Locations use tile coordinates plus pixel offsets.
@@ -95,7 +96,7 @@ const VILLAGE_DATA = {
     footprint: { x: -66, y: -48, width: 136, height: 48 },
     entrance: { x: -30, y: 12 },
     interactionRange: 90,
-    shop: { stock: ["00001", "01000", "01001", "02000", "02001", "02002", "02003", "02004", "03000", "04000", "05000", "06000", "07000"] },
+    shop: { stock: getAllItems().map(item => item.id) },
   }],
   enemySpawns: [
     { id: "00001", tileX: 30, tileY: 9 },
