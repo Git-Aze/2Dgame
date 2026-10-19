@@ -12,7 +12,7 @@ import { LOOT_RULES } from "../data/loot-tables.js";
 
 const SAVE_KEY = "TopDownSoloRPG.save";
 const BACKUP_KEY = "TopDownSoloRPG.save.backup";
-const SAVE_VERSION = 4;
+const SAVE_VERSION = 5;
 const MAX_SAVE_SIZE = 1000000;
 const LEGACY_ITEM_IDS = Object.freeze({
   "00001": "00001", "00002": "02000", "00003": "03000", "00004": "04000",
@@ -24,7 +24,7 @@ const integer = (value, min, max) => Number.isSafeInteger(value) && value >= min
 const itemExists = (id) => typeof id === "string" && /^\d{5}$/.test(id) && Boolean(getItem(id));
 
 function migrateSave(save) {
-  if (!object(save) || ![1, 2, 3, SAVE_VERSION].includes(save.version)) throw new Error("Unsupported save version. This game supports versions 1 through 4.");
+  if (!object(save) || ![1, 2, 3, 4, SAVE_VERSION].includes(save.version)) throw new Error("Unsupported save version. This game supports versions 1 through 5.");
   if (save.version === 1) {
     if (!object(save.inventory) || !Array.isArray(save.inventory.items) || !object(save.inventory.equipment)) throw new Error("Invalid legacy inventory.");
     const migrateItem = (id) => {
@@ -45,6 +45,13 @@ function migrateSave(save) {
   if (save.version === 3) {
     save.areaId = "village";
     if (Array.isArray(save.corpses)) save.corpses.forEach((corpse) => { if (object(corpse)) corpse.areaId = "village"; });
+    save.version = 4;
+  }
+  if (save.version === 4) {
+    if (!object(save.quests)) throw new Error("Invalid legacy quest data.");
+    if (!Object.hasOwn(save.quests,"stonehorn")) {
+      save.quests.stonehorn = { status: save.areaId === "cave-arena" ? "active" : "available", objectives: [0] };
+    }
     save.version = SAVE_VERSION;
   }
   return save;
@@ -147,6 +154,7 @@ function applySave(text) {
   runtime.cameraX = 0;
   runtime.cameraY = 0;
   setGameState("playing");
+  emit("area:changed",runtime.areaId);
   emit("player:changed");
   emit("resources:changed");
   emit("quests:changed");

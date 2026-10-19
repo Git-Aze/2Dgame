@@ -22,7 +22,8 @@ Press **Ctrl+M** to toggle collision borders for the current area, including whi
 
 - Explore the map, cross bridges, and navigate around water, cliffs, and tree trunks.
 - Enter the northeast cave by approaching its mouth and pressing **E**, or clicking it nearby. Explore its chambers, fight level-1 creatures, and loot them. Use the southwest cave exit to return to the village.
-- The opening in the cave's northeast chamber leads to **Cave Arena**. Press **E** or click nearby to enter. Its central floor and northern platform are explorable, with no enemies or boss yet. Return through the southern entrance.
+- The opening in the cave's northeast chamber leads to **Cave Arena**, home to **Stonehorn**. Press **E** or click nearby to enter. The southern corridor is safe; entering the arena floor starts the fight. Leave his red cleave circle and dodge his marked charge lane. Below half health he attacks faster. Retreat to the southern corridor to reset the encounter, or use its exit to return to the cave.
+- Entering Cave Arena starts **The Arena Guardian** quest. Defeating Stonehorn grants 100 kill XP plus the quest's **150 XP and 50 gold**. His corpse always contains a **Rare Knight's Iron Sword** and **3 gold**. The boss stays defeated for the adventure, including after saving/loading. Full inventory leaves the sword on the corpse. A fresh restart resets the encounter and quest.
 - Travel preserves your character and pauses enemies in the area you leave. Unlooted corpses stay in their own area. Saves restore the active area at its safe entrance with fresh enemies; older saves load in the village. Restart begins a fresh village adventure.
 - Equip weapons and armor from your inventory and inspect your character's attributes.
 - Target green slimes, red slimes, and wolves, then cast Fireball or Ignite.

@@ -86,7 +86,7 @@ function runAreaChecks(assert) {
   assert(!collides(player.x, player.y) && enemies.includes(villageEnemy), "Return position is clear and village enemy instances persist");
   assert(enterArea("cave") && enemies.includes(caveEnemy) && !caveEnemy.alive && corpses.includes(corpse), "Revisiting cave preserves enemy death and unlooted corpse");
   const save = createSave();
-  assert(save.version === 4 && save.areaId === "cave" && save.corpses[0].areaId === "cave", "Save records active area and corpse area");
+  assert(save.version === 5 && save.areaId === "cave" && save.corpses[0].areaId === "cave", "Save records active area and corpse area");
   applySave(JSON.stringify(save));
   assert(runtime.areaId === "cave" && !collides(player.x, player.y) && corpses[0].areaId === "cave", "Load restores cave at safe spawn with its loot");
   const legacy = { ...save, version: 3 }; delete legacy.areaId;

@@ -13,10 +13,15 @@ function targetEnemyAtScreenPosition(screenX, screenY) {
 
     if (!enemy.alive) continue;
 
+    // Large boss art extends above its ground collision footprint.
+    const left = enemy.isBoss ? enemy.x+enemy.w/2-90 : enemy.x-5;
+    const right = enemy.isBoss ? enemy.x+enemy.w/2+90 : enemy.x+enemy.w+5;
+    const top = enemy.isBoss ? enemy.y+enemy.h-180 : enemy.y-5;
+
     if (
-      worldX >= enemy.x - 5 &&
-      worldX <= enemy.x + enemy.w + 5 &&
-      worldY >= enemy.y - 5 &&
+      worldX >= left &&
+      worldX <= right &&
+      worldY >= top &&
       worldY <= enemy.y + enemy.h + 5
     ) {
       runtime.selectedEnemy = enemy;

@@ -4,7 +4,7 @@ const CAVE_ARENA_DATA = {
   id: "cave-arena", name: "Cave Arena", tileSize: 32, width: 72, height: 48,
   background: new URL("../../assets/images/cave_boss_area.png", import.meta.url).href,
   playerSpawn: { tileX: 35, tileY: 43, offsetX: 20, offsetY: 4 },
-  trees: [], buildings: [], enemySpawns: [],
+  trees: [], buildings: [], enemySpawns: [{ id: "00004", tileX: 36, tileY: 19 }],
   portals: [{ id: "arena-exit", label: "Return to Northeast Cave", x: 1080, y: 1440, width: 150, height: 64,
     targetArea: "cave", arrival: { x: 1998, y: 316 } }],
   collision: {

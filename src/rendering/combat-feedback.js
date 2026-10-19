@@ -19,7 +19,7 @@ function drawStunFeedback(enemy) {
   for (let star = 0; star < 3; star++) {
     const angle = combatFeedback.time * 4 + star * Math.PI * 2 / 3;
     const x = centerX + Math.cos(angle) * (enemy.w / 2 + 4);
-    const y = enemy.y - 5 + Math.sin(angle) * 4;
+    const y = enemy.y - (enemy.isBoss ? 110 : 5) + Math.sin(angle) * 4;
     ctx.beginPath();
     ctx.moveTo(x, y - 4); ctx.lineTo(x + 3, y); ctx.lineTo(x, y + 4); ctx.lineTo(x - 3, y);
     ctx.closePath(); ctx.fill();
@@ -29,8 +29,8 @@ function drawStunFeedback(enemy) {
   ctx.lineWidth = 3;
   ctx.strokeStyle = "#211b14";
   const label = `STUN ${(Math.ceil(enemy.stunRemaining * 10) / 10).toFixed(1)}s`;
-  ctx.strokeText(label, centerX, enemy.y - 32);
-  ctx.fillText(label, centerX, enemy.y - 32);
+  ctx.strokeText(label, centerX, enemy.y - (enemy.isBoss ? 135 : 32));
+  ctx.fillText(label, centerX, enemy.y - (enemy.isBoss ? 135 : 32));
   ctx.restore();
 }
 

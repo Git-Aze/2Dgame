@@ -38,6 +38,7 @@ import { runWallSlideChecks } from "./wall-slide-checks.js";
 import { runCriticalHitChecks } from "./critical-hit-checks.js";
 import { runVillageBorderChecks } from "./village-border-checks.js";
 import { runRangedEnemyChecks } from "./ranged-enemy-checks.js";
+import { runBossChecks } from "./boss-checks.js";
 
 let checks = 0;
 // Keep existing exact-damage checks deterministic; critical-hit checks control
@@ -313,6 +314,7 @@ try {
   runCriticalHitChecks(assert);
   runVillageBorderChecks(assert);
   runRangedEnemyChecks(assert);
+  runBossChecks(assert);
   render();
   assert(errors.length === 0, `Browser errors: ${errors.join("; ")}`);
   const result = `PASS: ${checks} gameplay checks`;

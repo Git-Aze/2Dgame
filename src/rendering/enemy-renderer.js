@@ -2,11 +2,16 @@ import { ctx } from "./canvas.js";
 import { drawSlimeSprite } from "./slime-sprites.js";
 import { runtime } from "../core/state.js";
 import { drawHitFlash, drawStunFeedback } from "./combat-feedback.js";
+import { drawBossSprite } from "./boss-sprites.js";
 
 function drawEnemy(enemy) {
   if (!enemy.alive) return;
 
   switch (enemy.sprite) {
+    case "stonehorn":
+      if (!drawBossSprite(enemy)) drawColoredSlime(enemy,"#74432a","#bb8260");
+      drawEnemyHealthBar(enemy);
+      break;
     case "slime":
       drawSlime(enemy);
       break;
@@ -28,7 +33,7 @@ function drawEnemy(enemy) {
   ctx.font = "10px Arial";
   ctx.textAlign = "center";
   ctx.fillStyle = "#fff0c4";
-  ctx.fillText(`Lv ${enemy.level}`, enemy.x + enemy.w / 2, enemy.y - 17);
+  if (!enemy.isBoss) ctx.fillText(`Lv ${enemy.level}`, enemy.x + enemy.w / 2, enemy.y - 17);
   ctx.restore();
   drawStunFeedback(enemy);
 }
@@ -76,6 +81,13 @@ function drawWolf(enemy) {
 
 
 function drawEnemyHealthBar(enemy) {
+  if (enemy.isBoss) {
+    if (runtime.selectedEnemy === enemy) {
+      ctx.strokeStyle = "#ffe36e"; ctx.lineWidth = 2;
+      ctx.strokeRect(enemy.x-3,enemy.y-3,enemy.w+6,enemy.h+6);
+    }
+    return;
+  }
   const barWidth = 36;
   const barHeight = 5;
 

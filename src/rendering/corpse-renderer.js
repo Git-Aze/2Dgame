@@ -3,15 +3,19 @@ import { drawSlimeSprite } from "./slime-sprites.js";
 import { getItem } from "../data/items.js";
 import { getRarity } from "../data/rarities.js";
 import { playerOverCorpse } from "../loot/loot.js";
+import { drawBossSprite } from "./boss-sprites.js";
 
 function drawCorpse(corpse) {
   const x = corpse.x + corpse.w / 2, y = corpse.y + corpse.h;
   ctx.save();
+  const bossCorpse = corpse.sprite === "stonehorn";
+  if (!bossCorpse) {
   ctx.translate(x, y);
   ctx.scale(1.15, 0.4);
   ctx.translate(-x, -y);
+  }
   ctx.globalAlpha = 0.7;
-  if (corpse.sprite === "wolf" || !drawSlimeSprite(corpse)) {
+  if (bossCorpse ? !drawBossSprite(corpse,true) : corpse.sprite === "wolf" || !drawSlimeSprite(corpse)) {
     ctx.fillStyle = corpse.sprite === "wolf" ? "#65594d" : corpse.sprite === "redSlime" ? "#b84949" : "#438e48";
     ctx.fillRect(corpse.x, corpse.y + 5, corpse.w, corpse.h - 5);
     ctx.fillStyle = "#211d1a";

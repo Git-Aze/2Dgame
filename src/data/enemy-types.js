@@ -2,6 +2,14 @@
 
 const ENEMY_TYPES = [
   {
+    id: "00004", level: 1, name: "Stonehorn", isBoss: true,
+    maxHp: 600, speed: 80, detectionRange: 600, respawnTime: 0,
+    wanderRadius: 0, wanderSpeed: 0, wanderPauseMin: 1, wanderPauseMax: 1,
+    damage: 14, attackRange: 95, attackCooldown: 1.5, xpReward: 100,
+    sprite: "stonehorn", width: 56, height: 42,
+    guaranteedLoot: { gold: 3, itemId: "02002" },
+  },
+  {
     id: "00001",
     level: 1,
     name: "Green Slime",

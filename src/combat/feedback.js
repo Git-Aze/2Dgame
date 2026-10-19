@@ -27,7 +27,7 @@ function addDamage({ target, amount, cause, critical = false }, incoming = false
     if (numbers.length >= 64) numbers.shift();
     numbers.push({ target, lane, amount: Math.round(amount * 10) / 10, kind,
       x: target.x + target.w / 2 + (lane % 2 ? 1 : -1) * Math.ceil(lane / 2) * 20,
-      y: target.y - (incoming ? 28 : 55) - lane * 14, age: 0, duration: 0.9 });
+      y: target.y - (incoming ? 28 : target.isBoss ? 145 : 55) - lane * 14, age: 0, duration: 0.9 });
   }
   let flash = combatFeedback.flashes.find((entry) => entry.target === target);
   if (!flash) {

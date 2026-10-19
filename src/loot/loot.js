@@ -34,7 +34,7 @@ function createCorpse(enemy) {
     id: runtime.nextCorpseId++, areaId: runtime.areaId, enemyTypeId: enemy.id, level: getEnemyLevel(enemy),
     name: enemy.name, sprite: enemy.sprite, x: enemy.x, y: enemy.y, w: enemy.w, h: enemy.h,
     spriteTime: 0, spriteMoving: false, stunRemaining: 0, hurtTime: 0,
-    ...rollLoot(getEnemyLevel(enemy)),
+    ...(enemy.guaranteedLoot ?? rollLoot(getEnemyLevel(enemy))),
   };
   corpses.push(corpse);
   emit("loot:changed");

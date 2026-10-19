@@ -18,7 +18,7 @@ function runCaveArenaChecks(assert) {
   player.hp = 73; player.mana = 21;
   window.dispatchEvent(new KeyboardEvent("keydown", { key: "e", bubbles: true }));
   assert(runtime.areaId === "cave-arena" && WORLD_DATA.name === "Cave Arena", "E at cave opening enters arena");
-  assert(enemies.length === 0 && WORLD_DATA.enemySpawns.length === 0, "Arena contains no monsters or boss");
+  assert(enemies.length === 1 && enemies[0].isBoss, "Arena contains its boss");
   assert(groundMapImage.complete && groundMapImage.naturalWidth === 1536 && groundMapImage.src.endsWith("/cave_boss_area.png"), "Arena loads supplied ground map");
   assert(!collides(player.x, player.y), "Arena entry spawn is clear");
   assert(player.hp === 73 && player.mana === 21 && inventory.items.join(",") === items, "Arena travel preserves character and inventory");
@@ -55,9 +55,9 @@ function runCaveArenaChecks(assert) {
     clientX:bounds.left+(exit.x+exit.width/2-Math.floor(runtime.cameraX))*bounds.width/runtime.viewWidth,
     clientY:bounds.top+(exit.y+exit.height/2-Math.floor(runtime.cameraY))*bounds.height/runtime.viewHeight}));
   assert(runtime.areaId === "cave" && !collides(player.x,player.y) && enemies.includes(caveEnemy), "Clicked arena exit returns safely to same cave enemies");
-  assert(enterArea("cave-arena") && enemies.length === 0, "Revisiting arena keeps it empty");
+  assert(enterArea("cave-arena") && enemies.length === 1 && enemies[0].isBoss, "Revisiting arena restores its boss");
   applySave(JSON.stringify(createSave()));
-  assert(runtime.areaId === "cave-arena" && enemies.length === 0 && !collides(player.x,player.y), "Saving and loading restores empty arena at safe entrance");
+  assert(runtime.areaId === "cave-arena" && enemies.length === 1 && !collides(player.x,player.y), "Saving and loading restores arena at safe entrance");
   resetAdventure();
 }
 

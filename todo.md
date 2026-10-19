@@ -158,11 +158,11 @@ Completion target: defeated enemies can drop loot that the player can identify a
 
 ## 12. Boss encounter
 
-- [ ] 12.01 Design a boss location with safe access and an intentional combat area.
-- [ ] 12.02 Define boss stats, distinct attack patterns, and clearly signaled attacks.
-- [ ] 12.03 Add a boss health display and rules for starting, resetting, and completing the encounter.
-- [ ] 12.04 Add a boss quest and guaranteed loot through the existing quest and loot systems.
-- [ ] 12.05 Verify boss rewards are granted once per defeat and the encounter resets correctly after player death.
+- [x] 12.01 Place Stonehorn in Cave Arena with a safe southern entrance corridor and existing floor collision.
+- [x] 12.02 Add level-1 Stonehorn (600 HP, 14 base damage), boss1.png animations, warned cleave and aimed charge, and faster attacks below half health.
+- [x] 12.03 Add a responsive boss health display. Start when entering the arena floor or attacking; reset on retreat, re-entry, or player death. Completed encounters do not respawn within the adventure.
+- [x] 12.04 Add The Arena Guardian quest (150 XP, 50 gold) and guaranteed Rare Knight's Iron Sword plus 3 gold on the corpse; defeat also grants 100 XP. Preserve full-inventory loot handling.
+- [x] 12.05 Verify attack warnings, dodging, charge collision, pauses/stuns, resets, one-time rewards, and completed/looted encounter persistence. Version 5 saves add the quest and migrate versions 1–4.
 
 ## 13. Areas and exploration
 

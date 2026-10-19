@@ -7,6 +7,7 @@ import { drawHitFlash, drawCombatFeedback } from "./combat-feedback.js";
 import { drawPortalPrompt } from "./portal-renderer.js";
 import { drawCollisionDebug } from "./collision-debug.js";
 import { drawEnemyProjectiles } from "./enemy-projectiles.js";
+import { drawBossWarnings, drawBossHealth } from "./boss-renderer.js";
 import { drawImageCharacter, drawSprite, playerSprites } from "./player-sprites.js";
 import { CAST_FRAME_DURATION, drawFireball, drawIgniteEffects, drawSwordSwings } from "../combat/spells.js";
 import { enemies, corpses, fireballs, player, runtime } from "../core/state.js";
@@ -21,6 +22,7 @@ function drawWorld() {
     ctx.fillStyle = "#537c3d";
     ctx.fillRect(0, 0, WORLD_PIXEL_W, WORLD_PIXEL_H);
   }
+  drawBossWarnings();
 
   const layers = [];
   for (const corpse of corpses) {
@@ -93,6 +95,7 @@ function render() {
   drawPortalPrompt();
   drawCollisionDebug();
   ctx.restore();
+  drawBossHealth();
 }
 
 export { render };

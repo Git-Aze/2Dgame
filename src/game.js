@@ -26,11 +26,13 @@ import { setupLoot } from "./loot/loot.js";
 import { setupLootUI } from "./ui/loot-ui.js";
 import { setupCombatFeedback } from "./combat/feedback.js";
 import { setupAreaUI } from "./ui/area-ui.js";
+import { setupBossEncounter } from "./combat/boss.js";
 
 // Entry point: initialize modules once, then advance simulation and rendering.
 function initializeGame() {
   setupCanvas();
   setupAreaUI();
+  setupBossEncounter();
   setupCombat();
   setupCombatFeedback();
   setupLoot();

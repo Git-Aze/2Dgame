@@ -11,6 +11,7 @@ import { enemies, isPlaying, player, runtime, spellCooldowns } from "../core/sta
 import { TILE } from "../world/world-state.js";
 import { WORLD_DATA } from "../world/world.js";
 import { launchSlimeball } from "./enemy-projectiles.js";
+import { updateBoss } from "./boss.js";
 
 // Enemy AI, spawning, damage and death handling.
 
@@ -69,6 +70,8 @@ function spawnEnemy(enemyId, tileX, tileY, level) {
     instanceId: runtime.nextEnemyInstanceId++,
     id: type.id,
     name: type.name,
+    isBoss: type.isBoss ?? false,
+    guaranteedLoot: type.guaranteedLoot ?? null,
     level: getEnemyLevel({ level: level ?? type.level }),
 
     x: tileX * TILE + (TILE - type.width) / 2,
@@ -157,6 +160,8 @@ function updateEnemies(dt) {
 
   for (const enemy of enemies) {
     if (!enemy.alive) continue;
+
+    if (enemy.isBoss) { updateBoss(enemy, dt); continue; }
 
     if (enemy.stunRemaining > 0) {
       enemy.stunRemaining = Math.max(0, enemy.stunRemaining - dt);
@@ -291,6 +296,7 @@ function respawnEnemy(enemy) {
 
 function updateEnemyRespawns(dt) {
   for (const enemy of enemies) {
+    if (enemy.isBoss) continue;
     // Only update dead enemies.
     if (enemy.alive) continue;
 

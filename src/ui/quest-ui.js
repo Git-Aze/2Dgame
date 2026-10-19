@@ -18,7 +18,7 @@ function renderQuestLog() {
     status.className = "quest-status";
     status.textContent = progress.status === "completed"
       ? "Completed — rewards received"
-      : progress.status === "available" ? "Begins when you start playing"
+      : progress.status === "available" ? quest.startHint ?? "Begins when you start playing"
       : quest.objectives.map((objective, index) =>
           `${progress.objectives[index]} / ${objective.required} ${objective.type === "equip" ? "equipped" : "defeated"}`).join(" · ");
     const rewards = document.createElement("p");
