@@ -174,9 +174,12 @@ function cancelCasting(reason = "") {
   if (!player.casting) return;
   player.casting = false;
   player.castTime = 0;
+  player.castDuration = 0;
+  player.castSpellId = null;
   player.castTarget = null;
   player.castReleased = false;
   player.frame = 0;
+  emit("casting:changed");
   if (reason) {
     showMessage(`Casting interrupted: ${reason}`);
     emit("combat:notice", { text: "Interrupted", kind: "interrupted" });
@@ -220,19 +223,10 @@ function spendMana(spell) {
 
 
 function castIgnite() {
-  if (!isPlaying()) return;
-  if (player.casting) return;
+  beginCasting("00002");
+}
 
-  const spell = getSpellStats(SPELLS["00002"]);
-
-  if (!canCastSpell(spell, runtime.selectedEnemy)) return;
-
-  // Spend mana.
-  spendMana(spell);
-  spellCooldowns["00002"] = spell.cooldown;
-
-  const target = runtime.selectedEnemy;
-
+function applyIgnite(target, spell) {
   // Refresh Ignite if the target is already burning.
   const existingEffect = activeIgnites.find(
     (effect) => effect.target === target
@@ -342,9 +336,6 @@ function drawIgniteEffects() {
   }
 }
 
-const CAST_FRAME_DURATION = SPELLS["00001"].castFrameDuration;
-const CAST_FRAME_COUNT = SPELLS["00001"].castFrameCount;
-
 // ==========================================
 // FIREBALL PROJECTILE
 // ==========================================
@@ -427,78 +418,44 @@ function launchFireball(target) {
 // ==========================================
 
 function castFireball() {
-  if (!isPlaying()) return;
-  if (player.casting) return;
+  beginCasting("00001");
+}
 
-  const spell = SPELLS["00001"];
-
-  if (!canCastSpell(spell, runtime.selectedEnemy)) return;
-
-  // Face the selected enemy.
-  const dx = runtime.selectedEnemy.x - player.x;
-  const dy = runtime.selectedEnemy.y - player.y;
-
-  player.facing =
-    Math.abs(dx) > Math.abs(dy)
-      ? dx < 0
-        ? "left"
-        : "right"
-      : dy < 0
-        ? "up"
-        : "down";
-
-  // Begin Fireball casting animation.
+function beginCasting(spellId) {
+  const spell = getSpellStats(SPELLS[spellId]);
+  const target = runtime.selectedEnemy;
+  if (!canCastSpell(spell, target)) return;
+  const dx = target.x - player.x, dy = target.y - player.y;
+  player.facing = Math.abs(dx) > Math.abs(dy)
+    ? (dx < 0 ? "left" : "right") : (dy < 0 ? "up" : "down");
   player.casting = true;
   player.castReleased = false;
   player.castTime = 0;
-  player.castTarget = runtime.selectedEnemy;
-  player.castGuaranteedCritical = activeIgnites.some((effect) => effect.target === player.castTarget && effect.remaining > 0);
+  player.castDuration = spell.castTime;
+  player.castSpellId = spellId;
+  player.castTarget = target;
+  player.castGuaranteedCritical = spellId === "00001" && activeIgnites.some((effect) => effect.target === target && effect.remaining > 0);
   player.moving = false;
   player.frame = 0;
+  emit("casting:changed");
 }
 
 function updateCasting(dt) {
-  if (!player.casting) return;
-  if (!player.castReleased && (!validateSpellTarget(SPELLS["00001"], player.castTarget) ||
-      !hasEnoughMana(SPELLS["00001"]))) {
+  if (!player.casting || !isPlaying()) return;
+  const definition = SPELLS[player.castSpellId];
+  if (!definition || !validateSpellTarget(definition, player.castTarget) || !hasEnoughMana(definition)) {
     cancelCasting("target, weapon or mana is no longer valid.");
     return;
   }
-
-  const previousFrame = Math.min(
-    CAST_FRAME_COUNT - 1,
-    Math.floor(player.castTime / CAST_FRAME_DURATION),
-  );
-
-  player.castTime += dt;
-
-  const currentFrame = Math.min(
-    CAST_FRAME_COUNT - 1,
-    Math.floor(player.castTime / CAST_FRAME_DURATION),
-  );
-
-  // Release the spell on the final casting frame.
-  if (
-    previousFrame < CAST_FRAME_COUNT - 1 &&
-    currentFrame === CAST_FRAME_COUNT - 1
-  ) {
-    spendMana(SPELLS["00001"]);
-    spellCooldowns["00001"] = SPELLS["00001"].cooldown;
-    launchFireball(player.castTarget);
-    player.castGuaranteedCritical = false;
-    player.castReleased = true;
-    player.castTarget = null;
-  }
-
-  if (player.castTime >= CAST_FRAME_COUNT * CAST_FRAME_DURATION) {
-    player.casting = false;
-    player.castReleased = false;
-    player.castTime = 0;
-    player.castTarget = null;
-    player.frame = 0;
-  }
+  player.castTime = Math.min(player.castDuration, player.castTime + dt);
+  if (player.castTime + 1e-9 < player.castDuration) return;
+  const spell = getSpellStats(definition);
+  spendMana(spell);
+  spellCooldowns[spell.id] = spell.cooldown;
+  if (spell.id === "00001") launchFireball(player.castTarget);
+  else if (spell.id === "00002") applyIgnite(player.castTarget, spell);
+  cancelCasting();
 }
-
 // ==========================================
 // SPELL COLLISION AND DAMAGE
 // ==========================================
@@ -560,8 +517,10 @@ function updateCombat(dt) {
 
 function setupCombat() {
   on("player:hurt", () => {
-    if (player.casting && !player.castReleased) cancelCasting("you took damage.");
+    if (!player.casting || player.castReleased || player.hp <= 0) return;
+    player.castTime = Math.max(0, player.castTime - player.castDuration / 6);
+    emit("casting:changed");
   });
 }
 
-export { chargeAttack, updateCharge, getActionWeaponRequirement, getActionUnavailableReason, swordAttack, rangedAttack, drawSwordSwings, updateSpellCooldowns, cancelCasting, resetSpellState, castIgnite, updateIgnites, drawIgniteEffects, CAST_FRAME_DURATION, drawFireball, castFireball, updateCasting, updateCombat, setupCombat };
+export { chargeAttack, updateCharge, getActionWeaponRequirement, getActionUnavailableReason, swordAttack, rangedAttack, drawSwordSwings, updateSpellCooldowns, cancelCasting, resetSpellState, castIgnite, updateIgnites, drawIgniteEffects, drawFireball, castFireball, updateCasting, updateCombat, setupCombat };

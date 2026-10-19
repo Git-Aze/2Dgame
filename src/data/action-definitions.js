@@ -1,5 +1,7 @@
 
 
+const BASE_CAST_TIME = 1.5;
+
 const SPELLS = {
   "00001": {
     id: "00001",
@@ -11,11 +13,9 @@ const SPELLS = {
     manaCost: 10,
     range: 320,
     cooldown: 0.5,
-    rules: "Movement, damage, weapon changes, or losing the target interrupt casting before release at no mana cost. Mana and cooldown begin on release. Released projectiles continue independently, stop at solid scenery, and expire after traveling their range.",
+    rules: "Taking damage pushes casting progress back by one sixth of its total duration per hit, down to zero. Movement, weapon changes, or losing the target interrupt casting before release at no mana cost. Mana and cooldown begin on release. Released projectiles continue independently, stop at solid scenery, and expire after traveling their range.",
     projectileSpeed: 300,
     radius: 7,
-    castFrameDuration: 0.12,
-    castFrameCount: 4,
 
     requiredWeaponCategory: "Casting",
   },
@@ -29,7 +29,7 @@ const SPELLS = {
     manaCost: 15,
     range: 240,
     cooldown: 2,
-    rules: "Recasting refreshes the burn to 10 seconds without stacking or delaying the next tick. The burn continues if the target leaves range or line of sight. Mana and cooldown begin immediately.",
+    rules: "Recasting refreshes the burn to 10 seconds without stacking or delaying the next tick. The burn continues if the target leaves range or line of sight. Taking damage pushes casting progress back by one sixth of its total duration per hit, down to zero. Movement, weapon changes, or losing the target interrupt casting at no mana cost. Mana and cooldown begin on cast completion.",
     tickInterval: 1,
     duration: 10,
 
@@ -79,4 +79,4 @@ const SPELLS = {
   },
 };
 
-export { SPELLS };
+export { BASE_CAST_TIME, SPELLS };

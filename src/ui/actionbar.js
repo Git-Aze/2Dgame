@@ -137,8 +137,8 @@ function createActionTooltip(spell, key) {
   lines.push(`Range: ${spell.minRange ? `${spell.minRange}–` : ""}${Number.isFinite(spell.range) ? spell.range : "unlimited"} pixels · Cooldown: ${spell.cooldown}s`);
   lines.push("Requires line of sight. Cliffs and tree trunks block spells; water does not.");
   lines.push(spell.rules);
-  if (spell.castFrameDuration && spell.castFrameCount) {
-    lines.push(`Cast time: ${(spell.castFrameDuration * spell.castFrameCount).toFixed(2)}s`);
+  if (spell.castTime) {
+    lines.push(`Cast time: ${spell.castTime}s`);
   } else {
     lines.push("Cast time: instant");
   }

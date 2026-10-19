@@ -1,3 +1,4 @@
+import { BASE_CAST_TIME } from "../data/action-definitions.js";
 import { getEquipmentBonuses, getEquippedItem, meetsWeaponRequirement } from "./equipment.js";
 import { player } from "../core/state.js";
 
@@ -53,6 +54,7 @@ function getSpellStats(spell, stats = getPlayerStats()) {
   const roundDamage = (value) => Math.round(value * 10) / 10;
   return {
     ...spell,
+    castTime: spell.castTime ?? (spell.requiredWeaponCategory === "Casting" ? BASE_CAST_TIME : 0),
     // Equipment attributes are included once. DOT scales with its attribute,
     // while direct hits also include matching weapon damage. Round to tenths.
     ...(spell.damage !== undefined ? {

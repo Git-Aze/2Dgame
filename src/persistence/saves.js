@@ -65,6 +65,8 @@ function parseSave(text) {
   save = migrateSave(save);
   if (save.game !== "TopDownSoloRPG" || typeof save.savedAt !== "string" || !Number.isFinite(Date.parse(save.savedAt))) throw new Error("Invalid save header.");
   if (!Object.hasOwn(AREAS, save.areaId)) throw new Error("Unknown saved area.");
+  if (save.selectedQuestId !== undefined && save.selectedQuestId !== null &&
+      (typeof save.selectedQuestId !== "string" || !Object.hasOwn(QUEST_DEFINITIONS,save.selectedQuestId))) throw new Error("Invalid selected quest.");
   const p = save.player;
   if (!object(p) || !integer(p.level, 1, 75)) throw new Error("Invalid player level.");
   let threshold = 100;
@@ -113,6 +115,7 @@ function parseSave(text) {
   // Whitelist fields rather than spreading imported objects into shared state.
   return {
     version: SAVE_VERSION, game: save.game, savedAt: save.savedAt, areaId: save.areaId,
+    selectedQuestId: save.selectedQuestId ?? null,
     player: Object.fromEntries(fields.map((key) => [key, p[key]])),
     inventory: { items: [...save.inventory.items], equipment: Object.fromEntries(Object.keys(inventory.equipment).map((slot) => [slot, equipment[slot]])) },
     corpses: savedCorpses,
@@ -125,6 +128,7 @@ function createSave() {
   if (runtime.gameState !== "playing" || player.hp <= 0) throw new Error("Start or continue an adventure before saving.");
   return parseSave(JSON.stringify({
     version: SAVE_VERSION, game: "TopDownSoloRPG", savedAt: new Date().toISOString(), areaId: runtime.areaId,
+    selectedQuestId: runtime.selectedQuestId,
     player: Object.fromEntries(fields.map((key) => [key, player[key]])),
     inventory, actionBar: actionBarSpells, quests: questProgress,
     corpses: corpses.map(({ id, areaId, enemyTypeId, level, x, y, gold, itemId }) => ({ id, areaId, enemyTypeId, level, x, y, gold, itemId })),
@@ -144,6 +148,7 @@ function applySave(text) {
   actionBarSpells.splice(0, actionBarSpells.length, ...save.actionBar);
   for (const id of Object.keys(questProgress)) delete questProgress[id];
   Object.assign(questProgress, save.quests);
+  runtime.selectedQuestId = save.selectedQuestId;
   for (const corpse of save.corpses) {
     const type = ENEMY_TYPES.find((entry) => entry.id === corpse.enemyTypeId);
     corpses.push({ ...corpse, name: type.name, sprite: type.sprite, w: type.width, h: type.height,

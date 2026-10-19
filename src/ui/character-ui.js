@@ -175,6 +175,11 @@ function drawCharacterPortrait() {
 
 
 function updateCharacterFrame() {
+  const level = document.getElementById("character-level");
+  if (level.textContent !== String(player.level)) {
+    level.textContent = player.level;
+    level.setAttribute("aria-label", `Level ${player.level}`);
+  }
   // ======================================
   // HEALTH
   // ======================================

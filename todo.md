@@ -99,6 +99,7 @@ Completion target: predictable frame times on intended devices, supported by mea
 - [ ] 5.08 Add descriptive accessible labels to icon-only controls.
 - [ ] 5.09 Provide a keyboard alternative to dragging spells onto the action bar.
 - [ ] 5.10 Verify the complete introductory gameplay loop across intended screen sizes.
+- [x] 5.11 Add an L-toggle quest log with a quest list and parchment details, grouped quest states, a single selected-quest side tracker, saved selection, consistent Escape/focus handling, and scrolling layouts for narrow and short screens.
 
 ## 6. Loot
 
@@ -121,6 +122,12 @@ Completion target: defeated enemies can drop loot that the player can identify a
 - [x] 7.03 Add action-bar cooldown countdowns and unavailable reasons (weapon, target, range, line of sight, mana, casting/charging, pause); preserve dragging/tooltips and update DOM only when displayed values change.
 - [x] 7.04 Add orbiting stun stars and an outlined, rounded-up timer based on actual remaining stun duration; pause with gameplay.
 - [x] 7.05 Verify simultaneous hits, bounded bursts, effect expiry, shared availability checks, pause behavior, Charge reset, save exclusion, and death/load/restart cleanup; inspect a combined combat scene visually.
+
+- [x] 7.06 Give casting spells a shared 1.5-second base cast time and a gold progress bar above the action bar with spell icon, name, and remaining time; preserve interruption rules and pause behavior.
+
+- [x] 7.07 Replace damage interruption with cast pushback: each hit removes one sixth of total cast duration from elapsed progress, clamped at zero; update the cast bar immediately and preserve other interruption rules.
+
+- [x] 7.08 Show the player level on the portrait and add an adjacent target frame with enemy portrait, name, level, and live health; hide it when the target is cleared or defeated and keep frames within narrow viewports.
 
 ## 8. Potions and consumables
 

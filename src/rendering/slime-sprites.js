@@ -19,7 +19,7 @@ const GREEN_SLIME_ROWS = {
   hurt: { y: 540, outline: [[42,157],[51,128],[67,101],[82,76],[112,49],[157,38],[192,48],[219,71],[245,103],[278,134],[278,157],[257,176],[68,176]] },
 };
 
-function drawSlimeSprite(enemy) {
+function drawSlimeSprite(enemy, context = ctx) {
   const image = enemy.sprite === "redSlime" ? redSlimeImage : greenSlimeImage;
   if (!image.complete || !image.naturalWidth) return false;
   const action = enemy.hurtTime > 0 ? "hurt" : enemy.spriteMoving ? "walk" : "idle";
@@ -27,23 +27,23 @@ function drawSlimeSprite(enemy) {
   if (enemy.sprite === "redSlime") {
     const [x, y, width, height] = RED_SLIME_FRAMES[action][frame];
     const scale = 0.11;
-    ctx.drawImage(image, x, y, width, height,
+    context.drawImage(image, x, y, width, height,
       Math.round(enemy.x + enemy.w / 2 - 140 * scale),
       Math.round(enemy.y + enemy.h - height * scale), width * scale, height * scale);
     return true;
   }
   const row = GREEN_SLIME_ROWS[action];
   const scale = 0.14;
-  ctx.save();
-  ctx.translate(Math.round(enemy.x + enemy.w / 2 - 160 * scale),
+  context.save();
+  context.translate(Math.round(enemy.x + enemy.w / 2 - 160 * scale),
     Math.round(enemy.y + enemy.h - 170 * scale));
-  ctx.scale(scale, scale);
-  ctx.beginPath();
-  row.outline.forEach(([x, y], index) => index ? ctx.lineTo(x, y) : ctx.moveTo(x, y));
-  ctx.closePath();
-  ctx.clip();
-  ctx.drawImage(greenSlimeImage, 112 + frame * 320, row.y, 320, 220, 0, 0, 320, 220);
-  ctx.restore();
+  context.scale(scale, scale);
+  context.beginPath();
+  row.outline.forEach(([x, y], index) => index ? context.lineTo(x, y) : context.moveTo(x, y));
+  context.closePath();
+  context.clip();
+  context.drawImage(greenSlimeImage, 112 + frame * 320, row.y, 320, 220, 0, 0, 320, 220);
+  context.restore();
   return true;
 }
 

@@ -23,6 +23,8 @@ function setGameState(state) {
     runtime.activeCharge = null;
     player.castReleased = false;
     player.castTime = 0;
+    player.castDuration = 0;
+    player.castSpellId = null;
     player.castTarget = null;
     player.frame = 0;
     runtime.selectedEnemy = null;
@@ -36,6 +38,7 @@ function resetAdventure(areaId = "village") {
   Object.assign(player, structuredClone(initialPlayerState));
   Object.assign(player, worldPosition(WORLD_DATA.playerSpawn));
   runtime.selectedEnemy = null;
+  runtime.selectedQuestId = null;
   resetSpellState();
   enemies.length = 0;
   corpses.length = 0;

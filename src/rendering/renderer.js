@@ -9,7 +9,7 @@ import { drawCollisionDebug } from "./collision-debug.js";
 import { drawEnemyProjectiles } from "./enemy-projectiles.js";
 import { drawBossWarnings, drawBossHealth } from "./boss-renderer.js";
 import { drawImageCharacter, drawSprite, playerSprites } from "./player-sprites.js";
-import { CAST_FRAME_DURATION, drawFireball, drawIgniteEffects, drawSwordSwings } from "../combat/spells.js";
+import { drawFireball, drawIgniteEffects, drawSwordSwings } from "../combat/spells.js";
 import { enemies, corpses, fireballs, player, runtime } from "../core/state.js";
 import { WORLD_PIXEL_H, WORLD_PIXEL_W, groundMapImage, treeImage, trees } from "../world/world-state.js";
 
@@ -43,7 +43,7 @@ function drawWorld() {
     }
   }
   layers.push({ depth: player.y + player.h, draw() {
-    const castFrame = Math.min(3, Math.floor(player.castTime / CAST_FRAME_DURATION));
+    const castFrame = Math.min(3, Math.floor(player.castTime / player.castDuration * 4));
     const action = player.casting ? "cast" : player.moving ? "walk" : "idle";
     const frame = player.casting ? castFrame : player.moving ? player.frame % 4 : 0;
     if (!drawImageCharacter(action, player.facing, frame)) {

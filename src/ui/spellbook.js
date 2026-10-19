@@ -74,7 +74,7 @@ entry.addEventListener("dragend", () => {
     const stats = document.createElement("div");
     stats.className = "spell-book-stats";
 
-    const statParts = [];
+    const statParts = [`Cast time: ${spell.castTime ? `${spell.castTime}s` : "instant"}`];
     statParts.push(`Range: ${spell.minRange ? `${spell.minRange}–` : ""}${Number.isFinite(spell.range) ? spell.range : "unlimited"}px`, `Cooldown: ${spell.cooldown}s`, "Requires line of sight");
 
     if (spell.damage !== undefined) {

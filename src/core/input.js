@@ -13,6 +13,7 @@ import { corpseAtScreenPosition } from "../ui/loot-ui.js";
 import { corpseUnderPlayer, lootCorpse } from "../loot/loot.js";
 import { nearbyPortal, interactWithPortal } from "../world/areas.js";
 import { portalAtScreenPosition } from "../ui/area-ui.js";
+import { toggleQuestLog } from "../ui/quest-ui.js";
 
 function setupInput() {
   canvas.addEventListener("click", (event) => {
@@ -62,6 +63,12 @@ function setupInput() {
       return;
     }
 
+    if (key === "l" && !event.ctrlKey && !event.altKey && !event.metaKey &&
+        !["INPUT", "TEXTAREA", "SELECT"].includes(event.target?.tagName) && !event.target?.isContentEditable) {
+      event.preventDefault();
+      if (!event.repeat) toggleQuestLog();
+      return;
+    }
     if (key === "c" && !event.repeat) toggleCharacterSheet();
     if (key === "k" && !event.repeat) {
       event.preventDefault();

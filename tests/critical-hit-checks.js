@@ -36,8 +36,8 @@ export function runCriticalHitChecks(assert) {
     runtime.selectedEnemy = target;
     Math.random = () => 0.99;
     const base = getSpellStats(SPELLS["00001"]).damage;
-    const launch = () => { updateCasting(0.36); updateCasting(0.12); };
-    castIgnite();
+    const launch = () => { updateCasting(1.5); };
+    castIgnite(); updateCasting(1.5);
     activeIgnites[0].remaining = 0.1;
     castFireball();
     updateIgnites(0.2);
@@ -65,7 +65,7 @@ export function runCriticalHitChecks(assert) {
     assert(fireballs[0]?.critical && fireballs[0].spellId === "00005", "Ranged attack rolls critical damage once when launched");
     fireballs.length = 0;
     equipItem("00001"); player.mana = 50; spellCooldowns["00002"] = 0;
-    castIgnite();
+    castIgnite(); updateCasting(1.5);
     const beforeTick = target.hp, tickDamage = getSpellStats(SPELLS["00002"]).damagePerTick;
     updateIgnites(1);
     assert(target.hp === Math.round((beforeTick-tickDamage)*10)/10, "Ignite ticks do not gain direct-hit critical damage");

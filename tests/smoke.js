@@ -14,6 +14,8 @@ import { castFireball, castIgnite, swordAttack, chargeAttack, updateCharge, upda
 import { toggleCharacterSheet, updateCharacterFrame } from "../src/ui/character-ui.js";
 import { toggleSpellBook } from "../src/ui/spellbook.js";
 import { assignSpellToSlot } from "../src/ui/actionbar.js";
+import { updateCastBar } from "../src/ui/cast-bar.js";
+import { updateTargetFrame } from "../src/ui/target-frame.js";
 import { collides, movePlayer } from "../src/world/movement.js";
 import { mapCollision, spellPathBlocked } from "../src/world/collision.js";
 import { trees, WORLD_PIXEL_W, WORLD_PIXEL_H } from "../src/world/world-state.js";
@@ -39,6 +41,7 @@ import { runCriticalHitChecks } from "./critical-hit-checks.js";
 import { runVillageBorderChecks } from "./village-border-checks.js";
 import { runRangedEnemyChecks } from "./ranged-enemy-checks.js";
 import { runBossChecks } from "./boss-checks.js";
+import { runQuestUIChecks } from "./quest-ui-checks.js";
 
 let checks = 0;
 // Keep existing exact-damage checks deterministic; critical-hit checks control
@@ -143,14 +146,60 @@ try {
   castFireball();
   assert(player.casting && player.mana === 50, "Cast reservation without early mana cost");
   damagePlayer(1);
-  assert(!player.casting && player.mana === 50, "Damage interrupts casting");
+  assert(player.casting && player.castTime === 0 && player.mana === 50, "Early damage keeps casting active and clamps progress at zero");
+  for (const cast of [castFireball, castIgnite]) {
+    combatSetup();
+    cast();
+    updateCasting(0.75);
+    updateCastBar();
+    const bar = document.getElementById("cast-bar");
+    assert(player.casting && player.castDuration === 1.5 && player.mana === 50 && !fireballs.length && !activeIgnites.length,
+      "Casting spells share a 1.5-second base and have no early effect or mana cost");
+    assert(!bar.hidden && bar.getAttribute("aria-valuenow") === "0.8" && document.getElementById("cast-bar-fill").style.transform === "scaleX(0.5)",
+      "Cast bar displays actual spell progress accessibly");
+    assert(bar.getBoundingClientRect().bottom <= document.getElementById("action-bar").getBoundingClientRect().top - 8,
+      "Cast bar stays above the action bar");
+    const elapsed = player.castTime;
+    runtime.menuOpen = true;
+    updateCasting(1);
+    assert(player.castTime === elapsed, "Paused casting freezes elapsed time");
+    runtime.menuOpen = false;
+    updateCasting(0.74);
+    assert(player.casting && player.mana === 50 && !fireballs.length && !activeIgnites.length,
+      "Spells remain pending until the full cast time");
+    const id = player.castSpellId;
+    updateCasting(0.01);
+    updateCastBar();
+    assert(!player.casting && player.mana === 50 - SPELLS[id].manaCost && spellCooldowns[id] === SPELLS[id].cooldown && bar.hidden,
+      "Cast completion applies mana/cooldown once and hides the bar");
+    assert(id === "00001" ? fireballs.length === 1 : activeIgnites.length === 1,
+      "Completed casting releases the correct spell effect");
+    combatSetup();
+    cast(); updateCasting(0.5); damagePlayer(1); updateCastBar();
+    assert(player.casting && !bar.hidden && near(player.castTime, 0.25) && player.mana === 50 && !fireballs.length && !activeIgnites.length && !spellCooldowns[id],
+      "Damage pushes either spell back by one sixth without spending mana or starting cooldown");
+    assert(near(parseFloat(document.getElementById("cast-bar-fill").style.transform.slice(7)), player.castTime / player.castDuration),
+      "Cast bar immediately reflects hit pushback");
+    damagePlayer(1); damagePlayer(1);
+    assert(player.casting && player.castTime === 0, "Repeated hits push back per hit without negative progress");
+    updateCasting(1.49);
+    assert(player.casting && !fireballs.length && !activeIgnites.length, "Pushback delays spell completion");
+    updateCasting(0.01);
+    assert(!player.casting && player.mana === 50 - SPELLS[id].manaCost && (id === "00001" ? fireballs.length === 1 : activeIgnites.length === 1),
+      "Spell completes once after recovering lost progress");
+    combatSetup(); cast();
+    player.castDuration = 3;
+    updateCasting(1);
+    damagePlayer(1);
+    assert(near(player.castTime, 0.5), "Pushback scales with total cast duration rather than a fixed delay");
+  }
   combatSetup();
-  castFireball(); updateCasting(0.36);
+  castFireball(); updateCasting(1.5);
   assert(fireballs.length === 1 && player.mana === 40 && spellCooldowns["00001"] === 0.5, "Fireball release");
   updateCasting(0.2); updateCombat(0.4);
   assert(target.hp === 19.8, "Projectile damage");
   combatSetup(); target.hp = 2;
-  castIgnite(); updateIgnites(0.75); updateSpellCooldowns(2); castIgnite(); updateIgnites(0.25);
+  castIgnite(); updateCasting(1.5); updateIgnites(0.75); updateSpellCooldowns(2); castIgnite(); updateCasting(1.5); updateIgnites(0.25);
   assert(!target.alive && activeIgnites.length === 0, "Ignite refresh preserves next tick");
   const xpAfterKill = player.xp;
   damageEnemy(target, 1000, "00001");
@@ -290,6 +339,7 @@ try {
   assert(text("xp-bar-text") === "25 / 337 XP" && near(parseFloat(document.getElementById("xp-bar-fill").style.width), 25 / 337 * 100),
     "XP bar shows final overflow and threshold after multiple levels");
   assert(text("sheet-level") === "Level 4" && text("attribute-points") === "15", "Character sheet reflects all awarded levels and points");
+  assert(text("character-level") === "4", "Player portrait level updates on level up");
   gainXP(312);
   assert(player.level === 5 && player.xp === 0 && player.xpToNextLevel === 505 && player.attributePoints === 20,
     "Carried XP contributes to next level and thresholds round down");
@@ -315,6 +365,26 @@ try {
   runVillageBorderChecks(assert);
   runRangedEnemyChecks(assert);
   runBossChecks(assert);
+  await runQuestUIChecks(assert);
+  const previousTarget = runtime.selectedEnemy;
+  const targetFrame = document.getElementById("target-frame");
+  for (const sprite of ["slime", "redSlime", "wolf", "stonehorn"]) {
+    const target = { name: `Test ${sprite}`, sprite, level: 3, hp: 25, maxHp: 100,
+      alive: true, w: 24, h: 24, isBoss: sprite === "stonehorn" };
+    runtime.selectedEnemy = target;
+    updateTargetFrame();
+    assert(!targetFrame.hidden && text("target-name") === target.name && text("target-level") === "3" && text("target-hp-text") === "25 / 100",
+      `${sprite}: selected target frame displays identity, level and health`);
+    assert(document.getElementById("target-hp-fill").style.width === "25%" && document.getElementById("target-hp-bar").getAttribute("aria-valuenow") === "25",
+      "Target health matches visual and accessible progress");
+    target.hp = 10; updateTargetFrame();
+    assert(text("target-hp-text") === "10 / 100", "Target health updates without changing selection");
+    target.alive = false; updateTargetFrame();
+    assert(targetFrame.hidden, "Target frame hides on target death");
+  }
+  runtime.selectedEnemy = null; updateTargetFrame();
+  assert(targetFrame.hidden, "Target frame hides when selection is cleared");
+  runtime.selectedEnemy = previousTarget;
   render();
   assert(errors.length === 0, `Browser errors: ${errors.join("; ")}`);
   const result = `PASS: ${checks} gameplay checks`;

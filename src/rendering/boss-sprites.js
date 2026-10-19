@@ -27,7 +27,7 @@ const frames = {
   death: [[1300,655,230,150]],
 };
 
-function drawBossSprite(boss, dead = false) {
+function drawBossSprite(boss, dead = false, context = ctx) {
   if (!bossSheet) return false;
   const action = boss.bossAction;
   const moving = boss.spriteMoving && !action && boss.bossState === "active";
@@ -37,11 +37,11 @@ function drawBossSprite(boss, dead = false) {
   const frame = action && action.type !== "charging" ? Math.min(row.length-1,Math.floor(time*row.length)) : Math.floor(time*row.length)%row.length;
   const [sx,sy,sw,sh] = row[frame];
   const scale = 0.8;
-  ctx.save();
-  ctx.translate(Math.round(boss.x+boss.w/2),Math.round(boss.y+boss.h));
-  if ((kind === "charging" && action.dx < 0) || (kind === "walk" && boss.facingLeft)) ctx.scale(-1,1);
-  ctx.drawImage(bossSheet,sx,sy,sw,sh,-sw*scale/2,-sh*scale,sw*scale,sh*scale);
-  ctx.restore();
+  context.save();
+  context.translate(Math.round(boss.x+boss.w/2),Math.round(boss.y+boss.h));
+  if ((kind === "charging" && action.dx < 0) || (kind === "walk" && boss.facingLeft)) context.scale(-1,1);
+  context.drawImage(bossSheet,sx,sy,sw,sh,-sw*scale/2,-sh*scale,sw*scale,sh*scale);
+  context.restore();
   return true;
 }
 

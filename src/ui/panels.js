@@ -1,8 +1,11 @@
-// Match the panels' visual stacking order: the spell book covers the sheet.
+import { closeQuestLog } from "./quest-ui.js";
+
+// Match the panels' visual stacking order.
 function closeTopPanel() {
-  for (const id of ["spell-book", "character-sheet"]) {
+  for (const id of ["quest-log", "spell-book", "character-sheet"]) {
     const panel = document.getElementById(id);
     if (panel.classList.contains("hidden")) continue;
+    if (id === "quest-log") { closeQuestLog(); return true; }
     if (panel.contains(document.activeElement)) document.activeElement.blur();
     panel.classList.add("hidden");
     return true;

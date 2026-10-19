@@ -15,6 +15,7 @@
       <div id="character-frame">
         <div id="character-portrait">
           <canvas id="portrait-canvas" width="48" height="48"></canvas>
+          <span id="character-level" class="unit-level" aria-label="Level 1">1</span>
         </div>
 
         <div id="character-info">
@@ -27,6 +28,19 @@
           <div class="character-resource-bar" id="character-mana-bar">
             <div id="character-mana-fill"></div>
             <span id="character-mana-text">50 / 50</span>
+          </div>
+        </div>
+      </div>
+      <div id="target-frame" aria-label="Targeted enemy" hidden>
+        <div class="target-portrait">
+          <canvas id="target-portrait-canvas" width="48" height="48" aria-hidden="true"></canvas>
+          <span id="target-level" class="unit-level"></span>
+        </div>
+        <div class="target-info">
+          <div id="target-name"></div>
+          <div id="target-hp-bar" role="progressbar" aria-label="Target health" aria-valuemin="0">
+            <div id="target-hp-fill"></div>
+            <span id="target-hp-text"></span>
           </div>
         </div>
       </div>
@@ -198,13 +212,31 @@
       </div>
 
       <canvas id="game" width="800" height="576"></canvas>
-      <aside id="quest-log" aria-label="Quests">
-        <h2>Quests</h2>
-        <div id="quest-list" aria-live="polite"></div>
+      <aside id="quest-tracker" aria-label="Selected quest">
+        <button type="button" id="open-quest-log" aria-controls="quest-log" aria-expanded="false">Quest Log <kbd>L</kbd></button>
+        <div id="tracked-quest" aria-live="polite"></div>
       </aside>
 
-      <p class="help">Move: WASD or arrow keys · Character: C · Spells: K</p>
+      <section id="quest-log" class="hidden" role="dialog" aria-labelledby="quest-log-title" inert>
+        <header class="quest-log-header">
+          <div><span class="quest-log-eyebrow">Adventurer's journal</span><h2 id="quest-log-title">Quest Log</h2></div>
+          <button type="button" id="close-quest-log" aria-label="Close quest log">&times;</button>
+        </header>
+        <div class="quest-log-body">
+          <nav id="quest-list" aria-label="Quest list"></nav>
+          <article id="quest-details" aria-label="Selected quest details" tabindex="0"></article>
+        </div>
+        <footer class="quest-log-footer"><span>Select a quest to track it on screen.</span><span><kbd>L</kbd> or <kbd>Esc</kbd> to close</span></footer>
+      </section>
 
+      <p class="help">Move: WASD or arrow keys · Character: C · Spells: K · Quests: L</p>
+
+      <div id="cast-bar" role="progressbar" aria-label="Casting" aria-valuemin="0" aria-valuemax="1.5" aria-valuenow="0" hidden>
+        <div id="cast-bar-fill"></div>
+        <span id="cast-bar-icon" aria-hidden="true"></span>
+        <span id="cast-bar-name"></span>
+        <span id="cast-bar-time"></span>
+      </div>
       <div id="action-bar">
         <button class="action-slot" id="slot-1">
           <span class="slot-number">1</span>

@@ -27,6 +27,8 @@ Press **Ctrl+M** to toggle collision borders for the current area, including whi
 - Travel preserves your character and pauses enemies in the area you leave. Unlooted corpses stay in their own area. Saves restore the active area at its safe entrance with fresh enemies; older saves load in the village. Restart begins a fresh village adventure.
 - Equip weapons and armor from your inventory and inspect your character's attributes.
 - Target green slimes, red slimes, and wolves, then cast Fireball or Ignite.
+- Your portrait shows your level. Selecting an enemy displays its portrait, name, level, and live health in a frame beside yours; the target frame disappears when selection is cleared or the enemy dies.
+- Casting spells have a **1.5-second base cast time**. A gold bar above the action bar shows the spell and remaining time. Each hit pushes casting progress back by one sixth of the total cast time (0.25 seconds for a 1.5-second cast), down to zero. Moving or losing a valid target or weapon interrupts the cast without spending mana or starting its cooldown. Pausing freezes casting; melee and ranged weapon attacks remain instant.
 - Red slimes shoot red slimeballs from up to **180 pixels** away, once per second. Shots travel straight toward your position when fired, so move aside to dodge. Walls, trees, and buildings block them. Slimes move to find line of sight; their shots use normal monster damage scaling and player armor.
 - Direct attacks (Fireball, Sword Strike, and Ranged Attack) have a **5% base critical chance** and deal **double damage** on a crit. Casting Fireball while its target is burning from Ignite guarantees a critical hit, even if the burn expires before release or impact. Ignite ticks do not crit. Critical damage displays **CRIT!**; action-bar tooltips show your current chance. Future items can add critical chance bonuses.
 - Enemies navigate around trees, buildings, cliffs, and water while chasing, wandering, or returning home, using bridges when needed. Solid obstacles also block their melee attacks.
@@ -58,7 +60,7 @@ The General Store sells one sword of each tier. All five support Sword Strike an
 3. **Slime Trouble** then starts automatically. Defeat three green slimes to earn an additional **75 XP and 20 gold**, alongside their normal kill XP.
 4. Click an enemy to select it, then press **1** for Fireball or **2** for Ignite. Both spells require a casting weapon, such as the staff.
 
-Quest progress appears in the quest panel, and combat messages appear in the message log. Enemies respawn after being defeated.
+Press **L** or click **Quest Log** on the side to open your journal. Browse in-progress, available, locked, and completed quests, with descriptions, objectives, prerequisites, and rewards. Selecting a quest makes it the **only quest shown in the side tracker**; progress updates live. Selection stays until you choose another quest and is preserved in saves. Close the log with **L**, **Escape**, or its close button. Combat messages appear in the message log. Regular enemies respawn after being defeated.
 
 Every kill rolls **gold**, plus a **35% chance of one item** from the current equipment pool. Loot is rolled once at death and never rerolled by clicking, respawning, or loading. Item rarity is selected first, then one item is chosen from that tier:
 
@@ -72,7 +74,7 @@ Every kill rolls **gold**, plus a **35% chance of one item** from the current eq
 
 Monsters currently start at **level 1**, shown above their health bars and when targeted. Each level above 1 adds **10% of base attack damage**. Gold rolls uniformly from **monster level to three times monster level**: 1–3 gold at level 1, 5–15 at level 5. Health and XP retain their existing values; item rarity odds do not scale with level yet. Fresh adventures clear old corpses.
 
-Fireball has a 320-pixel range and a 0.5-second cooldown; Ignite has a 240-pixel range and a 2-second cooldown. Cliffs and tree trunks block spells, while water does not. Moving, taking damage, changing weapons, or losing a valid target interrupts Fireball before release without spending mana. Escape pauses an active cast along with the game. Recasting Ignite refreshes its duration without stacking damage or postponing the next tick. Hover over action-bar spells for details.
+Fireball has a 320-pixel range and a 0.5-second cooldown; Ignite has a 240-pixel range and a 2-second cooldown. Cliffs and tree trunks block spells, while water does not. Taking damage pushes back casting progress by one sixth of its total duration per hit. Moving, changing weapons, or losing a valid target interrupts either casting spell before release without spending mana. Escape pauses an active cast along with the game. Recasting Ignite refreshes its duration without stacking damage or postponing the next tick. Hover over action-bar spells for details.
 
 ## Controls
 
@@ -86,6 +88,7 @@ For example, the Iron Sword gives a starting character 13 Strength: Sword Strike
 | Move | WASD or arrow keys |
 | Open or close character sheet | C |
 | Open or close spell book | K |
+| Open or close quest log | L or the Quest Log button |
 | Select an enemy | Left-click the enemy |
 | Open the shop nearby | E or click the building |
 | Loot a corpse | Click nearby, or stand on it and press E |

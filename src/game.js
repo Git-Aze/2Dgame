@@ -1,3 +1,5 @@
+import { setupCastBar, updateCastBar } from "./ui/cast-bar.js";
+import { updateTargetFrame } from "./ui/target-frame.js";
 import "./ui/tooltips.js";
 import { setupActionBar, updateActionBarStatus } from "./ui/actionbar.js";
 import { setupCanvas } from "./rendering/canvas.js";
@@ -46,6 +48,7 @@ function initializeGame() {
   setupPauseMenu();
   setupSaveUI();
   setupActionBar();
+  setupCastBar();
   setupSpellBook();
   setupInput();
   document.getElementById("location").textContent = WORLD_DATA.name;
@@ -66,6 +69,8 @@ function loop(timestamp) {
 
   update(dt);
   updateActionBarStatus();
+  updateCastBar();
+  updateTargetFrame();
   render();
 
   requestAnimationFrame(loop);

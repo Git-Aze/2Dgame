@@ -5,7 +5,7 @@ import { SPELLS } from "../src/data/action-definitions.js";
 import { gainXP, spendAttributePoint } from "../src/player/player.js";
 import { equipItem } from "../src/player/inventory.js";
 import { getPlayerStats, getSpellStats } from "../src/player/stats.js";
-import { castIgnite, updateIgnites, rangedAttack, swordAttack, chargeAttack, resetSpellState, updateCombat } from "../src/combat/spells.js";
+import { castIgnite, updateCasting, updateIgnites, rangedAttack, swordAttack, chargeAttack, resetSpellState, updateCombat } from "../src/combat/spells.js";
 import { buildings } from "../src/world/buildings.js";
 import { trees } from "../src/world/world-state.js";
 import { mapCollision } from "../src/world/collision.js";
@@ -45,7 +45,7 @@ export function runAttributeDamageChecks(assert) {
       return target;
     };
     setupTarget(100);
-    castIgnite();
+    castIgnite(); updateCasting(1.5);
     updateIgnites(1);
     assert(enemies[0].hp === 54.7, "Actual Ignite tick applies Intelligence-scaled damage");
     for (const id of ["01000", "01001"]) {

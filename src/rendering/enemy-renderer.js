@@ -23,6 +23,7 @@ function drawEnemy(enemy) {
 
     case "wolf":
       drawWolf(enemy);
+      drawEnemyHealthBar(enemy);
       break;
 
     default:
@@ -56,27 +57,27 @@ function drawColoredSlime(enemy, bodyColor, highlightColor) {
 }
 
 
-function drawWolf(enemy) {
+function drawWolf(enemy, context = ctx) {
   const { x, y, w, h } = enemy;
 
   // Temporary wolf appearance.
-  ctx.fillStyle = "#65594d";
-  ctx.fillRect(x + 3, y + 7, w - 6, h - 11);
+  context.fillStyle = "#65594d";
+  context.fillRect(x + 3, y + 7, w - 6, h - 11);
 
-  ctx.fillStyle = "#a59a87";
-  ctx.fillRect(x + 7, y + 4, w - 14, h - 8);
+  context.fillStyle = "#a59a87";
+  context.fillRect(x + 7, y + 4, w - 14, h - 8);
 
   // Ears.
-  ctx.fillStyle = "#65594d";
-  ctx.fillRect(x + 5, y + 1, 5, 7);
-  ctx.fillRect(x + w - 10, y + 1, 5, 7);
+  context.fillStyle = "#65594d";
+  context.fillRect(x + 5, y + 1, 5, 7);
+  context.fillRect(x + w - 10, y + 1, 5, 7);
 
   // Eyes.
-  ctx.fillStyle = "#f2d36d";
-  ctx.fillRect(x + 8, y + 10, 3, 3);
-  ctx.fillRect(x + w - 11, y + 10, 3, 3);
+  context.fillStyle = "#f2d36d";
+  context.fillRect(x + 8, y + 10, 3, 3);
+  context.fillRect(x + w - 11, y + 10, 3, 3);
 
-  drawEnemyHealthBar(enemy);
+
 }
 
 
@@ -176,4 +177,4 @@ function drawSlime(enemy) {
   ctx.fillRect(barX, barY, barWidth * healthPercent, barHeight);
 }
 
-export { drawEnemy };
+export { drawEnemy, drawWolf };
