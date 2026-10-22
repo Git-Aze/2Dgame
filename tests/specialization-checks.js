@@ -17,6 +17,7 @@ import { emit } from "../src/core/events.js";
 import { mapCollision } from "../src/world/collision.js";
 import { trees } from "../src/world/world-state.js";
 import { buildings } from "../src/world/buildings.js";
+import { runWarriorSkillChecks } from "./warrior-skill-checks.js";
 
 let checks = 0;
 const errors = [];
@@ -51,10 +52,10 @@ try {
   assert(!player.unlockedSkills.length && player.specializationPoints === 1, "First point must unlock Charge");
   lockedCleave.focus();
   assert(!document.getElementById("game-tooltip").hidden, "Locked nodes expose tooltips on keyboard focus");
-  assert(document.querySelectorAll(".specialization-icon").length === 4 && document.querySelectorAll(".specialization-links line").length === 3 && !document.querySelector(".specialization-node"),
-    "Tree uses four icon-only nodes connected by three prerequisite lines");
+  assert(document.querySelectorAll(".specialization-icon").length === 9 && document.querySelectorAll(".specialization-links line").length === 8 && !document.querySelector(".specialization-node"),
+    "Tree uses nine icon-only nodes connected by eight prerequisite lines");
   document.querySelector('[data-ability-id="00004"]').click();
-  assert(player.unlockedSkills.join() === "00004" && player.specializationPoints === 0 && actionBarSpells[3] === "00004", "First tree selection spends one point and assigns Charge");
+  assert(player.unlockedSkills.join() === "00004" && player.specializationPoints === 0 && actionBarSpells[0] === "00004", "First tree selection spends one point and assigns Charge to leftmost empty slot");
   assert(!unlockSkill("00006") && !unlockSkill("00007"), "Repeat clicks and overspending are rejected");
   gainXP(712);
   assert(player.level === 5 && player.specializationPoints === 3, "Multiple levels grant exactly one point each");
@@ -65,7 +66,7 @@ try {
   assert(document.querySelectorAll(".spell-book-entry").length === 5, "Spell book shows Sword Strike and four learned skills");
   document.getElementById("spell-book").classList.add("hidden");
   const saved = JSON.stringify(createSave()); applySave(saved);
-  assert(player.unlockedSkills.length === 4 && player.specializationPoints === 0 && actionBarSpells[7] === "00008", "Save/load preserves skills, points and action assignments");
+  assert(player.unlockedSkills.length === 4 && player.specializationPoints === 0 && actionBarSpells[1] === "00008", "Save/load preserves skills, points and leftmost action assignments");
   const oldBranch = JSON.parse(saved); oldBranch.version = 7;
   oldBranch.player.unlockedSkills = ["00006", "00007"]; oldBranch.player.specializationPoints = 2;
   oldBranch.actionBar = [null, null, "00003", null, null, "00006", "00007", null, null, null];
@@ -139,6 +140,7 @@ try {
   resetAdventure("village", "hunter"); setGameState("playing"); gainXP(100);
   assert(player.specializationPoints === 1 && !unlockSkill("00004") && !canUseAbility("00004", "hunter", ["00004"]), "Other classes retain earned points but cannot learn warrior nodes");
   key("n"); assert(document.getElementById("specialization-nodes").textContent.includes("coming later"), "Other classes see an explicit future-tree message"); key("n");
+  runWarriorSkillChecks(assert);
   resetAdventure("village", "warrior"); setGameState("playing"); gainXP(100); key("n");
   const frame = window.frameElement, original = [frame.style.width, frame.style.height];
   for (const [width, height] of [[390,480],[320,320]]) {
@@ -150,7 +152,7 @@ try {
     const shield = document.querySelector('[data-ability-id="00008"]').getBoundingClientRect();
     const cleave = document.querySelector('[data-ability-id="00006"]').getBoundingClientRect();
     const rend = document.querySelector('[data-ability-id="00007"]').getBoundingClientRect();
-    assert(root.top < shield.top && near(shield.top, cleave.top) && shield.left < root.left && root.left < cleave.left && rend.top > cleave.top && near(rend.left, cleave.left),
+    assert(root.top < shield.top && near(shield.top, cleave.top) && shield.left < root.left && root.left < cleave.left && rend.top > cleave.top,
       "Icon layout shows Charge splitting to Shield Wall/Cleave with Rend beneath Cleave");
     assert(close.top >= 8 && close.right <= innerWidth-8 && footer.bottom <= innerHeight-8 && content.scrollHeight > content.clientHeight,
       "Tree fits short/narrow viewports with pinned close/footer and scrolling content");

@@ -100,7 +100,7 @@ function updateBoss(boss, dt) {
       (distance <= BOSS_RULES.cleaveRadius || (distance > 140 && distance <= BOSS_RULES.chargeRange))) {
     const type = distance > 140 ? "charge" : "cleave";
     const duration = (type === "charge" ? BOSS_RULES.chargeWindup : BOSS_RULES.cleaveWindup) * (boss.hp <= boss.maxHp/2 ? 0.75 : 1);
-    boss.bossAction = { type, remaining: duration, duration, x, y, tx: px, ty: py,
+    boss.bossAction = { type, interruptible: false, remaining: duration, duration, x, y, tx: px, ty: py,
       dx: distance ? (px-x)/distance : 1, dy: distance ? (py-y)/distance : 0 };
     boss.navigation = null;
     showMessage(type === "charge" ? "Stonehorn prepares to charge! Move out of the marked lane." : "Stonehorn raises his axe! Leave the marked circle.");

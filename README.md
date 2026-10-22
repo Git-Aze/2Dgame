@@ -34,7 +34,7 @@ Press **Ctrl+M** to toggle collision borders for the current area, including whi
 - Enemies navigate around trees, buildings, cliffs, and water while chasing, wandering, or returning home, using bridges when needed. Solid obstacles also block their melee attacks.
 - Equip any sword and use Sword Strike (default key **3**) against nearby enemies. It costs no mana and has a 0.6-second cooldown.
 - Buy the Common **Short Bow** (`01000`, 25 gold) or **Throwing Dagger** (`01001`, 18 gold) at the General Store. Equip it and use **Ranged Attack** (default key **5** in new adventures). Bow range is 280 pixels; dagger range is 180 pixels. Both have a 0.8-second cooldown and use no mana or ammunition. Throwing does not consume the dagger. Existing saves can assign Ranged Attack from the spell book.
-- With a sword of any rarity equipped, use Charge (**4**) on an enemy at least 150 pixels away. Rush into melee range and stun it for 2 seconds. Charge costs no mana, stops at obstacles, and has a 20-second cooldown that resets whenever an enemy dies.
+- With a sword of any rarity equipped, learn Charge in the specialization tree (**N**) and use its assigned action-bar key on an enemy at least 150 pixels away. Rush into melee range and stun it for 2 seconds. Charge costs no mana, stops at obstacles, and has a 20-second cooldown that resets whenever an enemy dies.
 - Arrange spells on the action bar using the spell book and drag-and-drop.
 - Earn XP from enemies and quests, level up, and spend attribute points.
 - Loot defeated enemies by clicking a nearby corpse (within 64 pixels), or stand on it and press **E**. Hover for loot details. Corpses persist until fully looted, independently of enemy respawns, and are included in saves. A full inventory still allows collecting gold; the item remains until space is available.
@@ -55,14 +55,21 @@ Choose a class before starting a new adventure. Your class stays fixed for that 
 
 Equipment has an explicit Strength, Dexterity, or Intelligence category; your class can equip only its matching category, regardless of secondary stat bonuses. You can collect and buy other categories, and tooltips explain restrictions. The General Store stocks all **85 equipment items**: five rarity tiers for every weapon family, Strength/Dexterity/Intelligence head/chest/legs/boots families, and Strength shields. Hunters and Mages currently leave offhand empty. All equipment is also in the rarity-weighted loot pool. Higher tiers offer stronger fixed stats and cost more gold; rarity never adds a hidden multiplier.
 
-Press **N** to open your specialization tree. Level 1 starts with no points; each level-up grants **one specialization point**, in addition to five attribute points. Warriors start with Sword Strike only. Each tree node costs one point: **Charge first**, then branch into **Shield Wall** or **Cleave → Rend**. Hover or keyboard-focus an icon for effects, prerequisites, and cost; click it to learn. Both branches remain available as you earn more points. Choices last for the adventure and are saved. Learned skills appear in the spell book and fill their preferred action slot if empty, otherwise another empty slot; existing assignments are preserved. Hunters and Mages keep their current starting abilities and save points for future trees.
+Press **N** to open your specialization tree. Level 1 starts with no points; each level-up grants **one specialization point**, in addition to five attribute points. Warriors start with Sword Strike only. Each tree node costs one point: **Charge first**, then branch into **Shield Wall** or **Cleave → Rend**. Shield Wall leads to Shield Bash, Last Stand, and War Cry; Cleave also unlocks Whirlwind, and Rend unlocks Execute. Hover or keyboard-focus an icon for effects, prerequisites, and cost; click it to learn. Choices last for the adventure and are saved. Learned skills appear in the spell book and always fill the **leftmost empty action-bar slot**; existing assignments are preserved. If the bar is full, assign the learned skill manually from the spell book. Hunters and Mages keep their current starting abilities and save points for future trees.
 
-| Warrior unlock | Default key | Effect |
+| Warrior unlock | Cooldown | Effect |
 | --- | --- | --- |
-| Charge | 4 | Existing charge and 2-second stun; 20-second cooldown, reset on enemy death |
-| Cleave | 6 | Strength/sword-scaled damage in a 70px, 120-degree forward cone; 5-second cooldown |
-| Rend | 7 | Strength-scaled bleed every second for 6 seconds; 4-second cooldown; refreshes without stacking or delaying ticks |
-| Shield Wall | 8 | 40% less damage after armor for 5 seconds; 30-second cooldown; requires sword and shield, no enemy target |
+| Charge | 20s | Rush a distant target and stun for 2 seconds; cooldown resets on enemy death |
+| Shield Wall | 30s | 40% less post-armor damage for 5 seconds; requires sword and shield |
+| Cleave | 5s | Hit enemies in a 70px, 120-degree forward cone |
+| Rend | 4s | Strength-scaled bleed every second for 6 seconds; refreshes without stacking or delaying ticks |
+| Shield Bash | 12s | Shield hit that briefly stuns ordinary enemies and interrupts explicitly interruptible boss windups; Stonehorn's main attacks are protected |
+| Whirlwind | 10s | Strike enemies within 80px in all directions; allows movement and respects scenery |
+| Execute | 6s | Powerful melee hit usable only below 25% target health |
+| War Cry | 30s | +20% total Strength for 8 seconds; increased maximum health does not heal |
+| Last Stand | 60s | +30% snapshot maximum and current health for 8 seconds; expiry removes the bonus without killing you |
+
+Together with Sword Strike, this gives Warriors ten skills. Temporary buffs pause with gameplay and clear on death, travel, restart, and loading. Saving while buffed stores health without the temporary bonuses; it does not change the live character. Cooldowns, buff durations, and temporary health are not persisted.
 
 | Sword ID | Name | Rarity | Weapon damage | Strength | Vitality | Price |
 | --- | --- | --- | --- | --- | --- | --- |
@@ -75,7 +82,7 @@ Press **N** to open your specialization tree. Level 1 starts with no points; eac
 1. Choose Warrior, Hunter, or Mage, then click **New game** or press **Space** from the New game button.
 2. Press **C**, then equip your starting **Iron Sword**, **Short Bow**, or **Apprentice Staff**. This completes **Ready for Adventure** and grants **20 XP**.
 3. **Slime Trouble** then starts automatically. Defeat three green slimes to earn an additional **75 XP and 20 gold**, alongside their normal kill XP.
-4. Click an enemy to select it, then use your class's action-bar keys listed above. The spell book shows only your class's abilities. Ability weapon requirements still apply.
+4. Click an enemy to select it, then use the numbered action-bar slots for your learned skills. The spell book shows only your class's abilities. Ability weapon requirements still apply.
 
 Press **L** or click **Quest Log** on the side to open your journal. Browse in-progress, available, locked, and completed quests, with descriptions, objectives, prerequisites, and rewards. Selecting a quest makes it the **only quest shown in the side tracker**; progress updates live. Selection stays until you choose another quest and is preserved in saves. Close the log with **L**, **Escape**, or its close button. Combat messages appear in the message log. Regular enemies respawn after being defeated.
 
@@ -149,6 +156,14 @@ Spells and attacks use permanent five-digit string IDs, in a separate namespace 
 | `00003` | Sword Strike |
 | `00004` | Charge |
 | `00005` | Ranged Attack |
+| `00006` | Cleave |
+| `00007` | Rend |
+| `00008` | Shield Wall |
+| `00009` | Shield Bash |
+| `00010` | Whirlwind |
+| `00011` | Execute |
+| `00012` | War Cry |
+| `00013` | Last Stand |
 
 Assign the next unused ID when adding an ability; never renumber existing IDs or reuse retired ones.
 

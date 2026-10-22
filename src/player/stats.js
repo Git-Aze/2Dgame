@@ -17,9 +17,10 @@ const STAT_RULES = Object.freeze({
   criticalDamageMultiplier: 2,
 });
 
-function getPlayerStats() {
+function getPlayerStats({ includeTemporary = true } = {}) {
   const bonuses = getEquipmentBonuses();
-  const strength = player.strength + bonuses.strength;
+  const baseStrength = player.strength + bonuses.strength;
+  const strength = includeTemporary && player.warCryRemaining > 0 ? Math.round(baseStrength * 1.2 * 10) / 10 : baseStrength;
   const vitality = player.vitality + bonuses.vitality;
   const intelligence = player.intelligence + bonuses.intelligence;
   const dexterity = player.dexterity + bonuses.dexterity;
@@ -28,7 +29,8 @@ function getPlayerStats() {
     armor: player.armor + bonuses.armor,
     weaponDamage: bonuses.damage,
     critChance: Math.max(0, Math.min(1, STAT_RULES.baseCritChance + bonuses.critChance)),
-    maxHp: player.baseMaxHp + Math.max(0, strength - STAT_RULES.attributeBaseline) * STAT_RULES.healthPerStrength,
+    maxHp: Math.round((player.baseMaxHp + Math.max(0, strength - STAT_RULES.attributeBaseline) * STAT_RULES.healthPerStrength +
+      (includeTemporary && player.lastStandRemaining > 0 ? player.lastStandHealthBonus : 0)) * 10) / 10,
     maxMana: player.baseMaxMana,
     moveSpeed: player.speed * (1 + Math.max(0, dexterity - STAT_RULES.attributeBaseline) * STAT_RULES.speedPerDexterity),
     healthRegen: STAT_RULES.baseHealthRegen + vitality * STAT_RULES.healthRegenPerVitality,

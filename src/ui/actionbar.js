@@ -2,13 +2,13 @@ import { canUseAbility } from "../data/classes.js";
 import { player } from "../core/state.js";
 import { SPELLS } from "../data/action-definitions.js";
 import { showMessage } from "./messages.js";
-import { cleaveAttack, rendAttack, shieldWall, castFireball, castIgnite, chargeAttack, getActionWeaponRequirement, getActionUnavailableReason, swordAttack, rangedAttack } from "../combat/spells.js";
+import { shieldBash, whirlwind, executeAttack, warCry, lastStand, cleaveAttack, rendAttack, shieldWall, castFireball, castIgnite, chargeAttack, getActionWeaponRequirement, getActionUnavailableReason, swordAttack, rangedAttack } from "../combat/spells.js";
 import { ACTION_BAR_SIZE, actionBarSpells, isPlaying, spellCooldowns } from "../core/state.js";
 import { getSpellStats } from "../player/stats.js";
 import { setTooltip } from "./tooltips.js";
 
 const slotStates = [];
-const statusLabels = { class: "Locked", shield: "Shield", paused: "Paused", cooldown: "Cooldown", casting: "Casting", charging: "Charging", weapon: "Weapon", target: "Target",
+const statusLabels = { class: "Locked", health: "Health", shield: "Shield", paused: "Paused", cooldown: "Cooldown", casting: "Casting", charging: "Charging", weapon: "Weapon", target: "Target",
   "too-close": "Too close", range: "Range", blocked: "Blocked", mana: "Mana" };
 
 function updateActionBarStatus() {
@@ -67,6 +67,11 @@ function castActionBarSlot(slotIndex) {
   if (!spellId) return;
 
   switch (spellId) {
+    case "00009": shieldBash(); break;
+    case "00010": whirlwind(); break;
+    case "00011": executeAttack(); break;
+    case "00012": warCry(); break;
+    case "00013": lastStand(); break;
     case "00006": cleaveAttack(); break;
     case "00007": rendAttack(); break;
     case "00008": shieldWall(); break;

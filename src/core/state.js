@@ -27,6 +27,9 @@ const player = {
   specializationPoints: 0,
   unlockedSkills: [],
   shieldWallRemaining: 0,
+  warCryRemaining: 0,
+  lastStandRemaining: 0,
+  lastStandHealthBonus: 0,
 
   // Attributes
   strength: 10,

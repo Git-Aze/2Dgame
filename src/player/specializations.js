@@ -16,11 +16,10 @@ function getUnlockReason(abilityId) {
 
 function unlockSkill(abilityId) {
   if (!isPlaying() || getUnlockReason(abilityId)) return false;
-  const node = getSpecializationTree(player.classId).nodes.find(entry => entry.abilityId === abilityId);
   player.specializationPoints--;
   player.unlockedSkills.push(abilityId);
   if (!actionBarSpells.includes(abilityId)) {
-    const slot = actionBarSpells[node.slot] === null ? node.slot : actionBarSpells.indexOf(null);
+    const slot = actionBarSpells.indexOf(null);
     if (slot >= 0) actionBarSpells[slot] = abilityId;
   }
   showMessage(`Learned ${SPELLS[abilityId].name}! Find it in your spell book (K).`);

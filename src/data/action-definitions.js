@@ -98,6 +98,39 @@ const SPELLS = {
     requiredWeaponCategory: "Melee", requiredWeaponClass: "Sword", requiredOffhandClass: "Shield",
     rules: "Instant defensive skill. Requires a sword and shield, but no enemy target. Reduction applies after armor, with at least 1 damage per hit. Removing your shield ends the effect. Pauses with gameplay.",
   },
+  "00009": {
+    id: "00009", name: "Shield Bash", icon: "\ud83d\udca5",
+    description: "Bash your target with your shield, dealing damage and interrupting interruptible windups.",
+    damage: 14, manaCost: 0, range: 48, cooldown: 12,
+    requiredWeaponCategory: "Melee", requiredWeaponClass: "Sword", requiredOffhandClass: "Shield",
+    rules: "Instant melee hit. Also stuns ordinary enemies for 1 second. Boss windups are interrupted only when explicitly marked interruptible; Stonehorn's attacks are protected. Damage scales with Strength and sword damage.",
+  },
+  "00010": {
+    id: "00010", name: "Whirlwind", icon: "\ud83c\udf00",
+    description: "Spin once, striking every enemy within 80 pixels. You can keep moving.",
+    damage: 20, manaCost: 0, range: 80, cooldown: 10, target: "self",
+    requiredWeaponCategory: "Melee", requiredWeaponClass: "Sword",
+    rules: "Instant 360-degree attack centered on you; no selected enemy required. Each enemy needs a clear path and rolls a separate critical hit. Scales with Strength and sword damage.",
+  },
+  "00011": {
+    id: "00011", name: "Execute", icon: "\ud83e\ude93",
+    description: "Deliver a powerful blow to an enemy below 25% health.",
+    damage: 45, manaCost: 0, range: 48, cooldown: 6, maxTargetHealthRatio: 0.25,
+    requiredWeaponCategory: "Melee", requiredWeaponClass: "Sword",
+    rules: "Instant melee hit. Unavailable at or above 25% target health; failed attempts spend no cooldown. Scales with Strength and sword damage and can critically hit.",
+  },
+  "00012": {
+    id: "00012", name: "War Cry", icon: "\ud83d\udce3",
+    description: "Increase your total Strength by 20% for 8 seconds.",
+    manaCost: 0, range: 0, cooldown: 30, duration: 8, target: "self",
+    rules: "Instant shout with no weapon or target required. Boosts Strength-based damage and maximum health without healing. Temporary Strength is not saved; health is clamped when the bonus ends. Pauses with gameplay.",
+  },
+  "00013": {
+    id: "00013", name: "Last Stand", icon: "\u2764\ufe0f",
+    description: "Gain temporary maximum and current health equal to 30% of your maximum health for 8 seconds.",
+    manaCost: 0, range: 0, cooldown: 60, duration: 8, target: "self",
+    rules: "Instant defensive skill with no weapon or target required. Bonus health is fixed when activated. Expiry removes that health but never kills you. Saving/loading removes temporary health safely rather than making it permanent. Pauses with gameplay.",
+  },
 };
 
 export { BASE_CAST_TIME, SPELLS };

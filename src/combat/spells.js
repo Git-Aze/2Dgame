@@ -10,7 +10,7 @@ import { getItem } from "../data/items.js";
 import { showMessage } from "../ui/messages.js";
 import { moveEntity } from "../world/movement.js";
 import { enemies, activeIgnites, fireballs, enemyProjectiles, isPlaying, player, runtime, spellCooldowns, swordSwings } from "../core/state.js";
-import { getSpellStats } from "../player/stats.js";
+import { getSpellStats, getPlayerStats, refreshPlayerStats } from "../player/stats.js";
 import { blocked } from "../world/world-state.js";
 
 // ==========================================
@@ -20,8 +20,84 @@ import { blocked } from "../world/world-state.js";
 // Permanent five-digit IDs, independent of item IDs. Never reuse retired IDs.
 const activeRends = [];
 function clearWarriorEffects() {
+  const hadBuffs = player.warCryRemaining > 0 || player.lastStandHealthBonus > 0;
   activeRends.length = 0;
   player.shieldWallRemaining = 0;
+  player.warCryRemaining = 0;
+  endLastStand();
+  if (hadBuffs) {
+    refreshPlayerStats();
+    emit("player:changed");
+  }
+}
+
+function endLastStand() {
+  if (player.lastStandHealthBonus > 0 && player.hp > 0) {
+    player.hp = Math.max(1, player.hp - player.lastStandHealthBonus);
+  }
+  player.lastStandRemaining = 0;
+  player.lastStandHealthBonus = 0;
+}
+
+function shieldBash() {
+  const spell = getSpellStats(SPELLS["00009"]);
+  if (!canCastSpell(spell, runtime.selectedEnemy)) return;
+  const target = runtime.selectedEnemy;
+  spellCooldowns[spell.id] = spell.cooldown;
+  const hit = rollPlayerHit(spell.damage);
+  damageEnemy(target, hit.damage, spell.id, hit.critical);
+  if (!target.alive) return;
+  if (target.bossAction?.interruptible === true) {
+    target.bossAction = null;
+    target.bossCooldown = Math.max(target.bossCooldown ?? 0, 1);
+    showMessage(`${target.name}'s attack was interrupted!`);
+  }
+  if (!target.isBoss) target.stunRemaining = Math.max(target.stunRemaining ?? 0, 1);
+}
+
+function whirlwind() {
+  const spell = getSpellStats(SPELLS["00010"]);
+  if (!canCastSpell(spell, null)) return;
+  spellCooldowns[spell.id] = spell.cooldown;
+  const x = player.x + player.w / 2, y = player.y + player.h / 2;
+  swordSwings.push({ x, y, angle: 0, elapsed: 0, duration: 0.45, radius: spell.range, whirlwind: true });
+  for (const enemy of enemies) {
+    if (!enemy.alive) continue;
+    const tx = enemy.x + enemy.w / 2, ty = enemy.y + enemy.h / 2;
+    if (Math.hypot(tx - x, ty - y) > spell.range || spellPathBlocked(x, y, tx, ty)) continue;
+    const hit = rollPlayerHit(spell.damage);
+    damageEnemy(enemy, hit.damage, spell.id, hit.critical);
+  }
+}
+
+function executeAttack() {
+  const spell = getSpellStats(SPELLS["00011"]);
+  if (!canCastSpell(spell, runtime.selectedEnemy)) return;
+  spellCooldowns[spell.id] = spell.cooldown;
+  const hit = rollPlayerHit(spell.damage);
+  damageEnemy(runtime.selectedEnemy, hit.damage, spell.id, hit.critical);
+}
+
+function warCry() {
+  const spell = SPELLS["00012"];
+  if (!canCastSpell(spell, null)) return;
+  spellCooldowns[spell.id] = spell.cooldown;
+  player.warCryRemaining = spell.duration;
+  refreshPlayerStats();
+  emit("player:changed");
+  showMessage("War Cry: +20% Strength for 8 seconds!");
+}
+
+function lastStand() {
+  const spell = SPELLS["00013"];
+  if (!canCastSpell(spell, null)) return;
+  spellCooldowns[spell.id] = spell.cooldown;
+  player.lastStandHealthBonus = Math.round(getPlayerStats().maxHp * 0.3);
+  player.lastStandRemaining = spell.duration;
+  player.hp += player.lastStandHealthBonus;
+  refreshPlayerStats();
+  emit("player:changed");
+  showMessage(`Last Stand: +${player.lastStandHealthBonus} temporary health for 8 seconds!`);
 }
 
 function cleaveAttack() {
@@ -66,6 +142,14 @@ function shieldWall() {
 }
 
 function updateWarriorEffects(dt) {
+  const hadWarCry = player.warCryRemaining > 0, hadLastStand = player.lastStandRemaining > 0;
+  player.warCryRemaining = Math.max(0, player.warCryRemaining - dt);
+  player.lastStandRemaining = Math.max(0, player.lastStandRemaining - dt);
+  if (hadLastStand && player.lastStandRemaining === 0) endLastStand();
+  if ((hadWarCry && player.warCryRemaining === 0) || (hadLastStand && player.lastStandRemaining === 0)) {
+    refreshPlayerStats();
+    emit("player:changed");
+  }
   player.shieldWallRemaining = getEquippedItem("offhand")?.offhandClass === "Shield"
     ? Math.max(0, player.shieldWallRemaining - dt) : 0;
   for (let i = activeRends.length - 1; i >= 0; i--) {
@@ -162,14 +246,15 @@ function rangedAttack() {
 function drawSwordSwings() {
   for (const swing of swordSwings) {
     const progress = swing.elapsed / swing.duration;
-    const angle = swing.angle - 0.8 + progress * 1.6;
+    const angle = swing.whirlwind ? progress * Math.PI * 2 : swing.angle - 0.8 + progress * 1.6;
     ctx.save();
-    ctx.translate(swing.x, swing.y);
+    ctx.translate(swing.whirlwind ? player.x + player.w / 2 : swing.x,
+      swing.whirlwind ? player.y + player.h / 2 : swing.y);
     ctx.globalAlpha = 1 - progress;
     ctx.strokeStyle = "#ffe6a3";
     ctx.lineWidth = 3;
     ctx.beginPath();
-    ctx.arc(0, 0, swing.radius ?? 30, angle - 0.7, angle);
+    ctx.arc(0, 0, swing.radius ?? 30, angle - (swing.whirlwind ? Math.PI * 1.7 : 0.7), angle);
     ctx.stroke();
     ctx.strokeStyle = "#f1f6ff";
     ctx.lineWidth = 4;
@@ -193,6 +278,7 @@ function getTargetProblem(spell, target) {
   if (spell.requiredOffhandClass && getEquippedItem("offhand")?.offhandClass !== spell.requiredOffhandClass) return "shield";
   if (spell.target === "self") return "";
   if (!target?.alive) return "target";
+  if (spell.maxTargetHealthRatio && target.hp / target.maxHp >= spell.maxTargetHealthRatio) return "health";
   const ax = player.x + player.w / 2, ay = player.y + player.h / 2;
   const bx = target.x + target.w / 2, by = target.y + target.h / 2;
   const distance = Math.hypot(bx - ax, by - ay);
@@ -217,12 +303,13 @@ function validateSpellTarget(spell, target) {
   if (!problem) return true;
   const reason = problem === "class" ? `${spell.name} is not learned or is not available to your class.`
     : problem === "shield" ? `${spell.name} requires a shield.`
+    : problem === "health" ? `${spell.name} requires a target below ${spell.maxTargetHealthRatio * 100}% health.`
     : problem === "weapon" ? `${spell.name} requires ${getActionWeaponRequirement(spell)}.`
     : problem === "target" ? "Select a living enemy before casting."
     : problem === "too-close" ? `${spell.name}: target must be at least ${spell.minRange} pixels away.`
     : problem === "range" ? `${spell.name}: target is out of range.` : `${spell.name}: line of sight is blocked.`;
   showMessage(reason);
-  emit("combat:notice", { text: problem === "class" ? "Skill locked" : problem === "shield" ? "Shield required" : problem === "weapon" ? "Wrong weapon" : problem === "target" ? "No target"
+  emit("combat:notice", { text: problem === "class" ? "Skill locked" : problem === "health" ? "Target health too high" : problem === "shield" ? "Shield required" : problem === "weapon" ? "Wrong weapon" : problem === "target" ? "No target"
     : problem === "too-close" ? "Too close" : problem === "range" ? "Out of range" : "Blocked" });
   return false;
 }
@@ -594,4 +681,4 @@ function setupCombat() {
   });
 }
 
-export { cleaveAttack, rendAttack, shieldWall, chargeAttack, updateCharge, getActionWeaponRequirement, getActionUnavailableReason, swordAttack, rangedAttack, drawSwordSwings, updateSpellCooldowns, cancelCasting, resetSpellState, castIgnite, updateIgnites, drawIgniteEffects, drawFireball, castFireball, updateCasting, updateCombat, setupCombat };
+export { shieldBash, whirlwind, executeAttack, warCry, lastStand, cleaveAttack, rendAttack, shieldWall, chargeAttack, updateCharge, getActionWeaponRequirement, getActionUnavailableReason, swordAttack, rangedAttack, drawSwordSwings, updateSpellCooldowns, cancelCasting, resetSpellState, castIgnite, updateIgnites, drawIgniteEffects, drawFireball, castFireball, updateCasting, updateCombat, setupCombat };

@@ -3,7 +3,7 @@ import { getItem } from "../data/items.js";
 import { SPELLS } from "../data/action-definitions.js";
 import { QUEST_DEFINITIONS } from "../quests/quests.js";
 import { resetAdventure, setGameState } from "../core/lifecycle.js";
-import { STAT_RULES, refreshPlayerStats } from "../player/stats.js";
+import { STAT_RULES, refreshPlayerStats, getPlayerStats } from "../player/stats.js";
 import { emit } from "../core/events.js";
 import { ENEMY_TYPES } from "../data/enemy-types.js";
 import { AREAS } from "../world/world.js";
@@ -190,10 +190,14 @@ function parseSave(text, legacyClassId = null) {
 
 function createSave() {
   if (runtime.gameState !== "playing" || player.hp <= 0) throw new Error("Start or continue an adventure before saving.");
+  const savedPlayer = Object.fromEntries(fields.map((key) => [key, player[key]]));
+  // Temporary health must not become permanent through save/load.
+  const healthWithoutLastStand = player.lastStandHealthBonus > 0 ? Math.max(1, player.hp - player.lastStandHealthBonus) : player.hp;
+  savedPlayer.hp = Math.min(getPlayerStats({ includeTemporary: false }).maxHp, healthWithoutLastStand);
   return parseSave(JSON.stringify({
     version: SAVE_VERSION, game: "TopDownSoloRPG", savedAt: new Date().toISOString(), areaId: runtime.areaId,
     selectedQuestId: runtime.selectedQuestId,
-    player: Object.fromEntries(fields.map((key) => [key, player[key]])),
+    player: savedPlayer,
     inventory, actionBar: actionBarSpells, quests: questProgress,
     corpses: corpses.map(({ id, areaId, enemyTypeId, level, x, y, gold, itemId }) => ({ id, areaId, enemyTypeId, level, x, y, gold, itemId })),
   }));

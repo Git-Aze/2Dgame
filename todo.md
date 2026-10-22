@@ -160,6 +160,8 @@ Completion target: defeated enemies can drop loot that the player can identify a
 
 - [x] 10.09 Restyle the specialization tree as connected icon-only nodes with instant hover/focus details. Require Charge first, branch to Shield Wall or Cleave, and place Rend after Cleave; migrate earlier Cleave-first builds by refunding inaccessible nodes.
 
+- [x] 10.10 Always assign learned skills to the leftmost empty action slot. Expand the Warrior tree with Shield Bash, Whirlwind, Execute, War Cry, and Last Stand; implement combat effects, protected boss interrupts, temporary-stat/health handling, and safe save/load. Verify all nine unlocks, action assignment, cooldowns, pauses, buff expiry, and responsive layout.
+
 ## 11. Enemy behavior and navigation
 
 - [x] 11.01 Complete obstacle-aware pathfinding tracked in 4.10 for chasing, wandering, and returning; verify all enemy sizes, changing routes, bridges, unreachable goals, stuns, chase limits, and respawn cleanup.
