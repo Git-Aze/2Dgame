@@ -1,4 +1,6 @@
-
+import { player } from "../core/state.js";
+import { getClass } from "../data/classes.js";
+import { getItem } from "../data/items.js";
 
 // Definitions are separate from each adventure's changing quest progress.
 const QUEST_DEFINITIONS = {
@@ -12,8 +14,8 @@ const QUEST_DEFINITIONS = {
   firstSteps: {
     id: "firstSteps",
     title: "Ready for Adventure",
-    description: "Press C to open your character sheet, then click the Apprentice Staff in your inventory to equip it.",
-    objectives: [{ type: "equip", targetId: "00001", required: 1 }],
+    get description() { return `Press C to open your character sheet, then equip your ${getItem(getClass(player.classId).startingWeapon).name}.`; },
+    objectives: [{ type: "equip", get targetId() { return getClass(player.classId).startingWeapon; }, required: 1 }],
     rewards: { xp: 20, gold: 0 },
   },
   slimeTrouble: {

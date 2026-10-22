@@ -17,11 +17,12 @@ function gainXP(amount) {
 
     player.level++;
     player.attributePoints += 5;
+    player.specializationPoints++;
 
     // Increase XP required for the next level.
     player.xpToNextLevel = Math.floor(player.xpToNextLevel * 1.5);
 
-    showMessage(`Level ${player.level}! You received 5 attribute points.`);
+    showMessage(`Level ${player.level}! You received 5 attribute points and 1 specialization point.`);
   }
 
   emit("player:changed");

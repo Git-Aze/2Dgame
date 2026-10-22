@@ -1,10 +1,12 @@
 import { closeQuestLog } from "./quest-ui.js";
+import { closeSpecializationTree } from "./specialization-ui.js";
 
 // Match the panels' visual stacking order.
 function closeTopPanel() {
-  for (const id of ["quest-log", "spell-book", "character-sheet"]) {
+  for (const id of ["specialization-tree", "quest-log", "spell-book", "character-sheet"]) {
     const panel = document.getElementById(id);
     if (panel.classList.contains("hidden")) continue;
+    if (id === "specialization-tree") { closeSpecializationTree(); return true; }
     if (id === "quest-log") { closeQuestLog(); return true; }
     if (panel.contains(document.activeElement)) document.activeElement.blur();
     panel.classList.add("hidden");

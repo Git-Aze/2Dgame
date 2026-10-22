@@ -154,6 +154,12 @@ Completion target: defeated enemies can drop loot that the player can identify a
 - [ ] 10.05 Connect equipment upgrades to enemy loot, merchants, and quest rewards. Equipment now drops from corpses and is sold by the General Store; quest upgrades remain.
 - [x] 10.06 Verify derived stats, attack requirements, and resource limits when swapping current upgraded swords; cover all five tiers, purchases, styling, Sword Strike/Charge, health clamping, and save/load.
 
+- [x] 10.07 Add data-driven Warrior (Strength), Hunter (Dexterity), and Mage (Intelligence) classes; explicit gear categories, class armor families across all rarities, starting selection/loadouts/abilities and class-specific introduction objectives. Enforce equipment/ability restrictions in gameplay, UI, and version-6 saves; offer non-destructive class selection for older saves and verify class flows and migration.
+
+- [x] 10.08 Add specialization points (one per level-up), a responsive N-key tree, prerequisites, saved unlocks and ability gating. Warriors start with Sword Strike; unlock Charge → Shield Wall and Cleave → Rend. Implement Cleave, Rend and Shield Wall, preserve action assignments, and migrate older saves with earned points available to spend.
+
+- [x] 10.09 Restyle the specialization tree as connected icon-only nodes with instant hover/focus details. Require Charge first, branch to Shield Wall or Cleave, and place Rend after Cleave; migrate earlier Cleave-first builds by refunding inaccessible nodes.
+
 ## 11. Enemy behavior and navigation
 
 - [x] 11.01 Complete obstacle-aware pathfinding tracked in 4.10 for chasing, wandering, and returning; verify all enemy sizes, changing routes, bridges, unreachable goals, stuns, chase limits, and respawn cleanup.

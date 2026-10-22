@@ -1,3 +1,4 @@
+import "./adventurer-fixture.js";
 import { targetEnemyAtScreenPosition } from "../src/combat/targeting.js";
 // Runs only from tests/smoke.html, never in the normal game entry point.
 import "../src/game.js";

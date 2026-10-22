@@ -1,12 +1,14 @@
+import { canUseAbility } from "../data/classes.js";
+import { player } from "../core/state.js";
 import { SPELLS } from "../data/action-definitions.js";
 import { showMessage } from "./messages.js";
-import { castFireball, castIgnite, chargeAttack, getActionWeaponRequirement, getActionUnavailableReason, swordAttack, rangedAttack } from "../combat/spells.js";
+import { cleaveAttack, rendAttack, shieldWall, castFireball, castIgnite, chargeAttack, getActionWeaponRequirement, getActionUnavailableReason, swordAttack, rangedAttack } from "../combat/spells.js";
 import { ACTION_BAR_SIZE, actionBarSpells, isPlaying, spellCooldowns } from "../core/state.js";
 import { getSpellStats } from "../player/stats.js";
 import { setTooltip } from "./tooltips.js";
 
 const slotStates = [];
-const statusLabels = { paused: "Paused", cooldown: "Cooldown", casting: "Casting", charging: "Charging", weapon: "Weapon", target: "Target",
+const statusLabels = { class: "Locked", shield: "Shield", paused: "Paused", cooldown: "Cooldown", casting: "Casting", charging: "Charging", weapon: "Weapon", target: "Target",
   "too-close": "Too close", range: "Range", blocked: "Blocked", mana: "Mana" };
 
 function updateActionBarStatus() {
@@ -39,7 +41,7 @@ function updateActionBarStatus() {
 
 function assignSpellToSlot(spellId, slotIndex) {
   if (!isPlaying()) return;
-  if (!Object.hasOwn(SPELLS, spellId)) return;
+  if (!Object.hasOwn(SPELLS, spellId) || !canUseAbility(spellId, player.classId, player.unlockedSkills)) return;
   if (!Number.isInteger(slotIndex) ||
       slotIndex < 0 || slotIndex >= ACTION_BAR_SIZE) return;
 
@@ -65,6 +67,9 @@ function castActionBarSlot(slotIndex) {
   if (!spellId) return;
 
   switch (spellId) {
+    case "00006": cleaveAttack(); break;
+    case "00007": rendAttack(); break;
+    case "00008": shieldWall(); break;
     case "00005":
       rangedAttack();
       break;
@@ -135,7 +140,8 @@ function createActionTooltip(spell, key) {
   }
   lines.push(`Mana cost: ${spell.manaCost}`);
   lines.push(`Range: ${spell.minRange ? `${spell.minRange}–` : ""}${Number.isFinite(spell.range) ? spell.range : "unlimited"} pixels · Cooldown: ${spell.cooldown}s`);
-  lines.push("Requires line of sight. Cliffs and tree trunks block spells; water does not.");
+  if (spell.target !== "self") lines.push("Requires line of sight. Cliffs and tree trunks block spells; water does not.");
+  if (spell.requiredOffhandClass) lines.push(`Requires offhand: ${spell.requiredOffhandClass}`);
   lines.push(spell.rules);
   if (spell.castTime) {
     lines.push(`Cast time: ${spell.castTime}s`);
@@ -143,7 +149,7 @@ function createActionTooltip(spell, key) {
     lines.push("Cast time: instant");
   }
   if (spell.requiredWeaponCategory) lines.push(`Requires: ${getActionWeaponRequirement(spell)}`);
-  lines.push("Select an enemy to cast. Right-click to remove.");
+  lines.push(spell.target === "self" ? "Targets yourself. Right-click to remove." : "Select an enemy to cast. Right-click to remove.");
   return lines.filter(Boolean).join("\n");
 }
 
@@ -193,7 +199,7 @@ function setupActionBar() {
 
       const spellId = event.dataTransfer.getData("text/plain");
 
-      if (!Object.hasOwn(SPELLS, spellId)) return;
+      if (!Object.hasOwn(SPELLS, spellId) || !canUseAbility(spellId, player.classId, player.unlockedSkills)) return;
 
       const sourceIndexText =
         event.dataTransfer.getData("application/x-action-slot");

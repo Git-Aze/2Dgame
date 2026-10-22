@@ -1,7 +1,7 @@
 import { on } from "../core/events.js";
 import { setMenuOpen } from "../core/pause-menu.js";
-import { resetAdventure, setGameState, startGame } from "../core/lifecycle.js";
-import { runtime } from "../core/state.js";
+import { setGameState, startGame } from "../core/lifecycle.js";
+import { runtime, player } from "../core/state.js";
 
 function setupPauseMenu() {
   const dialog = document.getElementById("pause-menu");
@@ -19,7 +19,7 @@ function setupPauseMenu() {
   });
   document.getElementById("menu-continue-button").addEventListener("click", () => setMenuOpen(false));
   document.getElementById("menu-restart-button").addEventListener("click", () => {
-    resetAdventure();
+    runtime.selectedClassId = player.classId;
     setGameState("start");
     startGame();
   });

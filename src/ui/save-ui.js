@@ -1,7 +1,60 @@
 import { on } from "../core/events.js";
-import { SAVE_KEY, BACKUP_KEY, MAX_SAVE_SIZE, applySave, createSave, readSave, writeSave } from "../persistence/saves.js";
+import { SAVE_KEY, BACKUP_KEY, MAX_SAVE_SIZE, applySave, parseSave, createSave, readSave, writeSave } from "../persistence/saves.js";
+import { CLASSES } from "../data/classes.js";
+import { runtime, keys } from "../core/state.js";
+
+let pendingLoad = null;
+function finishMigration() {
+  const pending = pendingLoad;
+  pendingLoad = null;
+  runtime.migratingSave = false;
+  document.getElementById("class-migration").hidden = true;
+  for (const id of ["game-overlay", "pause-menu", "game-container"]) document.getElementById(id).inert = pending.inert[id];
+  runtime.lastTime = 0;
+  if (pending.focus?.isConnected) pending.focus.focus();
+}
+
+function loadAdventure(text) {
+  const save = parseSave(text);
+  if (!save.needsClassSelection) { applySave(text); return true; }
+  const ids = ["game-overlay", "pause-menu", "game-container"];
+  pendingLoad = { text, focus: document.activeElement,
+    inert: Object.fromEntries(ids.map(id => [id, document.getElementById(id).inert])) };
+  runtime.migratingSave = true;
+  for (const key of Object.keys(keys)) keys[key] = false;
+  for (const id of ids) document.getElementById(id).inert = true;
+  document.getElementById("migration-status").textContent = "Choose the class you want to keep for this adventure.";
+  document.getElementById("class-migration").hidden = false;
+  document.getElementById("migration-class").focus();
+  return false;
+}
 
 function setupSaveUI() {
+  const select = document.getElementById("migration-class");
+  for (const definition of Object.values(CLASSES)) {
+    const option = document.createElement("option");
+    option.value = definition.id; option.textContent = `${definition.name} - ${definition.mainStat}`;
+    select.append(option);
+  }
+  document.getElementById("cancel-class-migration").addEventListener("click", finishMigration);
+  document.getElementById("confirm-class-migration").addEventListener("click", () => {
+    try {
+      // Validate before closing the dialog or changing the current adventure.
+      parseSave(pendingLoad.text, select.value);
+      const text = pendingLoad.text, classId = select.value;
+      finishMigration();
+      applySave(text, classId);
+      report("Saved hero migrated. Press Save to store the class selection in this browser.");
+    } catch (error) { document.getElementById("migration-status").textContent = error.message; }
+  });
+  document.getElementById("class-migration").addEventListener("keydown", event => {
+    if (event.key === "Escape" && !event.repeat) { event.preventDefault(); event.stopPropagation(); finishMigration(); }
+    if (event.key === "Tab") {
+      const first = select, last = document.getElementById("cancel-class-migration");
+      if (event.shiftKey && document.activeElement === first) { event.preventDefault(); last.focus(); }
+      else if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first.focus(); }
+    }
+  });
   const status = document.getElementById("save-status");
   const overlayStatus = document.getElementById("save-overlay-status");
   const continueButton = document.getElementById("continue-game-button");
@@ -26,8 +79,7 @@ function setupSaveUI() {
     try {
       const result = readSave();
       if (!result) throw new Error("No valid saved adventure was found.");
-      applySave(JSON.stringify(result.save));
-      report(result.backup ? "Loaded the previous valid save." : "Saved adventure loaded.");
+      if (loadAdventure(JSON.stringify(result.save))) report(result.backup ? "Loaded the previous valid save." : "Saved adventure loaded.");
     } catch (error) { report(`Could not load: ${error.message}`); }
   };
   continueButton.addEventListener("click", loadBrowserSave);
@@ -52,8 +104,7 @@ function setupSaveUI() {
     if (!file) return;
     try {
       if (file.size > MAX_SAVE_SIZE) throw new Error("Save file is too large.");
-      applySave(await file.text());
-      report("Save file loaded. Press Save to store it in this browser.");
+      if (loadAdventure(await file.text())) report("Save file loaded. Press Save to store it in this browser.");
     } catch (error) { report(`Could not import: ${error.message}`); }
     finally { input.value = ""; }
   });
@@ -63,4 +114,4 @@ function setupSaveUI() {
   refresh();
 }
 
-export { setupSaveUI };
+export { setupSaveUI, loadAdventure };

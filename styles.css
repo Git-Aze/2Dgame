@@ -1452,3 +1452,37 @@ body {
   text-align: center;
   pointer-events: none;
 }
+/* Class creation and legacy-save class selection share the existing overlay style. */
+#class-selection { margin: 12px 0; border: 1px solid #796747; border-radius: 6px; padding: 10px; }
+#class-options { display: flex; justify-content: center; flex-wrap: wrap; gap: 12px; }
+#class-options label { display: flex; align-items: center; gap: 4px; cursor: pointer; }
+#class-description { margin: 10px 0 0; font-size: 13px; color: #d9cfb8; }
+#class-migration { position: fixed; inset: 0; z-index: 1200; display: grid; place-items: center; padding: 16px; background: #0a110fe8; overflow: auto; }
+#class-migration[hidden], #class-selection[hidden] { display: none; }
+#class-migration .game-overlay-panel { max-height: calc(100dvh - 32px); overflow: auto; }
+#migration-class { display: block; margin: 12px auto; max-width: 100%; padding: 8px; background: #28352e; color: #f2eadb; }
+.game-overlay-panel { max-height: calc(100dvh - 48px); overflow-y: auto; }
+.inventory-slot[aria-disabled="true"] .inventory-icon { opacity: 0.5; }
+.migration-actions { position: sticky; bottom: -24px; padding: 8px 0; background: #18221e; }
+/* Specialization dialog: pinned controls with independently scrolling skills. */
+#specialization-tree { position: absolute; z-index: 130; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 560px; max-width: calc(100% - 32px); max-height: calc(100dvh - 32px); display: flex; flex-direction: column; overflow: hidden; color: #eee4ce; background: #18221ef7; border: 2px solid #9b8154; border-radius: 8px; box-shadow: 0 8px 30px #0009; font-family: Arial, sans-serif; }
+#specialization-tree.hidden { display: none; }
+.specialization-header { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-shrink: 0; padding: 12px 16px; border-bottom: 1px solid #796747; }
+.specialization-header h2 { margin: 0; font-size: 20px; color: #f0d58c; }
+#specialization-points { margin: 6px 0 0; font-size: 13px; }
+#close-specialization-tree { align-self: flex-start; min-width: 36px; min-height: 36px; font-size: 24px; }
+#specialization-nodes { overflow: auto; min-height: 0; padding: 12px; background: radial-gradient(ellipse at 50% 20%, #61442d55, transparent 65%), linear-gradient(135deg, #111b1a, #22251b); }
+.specialization-map { position: relative; width: 100%; min-width: 220px; height: 400px; }
+.specialization-links { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; pointer-events: none; }
+.specialization-links line { stroke: #4b4b40; stroke-width: 3; vector-effect: non-scaling-stroke; }
+.specialization-links line.available { stroke: #a89157; }
+.specialization-links line.learned { stroke: #e5bf60; filter: drop-shadow(0 0 3px #d8b45966); }
+.specialization-icon { position: absolute; transform: translate(-50%, -50%); display: grid; place-items: center; width: 62px; height: 62px; padding: 0; border: 2px solid #777360; border-radius: 8px; background: radial-gradient(circle at 40% 25%, #7f6743, #28251c 65%, #141713); box-shadow: 0 0 0 3px #101410, inset 0 0 0 2px #c8b16b33, 0 4px 8px #0009; cursor: pointer; }
+.specialization-icon span { font-size: 32px; line-height: 1; filter: drop-shadow(0 2px 3px #000); pointer-events: none; }
+.specialization-icon.locked { border-color: #5a5c54; background: #222822; cursor: default; }
+.specialization-icon.locked span { filter: grayscale(1) brightness(0.55); }
+.specialization-icon.available { border-color: #e9c978; box-shadow: 0 0 0 3px #101410, 0 0 15px #dab55755, inset 0 0 9px #b9933e44; }
+.specialization-icon.learned { border-color: #b8d681; background: radial-gradient(circle at 40% 25%, #63703c, #253126 70%); }
+.specialization-icon:hover, .specialization-icon:focus-visible { outline: 2px solid #fff0b5; outline-offset: 4px; z-index: 1; }
+.specialization-footer { padding: 10px 16px; font-size: 12px; border-top: 1px solid #796747; flex-shrink: 0; }
+@media (max-width: 520px) { .specialization-icon { width: 54px; height: 54px; } .specialization-header h2 { font-size: 17px; } }

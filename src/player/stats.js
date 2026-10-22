@@ -67,7 +67,9 @@ function getSpellStats(spell, stats = getPlayerStats()) {
 }
 
 function getDamageTaken(baseDamage, stats = getPlayerStats()) {
-  return Math.max(STAT_RULES.minimumIncomingDamage, baseDamage - stats.armor);
+  const afterArmor = Math.max(STAT_RULES.minimumIncomingDamage, baseDamage - stats.armor);
+  return player.shieldWallRemaining > 0
+    ? Math.max(STAT_RULES.minimumIncomingDamage, Math.round(afterArmor * 0.6 * 10) / 10) : afterArmor;
 }
 
 export { STAT_RULES, getPlayerStats, refreshPlayerStats, getSpellStats, getDamageTaken };

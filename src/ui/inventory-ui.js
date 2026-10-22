@@ -1,3 +1,4 @@
+import { getEquipUnavailableReason } from "../player/equipment.js";
 import { getEquippedItem } from "../player/equipment.js";
 import { equipItem, unequipItem } from "../player/inventory.js";
 import { getItem } from "../data/items.js";
@@ -62,6 +63,7 @@ function renderInventory() {
 
     // Tooltip
     setItemAppearance(slot, item);
+    slot.setAttribute("aria-disabled", String(Boolean(getEquipUnavailableReason(item))));
     slot.setAttribute("aria-label", `${getRarity(item.rarity).name} ${item.name}, item level ${item.itemLevel}. Equip item.`);
     setTooltip(slot, createItemTooltip(item));
 
@@ -82,6 +84,9 @@ function createItemTooltip(item) {
   const rarity = getRarity(item.rarity);
   lines.push(`${rarity.name} (Tier ${rarity.tier})`);
   lines.push(`Item level: ${item.itemLevel}`);
+  lines.push(`Gear category: ${item.gearCategory}`);
+  const reason = getEquipUnavailableReason(item);
+  if (reason) lines.push(reason);
   if (item.range) lines.push(`Weapon range: ${item.range} pixels`);
   lines.push(`ID: ${item.id}`);
   lines.push("");

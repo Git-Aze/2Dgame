@@ -91,8 +91,8 @@ export function runBossChecks(assert) {
     applySave(JSON.stringify(createSave()));
     assert(!enemies.find(enemy=>enemy.isBoss).alive && corpses.length === 0, "Loading after looting cannot resurrect boss or recreate loot");
     const old=createSave();old.version=4;delete old.quests.stonehorn;
-    const migrated=parseSave(JSON.stringify(old));
-    assert(migrated.version === 5 && migrated.quests.stonehorn.status === "active", "Version 4 arena save migrates boss quest safely");
+    const migrated=parseSave(JSON.stringify(old), "adventurer");
+    assert(migrated.version === 8 && migrated.quests.stonehorn.status === "active", "Version 4 arena save migrates boss quest safely");
     const invalid=createSave();delete invalid.quests.stonehorn;
     let rejected=false;try{applySave(JSON.stringify(invalid));}catch{rejected=true;}
     assert(rejected && questProgress.stonehorn.status === "completed", "Current saves missing boss quest are rejected without mutating progress");

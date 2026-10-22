@@ -1,5 +1,11 @@
+import { player } from "../core/state.js";
+import { canEquipForClass, getClass } from "../data/classes.js";
 import { getItem } from "../data/items.js";
 import { inventory } from "../core/state.js";
+
+function getEquipUnavailableReason(item, classId = player.classId) {
+  return canEquipForClass(item, classId) ? "" : `${getClass(classId)?.name ?? "Your class"} cannot equip ${item?.gearCategory ?? "uncategorized"} gear.`;
+}
 
 function getEquippedItem(slot) {
   const itemId = inventory.equipment[slot];
@@ -44,4 +50,4 @@ function meetsWeaponRequirement(action, weapon = getEquippedItem("weapon")) {
     (!action.requiredWeaponId || weapon?.id === action.requiredWeaponId);
 }
 
-export { getEquippedItem, getEquipmentBonuses, meetsWeaponRequirement };
+export { getEquippedItem, getEquipmentBonuses, meetsWeaponRequirement, getEquipUnavailableReason };

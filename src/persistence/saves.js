@@ -9,22 +9,24 @@ import { ENEMY_TYPES } from "../data/enemy-types.js";
 import { AREAS } from "../world/world.js";
 import { ENEMY_LEVEL_RULES } from "../combat/enemy-stats.js";
 import { LOOT_RULES } from "../data/loot-tables.js";
+import { getClass, canEquipForClass, canUseAbility } from "../data/classes.js";
+import { getSpecializationTree } from "../data/specializations.js";
 
 const SAVE_KEY = "TopDownSoloRPG.save";
 const BACKUP_KEY = "TopDownSoloRPG.save.backup";
-const SAVE_VERSION = 5;
+const SAVE_VERSION = 8;
 const MAX_SAVE_SIZE = 1000000;
 const LEGACY_ITEM_IDS = Object.freeze({
   "00001": "00001", "00002": "02000", "00003": "03000", "00004": "04000",
   "00005": "05000", "00006": "06000", "00007": "07000",
 });
-const fields = ["level", "xp", "gold", "attributePoints", "strength", "vitality", "intelligence", "dexterity", "hp", "mana"];
+const fields = ["classId", "level", "xp", "gold", "attributePoints", "specializationPoints", "unlockedSkills", "strength", "vitality", "intelligence", "dexterity", "hp", "mana"];
 const object = (value) => value !== null && typeof value === "object" && !Array.isArray(value);
 const integer = (value, min, max) => Number.isSafeInteger(value) && value >= min && value <= max;
 const itemExists = (id) => typeof id === "string" && /^\d{5}$/.test(id) && Boolean(getItem(id));
 
 function migrateSave(save) {
-  if (!object(save) || ![1, 2, 3, 4, SAVE_VERSION].includes(save.version)) throw new Error("Unsupported save version. This game supports versions 1 through 5.");
+  if (!object(save) || ![1, 2, 3, 4, 5, 6, 7, SAVE_VERSION].includes(save.version)) throw new Error("Unsupported save version. This game supports versions 1 through 8.");
   if (save.version === 1) {
     if (!object(save.inventory) || !Array.isArray(save.inventory.items) || !object(save.inventory.equipment)) throw new Error("Invalid legacy inventory.");
     const migrateItem = (id) => {
@@ -52,13 +54,45 @@ function migrateSave(save) {
     if (!Object.hasOwn(save.quests,"stonehorn")) {
       save.quests.stonehorn = { status: save.areaId === "cave-arena" ? "active" : "available", objectives: [0] };
     }
+    save.version = 5;
+  }
+  if (save.version <= 6 && object(save.player)) {
+    save.player.specializationPoints = save.player.level - 1;
+    save.player.unlockedSkills = [];
+    if (save.version === 6) {
+      if (Array.isArray(save.actionBar)) {
+        const nodes = getSpecializationTree(save.player.classId)?.nodes ?? [];
+        save.actionBar = save.actionBar.map(id => nodes.some(node => node.abilityId === id) ? null : id);
+      }
+      save.version = SAVE_VERSION;
+    }
+  }
+  if (save.version === 7 && object(save.player)) {
+    const skills = save.player.unlockedSkills;
+    const oldNodes = getSpecializationTree(save.player.classId)?.nodes ?? [];
+    if (!Array.isArray(skills) || new Set(skills).size !== skills.length ||
+        !Number.isSafeInteger(save.player.specializationPoints) || save.player.specializationPoints < 0 ||
+        save.player.specializationPoints + skills.length !== save.player.level - 1 ||
+        !skills.every(id => oldNodes.some(node => node.abilityId === id &&
+          (id === "00006" || node.prerequisites.every(required => skills.includes(required)))))) {
+      throw new Error("Invalid legacy specialization progress.");
+    }
+    // Cleave was previously a root. Refund that now-inaccessible branch rather
+    // than silently granting Charge or rejecting a legitimate older adventure.
+    if (save.player.classId === "warrior" && Array.isArray(skills) &&
+        !skills.includes("00004") && skills.includes("00006")) {
+      const refunded = skills.filter(id => id === "00006" || id === "00007");
+      save.player.unlockedSkills = skills.filter(id => !refunded.includes(id));
+      save.player.specializationPoints += refunded.length;
+      if (Array.isArray(save.actionBar)) save.actionBar = save.actionBar.map(id => refunded.includes(id) ? null : id);
+    }
     save.version = SAVE_VERSION;
   }
   return save;
 }
 
 // Migrate parsed data and validate everything before touching the live adventure.
-function parseSave(text) {
+function parseSave(text, legacyClassId = null) {
   if (typeof text !== "string" || text.length > MAX_SAVE_SIZE) throw new Error("Save file is missing or too large.");
   let save;
   try { save = JSON.parse(text); } catch { throw new Error("Save file is not valid JSON."); }
@@ -68,7 +102,15 @@ function parseSave(text) {
   if (save.selectedQuestId !== undefined && save.selectedQuestId !== null &&
       (typeof save.selectedQuestId !== "string" || !Object.hasOwn(QUEST_DEFINITIONS,save.selectedQuestId))) throw new Error("Invalid selected quest.");
   const p = save.player;
+  const legacy = save.version < 6;
+  if (legacy && object(p)) p.classId = legacyClassId;
+  if ((!legacy || legacyClassId !== null) && !getClass(p?.classId)) throw new Error("Unknown character class.");
   if (!object(p) || !integer(p.level, 1, 75)) throw new Error("Invalid player level.");
+  const nodes = getSpecializationTree(p.classId)?.nodes ?? [];
+  if (!integer(p.specializationPoints, 0, p.level - 1) || !Array.isArray(p.unlockedSkills) ||
+      new Set(p.unlockedSkills).size !== p.unlockedSkills.length ||
+      !p.unlockedSkills.every(id => typeof id === "string" && nodes.some(node => node.abilityId === id && node.prerequisites.every(required => p.unlockedSkills.includes(required)))) ||
+      p.specializationPoints + p.unlockedSkills.length !== p.level - 1) throw new Error("Invalid specialization points or learned skills.");
   let threshold = 100;
   for (let level = 1; level < p.level; level++) threshold = Math.floor(threshold * 1.5);
   if (!integer(p.xp, 0, threshold - 1) || !integer(p.gold, 0, 1000000000) || !integer(p.attributePoints, 0, 1000000)) throw new Error("Invalid player progression.");
@@ -83,6 +125,7 @@ function parseSave(text) {
   for (const slot of Object.keys(inventory.equipment)) {
     const id = equipment[slot];
     if (!Object.hasOwn(equipment, slot) || (id !== null && (!itemExists(id) || getItem(id).type !== slot))) throw new Error("Invalid equipped item.");
+    if (!legacy && id !== null && !canEquipForClass(getItem(id), p.classId)) throw new Error("Equipped item is not allowed for this class.");
   }
   const equipmentStrength = Object.values(equipment).reduce((sum, id) => sum + (id ? getItem(id).stats?.strength ?? 0 : 0), 0);
   const maxHp = initialPlayerState.baseMaxHp + Math.max(0, p.strength + equipmentStrength - STAT_RULES.attributeBaseline) * STAT_RULES.healthPerStrength;
@@ -112,11 +155,32 @@ function parseSave(text) {
     return { id: corpse.id, areaId: corpse.areaId, enemyTypeId: type.id, level: corpse.level,
       x: corpse.x, y: corpse.y, gold: corpse.gold, itemId: corpse.itemId };
   });
+  if (!legacy && save.actionBar.some(id => id !== null && !canUseAbility(id, p.classId, p.unlockedSkills))) throw new Error("Action bar contains an unlearned or foreign ability.");
+  if (legacy && legacyClassId !== null) {
+    const displaced = Object.values(equipment).filter(id => id && !canEquipForClass(getItem(id), p.classId));
+    if (save.inventory.items.length + displaced.length > INVENTORY_SIZE) {
+      throw new Error(`This class needs ${displaced.length} free backpack slots for incompatible equipment. Choose another class or free space in the original save before migrating. Nothing was discarded.`);
+    }
+    for (const slot of Object.keys(equipment)) {
+      if (equipment[slot] && !canEquipForClass(getItem(equipment[slot]), p.classId)) {
+        save.inventory.items.push(equipment[slot]); equipment[slot] = null;
+      }
+    }
+    save.actionBar = save.actionBar.map(id => canUseAbility(id, p.classId, p.unlockedSkills) ? id : null);
+    if (!save.actionBar.some(Boolean)) {
+      const definition = getClass(p.classId);
+      save.actionBar = Array.from({ length: ACTION_BAR_SIZE }, (_, index) => (definition.actionBar ?? definition.abilities)[index] ?? null);
+    }
+    const strength = Object.values(equipment).reduce((sum, id) => sum + (id ? getItem(id).stats?.strength ?? 0 : 0), 0);
+    p.hp = Math.min(p.hp, initialPlayerState.baseMaxHp + Math.max(0, p.strength + strength - STAT_RULES.attributeBaseline) * STAT_RULES.healthPerStrength);
+  }
   // Whitelist fields rather than spreading imported objects into shared state.
   return {
-    version: SAVE_VERSION, game: save.game, savedAt: save.savedAt, areaId: save.areaId,
+    version: legacy && legacyClassId === null ? 5 : SAVE_VERSION,
+    needsClassSelection: legacy && legacyClassId === null,
+    game: save.game, savedAt: save.savedAt, areaId: save.areaId,
     selectedQuestId: save.selectedQuestId ?? null,
-    player: Object.fromEntries(fields.map((key) => [key, p[key]])),
+    player: Object.fromEntries(fields.map((key) => [key, Array.isArray(p[key]) ? [...p[key]] : p[key]])),
     inventory: { items: [...save.inventory.items], equipment: Object.fromEntries(Object.keys(inventory.equipment).map((slot) => [slot, equipment[slot]])) },
     corpses: savedCorpses,
     actionBar: [...save.actionBar],
@@ -135,11 +199,12 @@ function createSave() {
   }));
 }
 
-function applySave(text) {
-  const save = parseSave(text);
+function applySave(text, legacyClassId = null) {
+  const save = parseSave(text, legacyClassId);
+  if (save.needsClassSelection) throw new Error("Choose a class to migrate this saved adventure.");
 
   // Loading always rebuilds transient combat/world data at the known safe spawn.
-  resetAdventure(save.areaId);
+  resetAdventure(save.areaId, save.player.classId);
   Object.assign(player, save.player);
   player.xpToNextLevel = 100;
   for (let level = 1; level < player.level; level++) player.xpToNextLevel = Math.floor(player.xpToNextLevel * 1.5);

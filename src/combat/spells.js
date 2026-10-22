@@ -1,3 +1,4 @@
+import { canUseAbility } from "../data/classes.js";
 import { SPELLS } from "../data/action-definitions.js";
 import { ctx } from "../rendering/canvas.js";
 import { spellPathBlocked } from "../world/collision.js";
@@ -8,7 +9,7 @@ import { emit, on } from "../core/events.js";
 import { getItem } from "../data/items.js";
 import { showMessage } from "../ui/messages.js";
 import { moveEntity } from "../world/movement.js";
-import { activeIgnites, fireballs, enemyProjectiles, isPlaying, player, runtime, spellCooldowns, swordSwings } from "../core/state.js";
+import { enemies, activeIgnites, fireballs, enemyProjectiles, isPlaying, player, runtime, spellCooldowns, swordSwings } from "../core/state.js";
 import { getSpellStats } from "../player/stats.js";
 import { blocked } from "../world/world-state.js";
 
@@ -17,6 +18,68 @@ import { blocked } from "../world/world-state.js";
 // ==========================================
 
 // Permanent five-digit IDs, independent of item IDs. Never reuse retired IDs.
+const activeRends = [];
+function clearWarriorEffects() {
+  activeRends.length = 0;
+  player.shieldWallRemaining = 0;
+}
+
+function cleaveAttack() {
+  const spell = getSpellStats(SPELLS["00006"]);
+  if (!canCastSpell(spell, runtime.selectedEnemy)) return;
+  const x = player.x + player.w / 2, y = player.y + player.h / 2;
+  const angle = Math.atan2(runtime.selectedEnemy.y + runtime.selectedEnemy.h / 2 - y,
+    runtime.selectedEnemy.x + runtime.selectedEnemy.w / 2 - x);
+  player.facing = Math.abs(Math.cos(angle)) > Math.abs(Math.sin(angle))
+    ? (Math.cos(angle) < 0 ? "left" : "right") : (Math.sin(angle) < 0 ? "up" : "down");
+  spellCooldowns[spell.id] = spell.cooldown;
+  swordSwings.push({ x, y, angle, elapsed: 0, duration: 0.25, radius: spell.range });
+  for (const enemy of enemies) {
+    if (!enemy.alive) continue;
+    const dx = enemy.x + enemy.w / 2 - x, dy = enemy.y + enemy.h / 2 - y;
+    const distance = Math.hypot(dx, dy);
+    if (distance > spell.range || (distance > 0 && (dx * Math.cos(angle) + dy * Math.sin(angle)) / distance < 0.5) ||
+        spellPathBlocked(x, y, x + dx, y + dy)) continue;
+    const hit = rollPlayerHit(spell.damage);
+    damageEnemy(enemy, hit.damage, spell.id, hit.critical);
+  }
+}
+
+function rendAttack() {
+  const spell = getSpellStats(SPELLS["00007"]);
+  if (!canCastSpell(spell, runtime.selectedEnemy)) return;
+  const target = runtime.selectedEnemy;
+  spellCooldowns[spell.id] = spell.cooldown;
+  const existing = activeRends.find(effect => effect.target === target);
+  if (existing) {
+    existing.remaining = spell.duration; existing.damage = spell.damagePerTick;
+  } else activeRends.push({ target, remaining: spell.duration, elapsed: 0, damage: spell.damagePerTick });
+  showMessage(`${target.name} is bleeding!`);
+}
+
+function shieldWall() {
+  const spell = SPELLS["00008"];
+  if (!canCastSpell(spell, null)) return;
+  spellCooldowns[spell.id] = spell.cooldown;
+  player.shieldWallRemaining = spell.duration;
+  showMessage("Shield Wall: 40% damage reduction for 5 seconds.");
+}
+
+function updateWarriorEffects(dt) {
+  player.shieldWallRemaining = getEquippedItem("offhand")?.offhandClass === "Shield"
+    ? Math.max(0, player.shieldWallRemaining - dt) : 0;
+  for (let i = activeRends.length - 1; i >= 0; i--) {
+    const effect = activeRends[i];
+    if (!effect.target.alive) { activeRends.splice(i, 1); continue; }
+    effect.elapsed += Math.min(dt, effect.remaining);
+    effect.remaining = Math.max(0, effect.remaining - dt);
+    while (effect.elapsed + 1e-9 >= 1 && effect.target.alive) {
+      effect.elapsed -= 1;
+      damageEnemy(effect.target, effect.damage, "00007");
+    }
+    if (effect.remaining <= 0 || !effect.target.alive) activeRends.splice(i, 1);
+  }
+}
 
 function chargeAttack() {
   const attack = SPELLS["00004"];
@@ -106,7 +169,7 @@ function drawSwordSwings() {
     ctx.strokeStyle = "#ffe6a3";
     ctx.lineWidth = 3;
     ctx.beginPath();
-    ctx.arc(0, 0, 30, angle - 0.7, angle);
+    ctx.arc(0, 0, swing.radius ?? 30, angle - 0.7, angle);
     ctx.stroke();
     ctx.strokeStyle = "#f1f6ff";
     ctx.lineWidth = 4;
@@ -125,7 +188,10 @@ function updateSpellCooldowns(dt) {
 }
 
 function getTargetProblem(spell, target) {
+  if (!canUseAbility(spell.id, player.classId, player.unlockedSkills)) return "class";
   if (!meetsWeaponRequirement(spell)) return "weapon";
+  if (spell.requiredOffhandClass && getEquippedItem("offhand")?.offhandClass !== spell.requiredOffhandClass) return "shield";
+  if (spell.target === "self") return "";
   if (!target?.alive) return "target";
   const ax = player.x + player.w / 2, ay = player.y + player.h / 2;
   const bx = target.x + target.w / 2, by = target.y + target.h / 2;
@@ -149,12 +215,14 @@ function getActionUnavailableReason(spell, target = runtime.selectedEnemy) {
 function validateSpellTarget(spell, target) {
   const problem = getTargetProblem(spell, target);
   if (!problem) return true;
-  const reason = problem === "weapon" ? `${spell.name} requires ${getActionWeaponRequirement(spell)}.`
+  const reason = problem === "class" ? `${spell.name} is not learned or is not available to your class.`
+    : problem === "shield" ? `${spell.name} requires a shield.`
+    : problem === "weapon" ? `${spell.name} requires ${getActionWeaponRequirement(spell)}.`
     : problem === "target" ? "Select a living enemy before casting."
     : problem === "too-close" ? `${spell.name}: target must be at least ${spell.minRange} pixels away.`
     : problem === "range" ? `${spell.name}: target is out of range.` : `${spell.name}: line of sight is blocked.`;
   showMessage(reason);
-  emit("combat:notice", { text: problem === "weapon" ? "Wrong weapon" : problem === "target" ? "No target"
+  emit("combat:notice", { text: problem === "class" ? "Skill locked" : problem === "shield" ? "Shield required" : problem === "weapon" ? "Wrong weapon" : problem === "target" ? "No target"
     : problem === "too-close" ? "Too close" : problem === "range" ? "Out of range" : "Blocked" });
   return false;
 }
@@ -187,6 +255,7 @@ function cancelCasting(reason = "") {
 }
 
 function resetSpellState() {
+  clearWarriorEffects();
   runtime.activeCharge = null;
   fireballs.length = 0;
   enemyProjectiles.length = 0;
@@ -461,6 +530,7 @@ function updateCasting(dt) {
 // ==========================================
 
 function updateCombat(dt) {
+  updateWarriorEffects(dt);
   for (let i = swordSwings.length - 1; i >= 0; i--) {
     swordSwings[i].elapsed += dt;
     if (swordSwings[i].elapsed >= swordSwings[i].duration) swordSwings.splice(i, 1);
@@ -516,6 +586,7 @@ function updateCombat(dt) {
 }
 
 function setupCombat() {
+  on("combat:reset", clearWarriorEffects);
   on("player:hurt", () => {
     if (!player.casting || player.castReleased || player.hp <= 0) return;
     player.castTime = Math.max(0, player.castTime - player.castDuration / 6);
@@ -523,4 +594,4 @@ function setupCombat() {
   });
 }
 
-export { chargeAttack, updateCharge, getActionWeaponRequirement, getActionUnavailableReason, swordAttack, rangedAttack, drawSwordSwings, updateSpellCooldowns, cancelCasting, resetSpellState, castIgnite, updateIgnites, drawIgniteEffects, drawFireball, castFireball, updateCasting, updateCombat, setupCombat };
+export { cleaveAttack, rendAttack, shieldWall, chargeAttack, updateCharge, getActionWeaponRequirement, getActionUnavailableReason, swordAttack, rangedAttack, drawSwordSwings, updateSpellCooldowns, cancelCasting, resetSpellState, castIgnite, updateIgnites, drawIgniteEffects, drawFireball, castFireball, updateCasting, updateCombat, setupCombat };

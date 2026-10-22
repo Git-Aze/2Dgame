@@ -1,3 +1,6 @@
+import { getEquipUnavailableReason } from "./equipment.js";
+import { getClass } from "../data/classes.js";
+import { player } from "../core/state.js";
 import { emit } from "../core/events.js";
 import { getItem } from "../data/items.js";
 import { showMessage } from "../ui/messages.js";
@@ -53,6 +56,8 @@ function equipItem(itemId) {
   }
 
   const slot = item.type;
+  const reason = getEquipUnavailableReason(item);
+  if (reason) { showMessage(reason); return false; }
 
   // Make sure this item type corresponds to
   // a valid equipment slot.
@@ -73,6 +78,7 @@ function equipItem(itemId) {
 
   // Equip new item.
   inventory.equipment[slot] = itemId;
+  if (slot === "offhand") player.shieldWallRemaining = 0;
   if (slot === "weapon") cancelCasting("weapon changed.");
   refreshPlayerStats();
 
@@ -103,6 +109,7 @@ function unequipItem(slot) {
   const item = getItem(itemId);
 
   inventory.equipment[slot] = null;
+  if (slot === "offhand") player.shieldWallRemaining = 0;
   if (slot === "weapon") cancelCasting("weapon changed.");
   refreshPlayerStats();
   inventory.items.push(itemId);
@@ -116,13 +123,7 @@ function unequipItem(slot) {
 
 
 function giveStartingItems() {
-  addItem("00001"); // Apprentice Staff
-  addItem("02000"); // Iron Sword
-  addItem("03000"); // Leather Cap
-  addItem("04000"); // Leather Armor
-  addItem("05000"); // Wooden Shield
-  addItem("06000"); // Leather Pants
-  addItem("07000"); // Traveler's Boots
+  for (const id of getClass(player.classId).startingItems) addItem(id);
 }
 
 export { hasInventorySpace, addItem, equipItem, unequipItem, giveStartingItems };

@@ -45,7 +45,24 @@ Press **Ctrl+M** to toggle collision borders for the current area, including whi
 
 Equipment has five rarity tiers: **Common** (white), **Uncommon** (green), **Rare** (blue), **Epic** (purple), and **Legendary** (orange). Inventory/equipment borders, item names, and tooltips show rarity; tooltips also name the tier for clarity. Every current item has **item level 1**. Item level is descriptive metadata and does not scale stats or restrict equipping yet.
 
-The General Store sells one staff, bow, throwing dagger, sword, helmet, chest piece, shield, pair of leggings, and pair of boots per rarity: 45 equipment items total. All equipment can also drop from enemies through the rarity-weighted loot pool. Higher tiers offer stronger fixed stats and cost more gold. All five swords support Sword Strike and Charge. Prices and stats are initial balance values; rarity does not apply an additional multiplier or grant passive effects.
+Choose a class before starting a new adventure. Your class stays fixed for that adventure, including after death or restarting.
+
+| Class | Main stat / gear category | Starting abilities |
+| --- | --- | --- |
+| Warrior | Strength | Sword Strike (**3**); learn other skills in the specialization tree (**N**) |
+| Hunter | Dexterity | Ranged Attack (**5**) using a bow or throwing dagger |
+| Mage | Intelligence | Fireball (**1**), Ignite (**2**) |
+
+Equipment has an explicit Strength, Dexterity, or Intelligence category; your class can equip only its matching category, regardless of secondary stat bonuses. You can collect and buy other categories, and tooltips explain restrictions. The General Store stocks all **85 equipment items**: five rarity tiers for every weapon family, Strength/Dexterity/Intelligence head/chest/legs/boots families, and Strength shields. Hunters and Mages currently leave offhand empty. All equipment is also in the rarity-weighted loot pool. Higher tiers offer stronger fixed stats and cost more gold; rarity never adds a hidden multiplier.
+
+Press **N** to open your specialization tree. Level 1 starts with no points; each level-up grants **one specialization point**, in addition to five attribute points. Warriors start with Sword Strike only. Each tree node costs one point: **Charge first**, then branch into **Shield Wall** or **Cleave → Rend**. Hover or keyboard-focus an icon for effects, prerequisites, and cost; click it to learn. Both branches remain available as you earn more points. Choices last for the adventure and are saved. Learned skills appear in the spell book and fill their preferred action slot if empty, otherwise another empty slot; existing assignments are preserved. Hunters and Mages keep their current starting abilities and save points for future trees.
+
+| Warrior unlock | Default key | Effect |
+| --- | --- | --- |
+| Charge | 4 | Existing charge and 2-second stun; 20-second cooldown, reset on enemy death |
+| Cleave | 6 | Strength/sword-scaled damage in a 70px, 120-degree forward cone; 5-second cooldown |
+| Rend | 7 | Strength-scaled bleed every second for 6 seconds; 4-second cooldown; refreshes without stacking or delaying ticks |
+| Shield Wall | 8 | 40% less damage after armor for 5 seconds; 30-second cooldown; requires sword and shield, no enemy target |
 
 | Sword ID | Name | Rarity | Weapon damage | Strength | Vitality | Price |
 | --- | --- | --- | --- | --- | --- | --- |
@@ -55,10 +72,10 @@ The General Store sells one staff, bow, throwing dagger, sword, helmet, chest pi
 | `02003` | Oathkeeper | Epic | 12 | +6 | +2 | 240 gold |
 | `02004` | Dawnbreaker | Legendary | 14 | +7 | +3 | 480 gold |
 
-1. Click **New game** or press **Space**.
-2. Press **C** to open your character sheet, then click the **Apprentice Staff** in your inventory. Equipping it completes **Ready for Adventure** and grants **20 XP**.
+1. Choose Warrior, Hunter, or Mage, then click **New game** or press **Space** from the New game button.
+2. Press **C**, then equip your starting **Iron Sword**, **Short Bow**, or **Apprentice Staff**. This completes **Ready for Adventure** and grants **20 XP**.
 3. **Slime Trouble** then starts automatically. Defeat three green slimes to earn an additional **75 XP and 20 gold**, alongside their normal kill XP.
-4. Click an enemy to select it, then press **1** for Fireball or **2** for Ignite. Both spells require a casting weapon, such as the staff.
+4. Click an enemy to select it, then use your class's action-bar keys listed above. The spell book shows only your class's abilities. Ability weapon requirements still apply.
 
 Press **L** or click **Quest Log** on the side to open your journal. Browse in-progress, available, locked, and completed quests, with descriptions, objectives, prerequisites, and rewards. Selecting a quest makes it the **only quest shown in the side tracker**; progress updates live. Selection stays until you choose another quest and is preserved in saves. Close the log with **L**, **Escape**, or its close button. Combat messages appear in the message log. Regular enemies respawn after being defeated.
 
@@ -118,6 +135,8 @@ Saves include level, XP, base attributes, unspent points, gold, health/mana, inv
 Death still offers a fresh restart, or Continue from your last save. New Game/restart does not erase the stored save; pressing Save in the new adventure replaces it. The previous valid browser save is retained as a backup and used if the current one becomes unreadable.
 
 Browser saves belong to this browser profile and exact site address: different ports have separate saves. Clearing browser data removes them. Use Export save for backups or to move progress between browsers. No account or backend is required.
+
+Saves now include a permanent class ID and specialization progress (version 8). Loading a version 1-5 save opens a class-choice dialog. Incompatible equipped items move into the backpack, and incompatible action-bar assignments are cleared. If the backpack has insufficient space, migration stops without discarding items; choose another class or free space using the original game version/save before retrying. The original browser save or imported file is unchanged until you explicitly save again.
 
 ## Project structure
 
@@ -194,8 +213,14 @@ Collision checks in `tests/collision-checks.js` also cover player and enemy foot
 
 `tests/loot-checks.js` checks monster-level scaling, drop probabilities, exactly-once rewards, persistent corpses, click/E pickup, full inventories, pause/death restrictions, and corpse save validation.
 
+Open **http://localhost:8000/tests/classes.html** for the class-system checks, including all class/equipment combinations, starting quests, ability restrictions, save migration, keyboard focus, and short-screen layouts.
+
 ## Development status
 
 Hover over stats in the character sheet for explanations. Strength increases maximum health, Dexterity increases movement speed, Vitality improves health regeneration, and Intelligence improves mana regeneration. Equipment bonuses count toward these effects.
 
 This is an evolving prototype. Save manually to keep progress between sessions. Autosaving and persistent world changes are not implemented yet. See [todo.md](todo.md) for planned improvements.
+
+Open **http://localhost:8000/tests/specializations.html** to verify tree controls, point conservation, unlock prerequisites, combat behavior, save migration, and responsive layouts. Version 6 saves retain their class, receive one unspent specialization point per earned level, and remove action assignments for skills now learned through the tree; version 1-5 saves still require class selection.
+
+The specialization tree uses connected icon nodes: green learned skills, gold available skills, and dim locked skills. Version 7 saves that learned Cleave/Rend without Charge refund those nodes and clear their action assignments, preserving all earned points for the revised Charge-first tree. Builds already containing Charge keep their skills.

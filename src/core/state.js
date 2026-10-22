@@ -1,4 +1,5 @@
 import { WORLD_DATA, worldPosition } from "../world/world.js";
+import { getClass } from "../data/classes.js";
 
 // Shared mutable data. Modules mutate objects, never imported scalar bindings.
 const player = {
@@ -17,11 +18,15 @@ const player = {
 
   // Character information
   name: "Adventurer",
+  classId: "mage",
   level: 1,
   xp: 0,
   xpToNextLevel: 100,
   gold: 0,
   attributePoints: 0,
+  specializationPoints: 0,
+  unlockedSkills: [],
+  shieldWallRemaining: 0,
 
   // Attributes
   strength: 10,
@@ -70,19 +75,16 @@ const questProgress = Object.create(null);
 const ACTION_BAR_SIZE = 10;
 
 // Each slot contains a spell ID or null.
-const actionBarSpells = Array(ACTION_BAR_SIZE).fill(null);
-
-// Start with Fireball in slot 1.
-actionBarSpells[0] = "00001";
-actionBarSpells[1] = "00002";
-actionBarSpells[2] = "00003";
-actionBarSpells[3] = "00004";
-actionBarSpells[4] = "00005";
+const startingClass = getClass(player.classId);
+const actionBarSpells = Array.from({ length: ACTION_BAR_SIZE },
+  (_, index) => (startingClass.actionBar ?? startingClass.abilities)[index] ?? null);
 
 
 const initialPlayerState = structuredClone(player);
 const initialActionBar = [...actionBarSpells];
 const runtime = {
+  selectedClassId: player.classId,
+  migratingSave: false,
   cameraX: 0, cameraY: 0, viewWidth: 0, viewHeight: 0,
   gameState: "start", areaId: "village", lastTime: 0, nextEnemyInstanceId: 1, nextCorpseId: 1,
   selectedEnemy: null, activeShop: null, activeCharge: null, menuOpen: false,
@@ -90,7 +92,7 @@ const runtime = {
   selectedQuestId: null,
 };
 function isPlaying() {
-  return runtime.gameState === "playing" && player.hp > 0 && !runtime.activeShop && !runtime.menuOpen;
+  return runtime.gameState === "playing" && player.hp > 0 && !runtime.activeShop && !runtime.menuOpen && !runtime.migratingSave;
 }
 
 export { player, keys, inventory, INVENTORY_SIZE, enemies, corpses, combatFeedback, fireballs, enemyProjectiles, activeIgnites, swordSwings, spellCooldowns, questProgress, ACTION_BAR_SIZE, actionBarSpells, initialPlayerState, initialActionBar, runtime, isPlaying };

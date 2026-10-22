@@ -212,6 +212,14 @@
       </div>
 
       <canvas id="game" width="800" height="576"></canvas>
+      <section id="specialization-tree" class="hidden" role="dialog" aria-labelledby="specialization-title" inert>
+        <header class="specialization-header">
+          <div><h2 id="specialization-title">Specialization</h2><p id="specialization-points" role="status"></p></div>
+          <button type="button" id="close-specialization-tree" aria-label="Close specialization tree">&times;</button>
+        </header>
+        <div id="specialization-nodes" tabindex="0" aria-label="Specialization skills"></div>
+        <footer class="specialization-footer">One point per level after level 1. Choices last for this adventure. Press N or Esc to close.</footer>
+      </section>
       <aside id="quest-tracker" aria-label="Selected quest">
         <button type="button" id="open-quest-log" aria-controls="quest-log" aria-expanded="false">Quest Log <kbd>L</kbd></button>
         <div id="tracked-quest" aria-live="polite"></div>
@@ -229,7 +237,7 @@
         <footer class="quest-log-footer"><span>Select a quest to track it on screen.</span><span><kbd>L</kbd> or <kbd>Esc</kbd> to close</span></footer>
       </section>
 
-      <p class="help">Move: WASD or arrow keys · Character: C · Spells: K · Quests: L</p>
+      <p class="help">Move: WASD or arrow keys · Character: C · Spells: K · Specialization: N · Quests: L</p>
 
       <div id="cast-bar" role="progressbar" aria-label="Casting" aria-valuemin="0" aria-valuemax="1.5" aria-valuenow="0" hidden>
         <div id="cast-bar-fill"></div>
@@ -289,6 +297,11 @@
         <p class="game-overlay-eyebrow">A top-down adventure</p>
         <h1 id="game-overlay-title">TopDownSoloRPG</h1>
         <p id="game-overlay-description">Explore Greenfield Village, equip your gear, and battle the creatures nearby.</p>
+        <fieldset id="class-selection">
+          <legend>Choose your class</legend>
+          <div id="class-options"></div>
+          <p id="class-description"></p>
+        </fieldset>
         <button type="button" id="start-game-button">New game</button>
         <button type="button" id="continue-game-button" hidden>Continue</button>
         <button type="button" id="import-save-button">Import save</button>
@@ -296,7 +309,7 @@
         <p id="save-overlay-status" role="status"></p>
         <p class="game-overlay-controls">Starting or restarting begins a fresh adventure. Your browser save is kept until you press Save again.</p>
         <p id="game-overlay-hint">Press Space to start</p>
-        <p class="game-overlay-controls">Move: WASD / arrows · Character: C · Spells: K<br />Click an enemy to target · Cast: 1–0</p>
+        <p class="game-overlay-controls">Move: WASD / arrows · Character: C · Spells: K · Specialization: N<br />Click an enemy to target · Cast: 1–0</p>
       </div>
     </section>
     <section id="pause-menu" hidden role="dialog" aria-modal="true" aria-labelledby="pause-menu-title">
@@ -316,6 +329,20 @@
         </div>
         <p id="save-status" role="status"></p>
         <p class="game-overlay-controls">Escape to continue. Restart begins a fresh adventure and keeps your browser save.</p>
+      </div>
+    </section>
+
+    <section id="class-migration" hidden role="dialog" aria-modal="true" aria-labelledby="class-migration-title">
+      <div class="game-overlay-panel">
+        <h2 id="class-migration-title">Choose a class for your saved hero</h2>
+        <p>This adventure was saved before classes existed. Incompatible equipped items will move into your backpack. Your original save remains unchanged until you save again.</p>
+        <label for="migration-class">Character class</label>
+        <select id="migration-class"></select>
+        <p id="migration-status" role="status"></p>
+        <div class="migration-actions">
+          <button type="button" id="confirm-class-migration">Choose class and load</button>
+          <button type="button" id="cancel-class-migration">Cancel</button>
+        </div>
       </div>
     </section>
 

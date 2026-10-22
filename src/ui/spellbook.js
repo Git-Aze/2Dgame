@@ -1,3 +1,5 @@
+import { canUseAbility } from "../data/classes.js";
+import { player } from "../core/state.js";
 import { SPELLS } from "../data/action-definitions.js";
 import { getActionWeaponRequirement } from "../combat/spells.js";
 import { isPlaying } from "../core/state.js";
@@ -37,6 +39,7 @@ function renderSpellBook() {
 
   // Read all spells defined in spells.js.
   for (const definition of Object.values(SPELLS)) {
+    if (!canUseAbility(definition.id, player.classId, player.unlockedSkills)) continue;
     const spell = getSpellStats(definition);
     const entry = document.createElement("div");
     entry.className = "spell-book-entry";
@@ -75,7 +78,8 @@ entry.addEventListener("dragend", () => {
     stats.className = "spell-book-stats";
 
     const statParts = [`Cast time: ${spell.castTime ? `${spell.castTime}s` : "instant"}`];
-    statParts.push(`Range: ${spell.minRange ? `${spell.minRange}–` : ""}${Number.isFinite(spell.range) ? spell.range : "unlimited"}px`, `Cooldown: ${spell.cooldown}s`, "Requires line of sight");
+    if (spell.requiredOffhandClass) statParts.push(`Requires offhand: ${spell.requiredOffhandClass}`);
+    statParts.push(`Range: ${spell.minRange ? `${spell.minRange}–` : ""}${Number.isFinite(spell.range) ? spell.range : "unlimited"}px`, `Cooldown: ${spell.cooldown}s`, spell.target === "self" ? "Targets yourself" : "Requires line of sight");
 
     if (spell.damage !== undefined) {
       statParts.push(`Damage: ${spell.damage}`);

@@ -24,7 +24,8 @@ export function runRarityChecks(assert) {
     for (const kind of ["Casting", "Bow", "ThrowingDagger", "Sword", "head", "chest", "offhand", "legs", "boots"]) {
       let previous = null;
       for (const rarity of Object.keys(RARITIES)) {
-        const matches = allItems.filter(item => category(item) === kind && item.rarity === rarity);
+        const originalCategory = allItems.find(item => category(item) === kind).gearCategory;
+        const matches = allItems.filter(item => category(item) === kind && item.rarity === rarity && item.gearCategory === originalCategory);
         assert(matches.length === 1, `${kind}: exactly one ${rarity} item`);
         const item = matches[0];
         assert(item.itemLevel === 1 && /^\d{5}$/.test(item.id) && getItem(item.id) === item,

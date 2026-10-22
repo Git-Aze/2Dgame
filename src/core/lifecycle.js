@@ -1,3 +1,4 @@
+import { getClass } from "../data/classes.js";
 import { spawnStartingEnemies } from "../combat/enemies.js";
 import { emit, on } from "./events.js";
 import { giveStartingItems } from "../player/inventory.js";
@@ -17,6 +18,7 @@ function setGameState(state) {
   for (const key in keys) keys[key] = false;
   runtime.lastTime = 0;
   if (state !== "playing") {
+    resetSpellState();
     enemyProjectiles.length = 0;
     player.moving = false;
     player.casting = false;
@@ -32,10 +34,13 @@ function setGameState(state) {
   emit("game:statechanged", state);
 }
 
-function resetAdventure(areaId = "village") {
+function resetAdventure(areaId = "village", classId = player.classId) {
+  const definition = getClass(classId);
+  if (!definition) throw new Error("Unknown character class.");
   resetAreaSessions(areaId);
   closeShop();
   Object.assign(player, structuredClone(initialPlayerState));
+  player.classId = classId;
   Object.assign(player, worldPosition(WORLD_DATA.playerSpawn));
   runtime.selectedEnemy = null;
   runtime.selectedQuestId = null;
@@ -47,7 +52,7 @@ function resetAdventure(areaId = "village") {
   spawnStartingEnemies();
   inventory.items.length = 0;
   for (const slot of Object.keys(inventory.equipment)) inventory.equipment[slot] = null;
-  actionBarSpells.splice(0, actionBarSpells.length, ...initialActionBar);
+  actionBarSpells.splice(0, actionBarSpells.length, ...Array.from({ length: initialActionBar.length }, (_, index) => (definition.actionBar ?? definition.abilities)[index] ?? null));
   messageHistory.length = 0;
   document.getElementById("message-log-entries").replaceChildren();
   giveStartingItems();
@@ -58,7 +63,8 @@ function resetAdventure(areaId = "village") {
 
 function startGame() {
   if (runtime.gameState === "playing") return;
-  if (runtime.gameState === "dead") resetAdventure();
+  if (runtime.gameState === "dead") resetAdventure("village", player.classId);
+  else resetAdventure("village", runtime.selectedClassId);
   setGameState("playing");
   acceptQuest("firstSteps");
 }

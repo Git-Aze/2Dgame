@@ -14,6 +14,7 @@ import { corpseUnderPlayer, lootCorpse } from "../loot/loot.js";
 import { nearbyPortal, interactWithPortal } from "../world/areas.js";
 import { portalAtScreenPosition } from "../ui/area-ui.js";
 import { toggleQuestLog } from "../ui/quest-ui.js";
+import { toggleSpecializationTree } from "../ui/specialization-ui.js";
 
 function setupInput() {
   canvas.addEventListener("click", (event) => {
@@ -29,6 +30,8 @@ function setupInput() {
 
   window.addEventListener("keydown", (event) => {
     const key = event.key.toLowerCase();
+    if (runtime.migratingSave) return;
+    if (["INPUT", "TEXTAREA", "SELECT"].includes(event.target?.tagName) || event.target?.isContentEditable) return;
     if (key === "m" && event.ctrlKey && !event.altKey && !event.metaKey &&
         !["INPUT", "TEXTAREA", "SELECT"].includes(event.target?.tagName) && !event.target?.isContentEditable) {
       event.preventDefault();
@@ -67,6 +70,11 @@ function setupInput() {
         !["INPUT", "TEXTAREA", "SELECT"].includes(event.target?.tagName) && !event.target?.isContentEditable) {
       event.preventDefault();
       if (!event.repeat) toggleQuestLog();
+      return;
+    }
+    if (key === "n" && !event.ctrlKey && !event.altKey && !event.metaKey) {
+      event.preventDefault();
+      if (!event.repeat) toggleSpecializationTree();
       return;
     }
     if (key === "c" && !event.repeat) toggleCharacterSheet();

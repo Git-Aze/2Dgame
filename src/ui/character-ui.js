@@ -1,3 +1,4 @@
+import { getClass } from "../data/classes.js";
 import { renderActionBar } from "./actionbar.js";
 import { on } from "../core/events.js";
 import { renderEquipment, renderInventory } from "./inventory-ui.js";
@@ -84,7 +85,7 @@ function updateCharacterResources() {
 
 function updateCharacterSheet() {
   const stats = getPlayerStats();
-  document.getElementById("sheet-name").textContent = player.name;
+  document.getElementById("sheet-name").textContent = `${player.name} - ${getClass(player.classId).name}`;
   document.getElementById("sheet-level").textContent = `Level ${player.level}`;
 
   document.getElementById("stat-strength").textContent = stats.strength;
@@ -131,7 +132,7 @@ function updateStatDescriptions(stats) {
     "sheet-mana": `Mana: spent to cast spells and regenerated based on Intelligence. Maximum mana is currently ${player.maxMana}. Hover over an action-bar spell to see its mana cost.`,
     "sheet-gold": "Gold: earned from quest rewards and spent on items at the General Store. Click the shop nearby or press E at its entrance.",
     "attribute-points": "Attribute points: gain 5 per level. Use the + buttons to permanently increase a base attribute by 1 for this adventure.",
-    "sheet-level": "Level: earn XP from enemy kills and quests. Each level grants 5 attribute points; the next XP requirement increases by 50% (rounded down).",
+    "sheet-level": "Level: earn XP from enemy kills and quests. Each level grants 5 attribute points and 1 specialization point. Press N to spend specialization points. The next XP requirement increases by 50% (rounded down).",
   };
   for (const [id, description] of Object.entries(descriptions)) {
     const value = document.getElementById(id);

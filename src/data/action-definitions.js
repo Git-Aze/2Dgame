@@ -77,6 +77,27 @@ const SPELLS = {
     requiredWeaponCategory: "Ranged",
     rules: "Damage includes ranged weapon damage and Dexterity scaling. Bow range: 280 pixels; throwing dagger range: 180 pixels. Solid scenery blocks the projectile. Uses no mana or ammunition and does not consume the weapon.",
   },
+  "00006": {
+    id: "00006", name: "Cleave", icon: "\u2694\ufe0f",
+    description: "Sweep a 120-degree cone toward your target, hitting nearby enemies in front of you.",
+    damage: 16, manaCost: 0, range: 70, cooldown: 5,
+    requiredWeaponCategory: "Melee", requiredWeaponClass: "Sword",
+    rules: "Instant attack. Each enemy needs a clear path and rolls its own critical hit. Scales with Strength and sword damage.",
+  },
+  "00007": {
+    id: "00007", name: "Rend", icon: "\ud83e\ude78",
+    description: "Wound your target, causing physical bleed damage each second for 6 seconds.",
+    damagePerTick: 4, tickInterval: 1, duration: 6, manaCost: 0, range: 48, cooldown: 4,
+    requiredWeaponCategory: "Melee", requiredWeaponClass: "Sword",
+    rules: "Instant application. Bleed scales with Strength, does not crit, and continues outside melee range. Reapplying refreshes duration without stacking or delaying the next tick.",
+  },
+  "00008": {
+    id: "00008", name: "Shield Wall", icon: "\ud83d\udee1\ufe0f",
+    description: "Reduce incoming damage by 40% for 5 seconds.",
+    manaCost: 0, range: 0, cooldown: 30, duration: 5, target: "self",
+    requiredWeaponCategory: "Melee", requiredWeaponClass: "Sword", requiredOffhandClass: "Shield",
+    rules: "Instant defensive skill. Requires a sword and shield, but no enemy target. Reduction applies after armor, with at least 1 damage per hit. Removing your shield ends the effect. Pauses with gameplay.",
+  },
 };
 
 export { BASE_CAST_TIME, SPELLS };

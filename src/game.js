@@ -29,6 +29,7 @@ import { setupLootUI } from "./ui/loot-ui.js";
 import { setupCombatFeedback } from "./combat/feedback.js";
 import { setupAreaUI } from "./ui/area-ui.js";
 import { setupBossEncounter } from "./combat/boss.js";
+import { setupSpecializationUI } from "./ui/specialization-ui.js";
 
 // Entry point: initialize modules once, then advance simulation and rendering.
 function initializeGame() {
@@ -41,6 +42,7 @@ function initializeGame() {
   setupLootUI();
   setupCharacterUI();
   setupQuestUI();
+  setupSpecializationUI();
   setupShopUI();
   setupShops();
   setupLifecycle();
