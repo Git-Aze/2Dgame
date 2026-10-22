@@ -7,7 +7,7 @@ const CLASSES = {
     startingWeapon: "02000",
     startingItems: ["02000", "03000", "04000", "05000", "06010", "07010"],
     abilities: ["00003"],
-    actionBar: [null, null, "00003"],
+    actionBar: ["00003", null],
   },
   hunter: {
     id: "hunter", name: "Hunter", mainStat: "dexterity",
@@ -15,7 +15,7 @@ const CLASSES = {
     startingWeapon: "01000",
     startingItems: ["01000", "01001", "03010", "04010", "06000", "07000"],
     abilities: ["00005"],
-    actionBar: [null, null, null, null, "00005"],
+    actionBar: ["00005", null, null, null],
   },
   mage: {
     id: "mage", name: "Mage", mainStat: "intelligence",
